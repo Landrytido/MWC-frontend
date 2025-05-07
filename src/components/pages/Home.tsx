@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
-import heroImage from "../assets/hero-image.png";
+import heroImage from "../../assets/hero-image.png";
 
 const Home: React.FC = () => {
   return (

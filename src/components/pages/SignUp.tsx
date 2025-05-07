@@ -3,11 +3,11 @@ import { useSignUp } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
-import personImage1 from "../assets/person-1.png";
-import personImage2 from "../assets/person-2.png";
+import personImage1 from "../../assets/person-1.png";
+import personImage2 from "../../assets/person-2.png";
 
 const SignUp: React.FC = () => {
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { isLoaded, signUp } = useSignUp();
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

@@ -1,5 +1,5 @@
 import React from "react";
-import { SavedLink } from "../types";
+import { SavedLink } from "../types/index";
 
 interface LinkCardProps {
   link: SavedLink;
@@ -20,7 +20,7 @@ const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
     try {
       const urlObj = new URL(url);
       return urlObj.hostname;
-    } catch (e) {
+    } catch {
       return url;
     }
   };
