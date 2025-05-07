@@ -25,7 +25,6 @@ const SignUp: React.FC = () => {
       setIsLoading(true);
       setError("");
 
-      // Start the sign up process
       await signUp.create({
         firstName,
         lastName,
@@ -33,24 +32,51 @@ const SignUp: React.FC = () => {
         password,
       });
 
-      // Send email verification
       await signUp.prepareEmailAddressVerification({
         strategy: "email_code",
       });
 
-      // Navigate to verification page (you'd need to create this)
       navigate("/verify-email");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ longMessage?: string }> };
       console.error(JSON.stringify(err, null, 2));
       setError(
-        err.errors?.[0]?.longMessage ||
+        error.errors?.[0]?.longMessage ||
           "Une erreur est survenue. Veuillez réessayer."
       );
     } finally {
       setIsLoading(false);
     }
   };
+  const handleGoogleSignUp = async () => {
+    if (!isLoaded) return;
 
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/dashboard",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err) {
+      console.error("Erreur d'inscription avec Google:", err);
+      setError("Échec de l'inscription avec Google. Veuillez réessayer.");
+    }
+  };
+
+  const handleGitHubSignUp = async () => {
+    if (!isLoaded) return;
+
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_github",
+        redirectUrl: "/dashboard",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err) {
+      console.error("Erreur d'inscription avec GitHub:", err);
+      setError("Échec de l'inscription avec GitHub. Veuillez réessayer.");
+    }
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -58,17 +84,14 @@ const SignUp: React.FC = () => {
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <div className="relative max-w-4xl mx-auto">
-            {/* Left illustration */}
             <div className="hidden md:block absolute left-0 top-1/4 -translate-x-full transform">
               <img src={personImage1} alt="" className="w-64 h-auto" />
             </div>
 
-            {/* Right illustration */}
             <div className="hidden md:block absolute right-0 top-1/4 translate-x-full transform">
               <img src={personImage2} alt="" className="w-64 h-auto" />
             </div>
 
-            {/* Form container */}
             <div className="bg-white shadow-lg rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-center text-gray-800 mb-8">
                 Création de votre compte
@@ -176,6 +199,7 @@ const SignUp: React.FC = () => {
                 <div className="mt-4 flex justify-center space-x-4">
                   <button
                     type="button"
+                    onClick={handleGoogleSignUp}
                     className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -189,6 +213,7 @@ const SignUp: React.FC = () => {
 
                   <button
                     type="button"
+                    onClick={handleGitHubSignUp}
                     className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -197,7 +222,7 @@ const SignUp: React.FC = () => {
                         fill="#333"
                       />
                     </svg>
-                    <span className="ml-2">Sign in with GitHub</span>
+                    <span className="ml-2">S'inscrire avec GitHub</span>
                   </button>
                 </div>
               </div>

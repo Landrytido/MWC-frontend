@@ -35,16 +35,49 @@ const SignIn: React.FC = () => {
         // Handle other status
         console.log(result);
       }
-    } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      setError(
-        err.errors?.[0]?.longMessage || "Email ou mot de passe incorrect."
-      );
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null && "errors" in err) {
+        const error = err as { errors: Array<{ longMessage?: string }> };
+        setError(
+          error.errors?.[0]?.longMessage ||
+            "Une erreur est survenue. Veuillez réessayer."
+        );
+      } else {
+        setError("Une erreur est survenue. Veuillez réessayer.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
+  const handleGoogleSignIn = async () => {
+    if (!isLoaded) return;
 
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/dashboard",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err) {
+      console.error("Erreur de connexion avec Google:", err);
+      setError("Échec de la connexion avec Google. Veuillez réessayer.");
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    if (!isLoaded) return;
+
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_github",
+        redirectUrl: "/dashboard",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err) {
+      console.error("Erreur de connexion avec GitHub:", err);
+      setError("Échec de la connexion avec GitHub. Veuillez réessayer.");
+    }
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -151,6 +184,7 @@ const SignIn: React.FC = () => {
                 <div className="mt-4 flex justify-center space-x-4">
                   <button
                     type="button"
+                    onClick={handleGoogleSignIn}
                     className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -164,6 +198,7 @@ const SignIn: React.FC = () => {
 
                   <button
                     type="button"
+                    onClick={handleGitHubSignIn}
                     className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -172,7 +207,7 @@ const SignIn: React.FC = () => {
                         fill="#333"
                       />
                     </svg>
-                    <span className="ml-2">Sign in with GitHub</span>
+                    <span className="ml-2">Se connecter avec GitHub</span>
                   </button>
                 </div>
               </div>

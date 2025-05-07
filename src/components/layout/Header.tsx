@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser, useClerk } from "@clerk/clerk-react";
 
 const Header: React.FC = () => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="bg-white shadow-sm">
@@ -18,14 +26,17 @@ const Header: React.FC = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-gray-600 hover:text-teal-500">
               Accueil
             </Link>
             <Link to="/about" className="text-gray-600 hover:text-teal-500">
               Pourquoi My Web Companion ?
             </Link>
-            {!isSignedIn && (
+            <Link to="/privacy" className="text-gray-600 hover:text-teal-500">
+              Confidentialité
+            </Link>
+            {!isSignedIn ? (
               <>
                 <Link
                   to="/signup"
@@ -37,13 +48,55 @@ const Header: React.FC = () => {
                   Connexion
                 </Link>
               </>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center text-gray-600 hover:text-teal-500 focus:outline-none"
+                >
+                  <span className="mr-2">
+                    {user?.firstName || "Utilisateur"}
+                  </span>
+                  <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
+                    {user?.firstName?.charAt(0) || "U"}
+                  </div>
+                  <svg
+                    className="ml-1 h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    <Link
+                      to="/dashboard/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Paramètres du compte
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Déconnexion
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-            <Link to="/about" className="text-gray-600 hover:text-teal-500">
-              À propos
-            </Link>
-            <Link to="/privacy" className="text-gray-600 hover:text-teal-500">
-              Politique de confidentialité
-            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -93,7 +146,8 @@ const Header: React.FC = () => {
             >
               Pourquoi My Web Companion ?
             </Link>
-            {!isSignedIn && (
+
+            {!isSignedIn ? (
               <>
                 <Link
                   to="/signup"
@@ -110,20 +164,33 @@ const Header: React.FC = () => {
                   Connexion
                 </Link>
               </>
+            ) : (
+              <>
+                <Link
+                  to="/dashboard/settings"
+                  className="block text-gray-600 hover:text-teal-500"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Paramètres du compte
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleSignOut();
+                  }}
+                  className="block w-full text-left text-gray-600 hover:text-teal-500"
+                >
+                  Déconnexion
+                </button>
+              </>
             )}
-            <Link
-              to="/about"
-              className="block text-gray-600 hover:text-teal-500"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              À propos
-            </Link>
+
             <Link
               to="/privacy"
               className="block text-gray-600 hover:text-teal-500"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Politique de confidentialité
+              Confidentialité
             </Link>
           </nav>
         )}
