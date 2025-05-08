@@ -1,10 +1,16 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import {
   ClerkProvider,
   SignedIn,
   SignedOut,
   RedirectToSignIn,
+  useAuth,
 } from "@clerk/clerk-react";
 import Home from "./components/pages/Home";
 import SignUp from "./components/pages/SignUp";
@@ -12,6 +18,7 @@ import SignIn from "./components/pages/SignIn";
 import Dashboard from "./components/pages/Dashboard";
 import About from "./components/pages/About";
 import Privacy from "./components/pages/Privacy";
+import UserSettings from "./components/pages/UserSettings";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =
@@ -24,6 +31,20 @@ if (!clerkPubKey) {
     "Missing Clerk Publishable Key - authentication will not work properly"
   );
 }
+
+// Composant pour rediriger un utilisateur authentifié
+const AuthenticatedRedirect = () => {
+  const { isSignedIn } = useAuth();
+
+  if (isSignedIn) {
+    // Si l'utilisateur est connecté et accède à home, login ou signup,
+    // il sera redirigé vers le dashboard
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Sinon, render le contenu normalement
+  return null;
+};
 
 const App: React.FC = () => {
   return (
@@ -46,10 +67,36 @@ const App: React.FC = () => {
     >
       <Router>
         <Routes>
-          {/* Routes publiques */}
-          <Route path="/" element={<Home />} />
-          <Route path="/signup/*" element={<SignUp />} />
-          <Route path="/login/*" element={<SignIn />} />
+          {/* Routes publiques avec redirection pour utilisateurs authentifiés */}
+          <Route
+            path="/"
+            element={
+              <>
+                <AuthenticatedRedirect />
+                <Home />
+              </>
+            }
+          />
+          <Route
+            path="/signup/*"
+            element={
+              <>
+                <AuthenticatedRedirect />
+                <SignUp />
+              </>
+            }
+          />
+          <Route
+            path="/login/*"
+            element={
+              <>
+                <AuthenticatedRedirect />
+                <SignIn />
+              </>
+            }
+          />
+
+          {/* Routes accessibles à tous */}
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
 
@@ -59,7 +106,10 @@ const App: React.FC = () => {
             element={
               <>
                 <SignedIn>
-                  <Dashboard />
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/settings" element={<UserSettings />} />
+                  </Routes>
                 </SignedIn>
                 <SignedOut>
                   <RedirectToSignIn />
