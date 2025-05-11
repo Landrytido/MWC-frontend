@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,6 +11,7 @@ import {
   SignedOut,
   RedirectToSignIn,
   useAuth,
+  useUser,
 } from "@clerk/clerk-react";
 import Home from "./components/pages/Home";
 import SignUp from "./components/pages/SignUp";
@@ -19,6 +20,7 @@ import Dashboard from "./components/pages/Dashboard";
 import About from "./components/pages/About";
 import Privacy from "./components/pages/Privacy";
 import UserSettings from "./components/pages/UserSettings";
+import { useApiService } from "./components/services/apiService";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =
@@ -46,6 +48,36 @@ const AuthenticatedRedirect = () => {
   return null;
 };
 
+// Composant pour synchroniser l'utilisateur avec le backend
+const UserSynchronizer = () => {
+  const { isSignedIn, user } = useUser();
+  const api = useApiService();
+
+  useEffect(() => {
+    // Synchroniser l'utilisateur avec le backend quand il est connecté
+    const syncUser = async () => {
+      if (isSignedIn && user) {
+        try {
+          await api.user.syncUser({
+            clerkId: user.id,
+            email: user.primaryEmailAddress?.emailAddress || "",
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+          });
+
+          console.log("User synchronized with backend");
+        } catch (error) {
+          console.error("Error synchronizing user:", error);
+        }
+      }
+    };
+
+    syncUser();
+  }, [isSignedIn, user, api.user]);
+
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <ClerkProvider
@@ -66,6 +98,11 @@ const App: React.FC = () => {
       }}
     >
       <Router>
+        {/* Ajouter le synchroniseur d'utilisateur ici pour qu'il soit actif sur toutes les routes */}
+        <SignedIn>
+          <UserSynchronizer />
+        </SignedIn>
+
         <Routes>
           {/* Routes publiques avec redirection pour utilisateurs authentifiés */}
           <Route
@@ -109,6 +146,11 @@ const App: React.FC = () => {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/settings" element={<UserSettings />} />
+                    {/* Ajouter routes pour les notes et les liens */}
+                    <Route path="/notes/new" element={<CreateNote />} />
+                    <Route path="/notes/:id" element={<EditNote />} />
+                    <Route path="/links/new" element={<CreateLink />} />
+                    <Route path="/links/:id" element={<EditLink />} />
                   </Routes>
                 </SignedIn>
                 <SignedOut>

@@ -1,19 +1,25 @@
 import { useAuth } from "@clerk/clerk-react";
 
-// Types d'objets manipulés
 export interface Note {
-  id?: string;
+  id?: number;
   title: string;
   content: string;
-  createdAt?: Date;
+  createdAt?: string;
 }
 
 export interface SavedLink {
-  id?: string;
+  id?: number;
   url: string;
   title: string;
   description?: string;
-  createdAt?: Date;
+  createdAt?: string;
+}
+
+export interface User {
+  clerkId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 // URL de base de l'API
