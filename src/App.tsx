@@ -21,6 +21,10 @@ import About from "./components/pages/About";
 import Privacy from "./components/pages/Privacy";
 import UserSettings from "./components/pages/UserSettings";
 import { useApiService } from "./components/services/apiService";
+import CreateNote from "./components/pages/CreateNote";
+import EditNote from "./components/pages/EditNote";
+import CreateLink from "./components/pages/CreateLink";
+import EditLink from "./components/pages/EditLink";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =

@@ -133,9 +133,17 @@ export const useApiService = () => {
       firstName?: string;
       lastName?: string;
     }) =>
-      fetchWithAuth("/users/sync", {
+      fetch(`${API_BASE_URL}/users/sync`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(userData),
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Erreur ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
       }),
 
     // Récupérer les informations de l'utilisateur
