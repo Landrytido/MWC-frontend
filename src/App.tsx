@@ -25,6 +25,7 @@ import CreateNote from "./components/pages/CreateNote";
 import EditNote from "./components/pages/EditNote";
 import CreateLink from "./components/pages/CreateLink";
 import EditLink from "./components/pages/EditLink";
+import { AppProvider } from "./components/contexts/AppContext";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =
@@ -84,88 +85,90 @@ const UserSynchronizer = () => {
 
 const App: React.FC = () => {
   return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      appearance={{
-        variables: {
-          colorPrimary: "#38b2ac", // Couleur teal-500 pour correspondre au design
-          borderRadius: "0.375rem", // rounded-md en Tailwind
-        },
-        elements: {
-          formButtonPrimary:
-            "bg-teal-400 hover:bg-teal-500 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500",
-          card: "shadow-xl rounded-lg",
-          formFieldInput:
-            "rounded-md focus:ring-teal-500 focus:border-teal-500",
-          footer: "hidden", // Masquer le footer par défaut de Clerk
-        },
-      }}
-    >
-      <Router>
-        {/* Ajouter le synchroniseur d'utilisateur ici pour qu'il soit actif sur toutes les routes */}
-        <SignedIn>
-          <UserSynchronizer />
-        </SignedIn>
+    <AppProvider>
+      <ClerkProvider
+        publishableKey={clerkPubKey}
+        appearance={{
+          variables: {
+            colorPrimary: "#38b2ac", // Couleur teal-500 pour correspondre au design
+            borderRadius: "0.375rem", // rounded-md en Tailwind
+          },
+          elements: {
+            formButtonPrimary:
+              "bg-teal-400 hover:bg-teal-500 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500",
+            card: "shadow-xl rounded-lg",
+            formFieldInput:
+              "rounded-md focus:ring-teal-500 focus:border-teal-500",
+            footer: "hidden", // Masquer le footer par défaut de Clerk
+          },
+        }}
+      >
+        <Router>
+          {/* Ajouter le synchroniseur d'utilisateur ici pour qu'il soit actif sur toutes les routes */}
+          <SignedIn>
+            <UserSynchronizer />
+          </SignedIn>
 
-        <Routes>
-          {/* Routes publiques avec redirection pour utilisateurs authentifiés */}
-          <Route
-            path="/"
-            element={
-              <>
-                <AuthenticatedRedirect />
-                <Home />
-              </>
-            }
-          />
-          <Route
-            path="/signup/*"
-            element={
-              <>
-                <AuthenticatedRedirect />
-                <SignUp />
-              </>
-            }
-          />
-          <Route
-            path="/login/*"
-            element={
-              <>
-                <AuthenticatedRedirect />
-                <SignIn />
-              </>
-            }
-          />
+          <Routes>
+            {/* Routes publiques avec redirection pour utilisateurs authentifiés */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <AuthenticatedRedirect />
+                  <Home />
+                </>
+              }
+            />
+            <Route
+              path="/signup/*"
+              element={
+                <>
+                  <AuthenticatedRedirect />
+                  <SignUp />
+                </>
+              }
+            />
+            <Route
+              path="/login/*"
+              element={
+                <>
+                  <AuthenticatedRedirect />
+                  <SignIn />
+                </>
+              }
+            />
 
-          {/* Routes accessibles à tous */}
-          <Route path="/about" element={<About />} />
-          <Route path="/privacy" element={<Privacy />} />
+            {/* Routes accessibles à tous */}
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<Privacy />} />
 
-          {/* Routes protégées nécessitant une authentification */}
-          <Route
-            path="/dashboard/*"
-            element={
-              <>
-                <SignedIn>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/settings" element={<UserSettings />} />
-                    {/* Ajouter routes pour les notes et les liens */}
-                    <Route path="/notes/new" element={<CreateNote />} />
-                    <Route path="/notes/:id" element={<EditNote />} />
-                    <Route path="/links/new" element={<CreateLink />} />
-                    <Route path="/links/:id" element={<EditLink />} />
-                  </Routes>
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            }
-          />
-        </Routes>
-      </Router>
-    </ClerkProvider>
+            {/* Routes protégées nécessitant une authentification */}
+            <Route
+              path="/dashboard/*"
+              element={
+                <>
+                  <SignedIn>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/settings" element={<UserSettings />} />
+                      {/* Ajouter routes pour les notes et les liens */}
+                      <Route path="/notes/new" element={<CreateNote />} />
+                      <Route path="/notes/:id" element={<EditNote />} />
+                      <Route path="/links/new" element={<CreateLink />} />
+                      <Route path="/links/:id" element={<EditLink />} />
+                    </Routes>
+                  </SignedIn>
+                  <SignedOut>
+                    <RedirectToSignIn />
+                  </SignedOut>
+                </>
+              }
+            />
+          </Routes>
+        </Router>
+      </ClerkProvider>
+    </AppProvider>
   );
 };
 
