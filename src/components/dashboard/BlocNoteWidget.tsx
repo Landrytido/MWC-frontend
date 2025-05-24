@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useBlocNote } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 
@@ -14,12 +14,16 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Load bloc note on mount
-  useEffect(() => {
+  const loadBlocNote = useCallback(() => {
     if (!blocNote && !loading.isLoading) {
       api.blocNote.get();
     }
-  }, [blocNote, loading.isLoading, api.blocNote.get, api.blocNote]);
+  }, [blocNote, loading.isLoading]);
+
+  // CORRECTION 2: useEffect optimisé
+  useEffect(() => {
+    loadBlocNote();
+  }, [loadBlocNote]);
 
   // Update local content when bloc note changes
   useEffect(() => {

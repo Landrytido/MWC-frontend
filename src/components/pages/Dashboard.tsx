@@ -39,13 +39,7 @@ const Dashboard: React.FC = () => {
     };
 
     initializeData();
-  }, [
-    api.notes.getAll,
-    api.notebooks.getAll,
-    api.labels.getAll,
-    api.links.getAll,
-    api.blocNote.get,
-  ]);
+  }, []);
 
   // Update search term in global state
   useEffect(() => {

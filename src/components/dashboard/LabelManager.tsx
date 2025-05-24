@@ -22,8 +22,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     if (labels.length === 0 && !loading.isLoading) {
       api.labels.getAll();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [labels.length, loading.isLoading, api.labels.getAll]);
+  }, [labels.length, loading.isLoading]);
 
   const handleCreateLabel = async (e: React.FormEvent) => {
     e.preventDefault();
