@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import Layout from "../layout/Layout";
@@ -21,62 +21,115 @@ const Dashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<"notes" | "links">("notes");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize data on mount
+  // 🔧 FIX 1: Initialize data only once
   useEffect(() => {
-    const initializeData = async () => {
-      try {
-        await Promise.all([
-          api.notes.getAll(),
-          api.notebooks.getAll(),
-          api.labels.getAll(),
-          api.links.getAll(),
-          api.blocNote.get(),
-        ]);
-      } catch (error) {
-        console.error("Error initializing dashboard data:", error);
-      }
-    };
+    if (!isInitialized && user) {
+      console.log("🚀 Initializing dashboard data...");
 
-    initializeData();
-  }, []);
+      const initializeData = async () => {
+        try {
+          // Run all API calls in parallel
+          await Promise.allSettled([
+            api.notes.getAll(),
+            api.notebooks.getAll(),
+            api.labels.getAll(),
+            api.links.getAll(),
+            api.blocNote.get(),
+          ]);
 
-  // Update search term in global state
+          setIsInitialized(true);
+          console.log("✅ Dashboard data initialized");
+        } catch (error) {
+          console.error("❌ Error initializing dashboard data:", error);
+          setIsInitialized(true); // Set to true anyway to prevent infinite loop
+        }
+      };
+
+      initializeData();
+    }
+  }, [user, isInitialized, api]); // 🔧 Fixed dependencies
+
+  // 🔧 FIX 2: Debounced search update
   useEffect(() => {
-    dispatch({ type: "SET_SEARCH_TERM", payload: searchTerm });
+    const timeoutId = setTimeout(() => {
+      dispatch({ type: "SET_SEARCH_TERM", payload: searchTerm });
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [searchTerm, dispatch]);
 
-  const handleEditNote = (note: Note) => {
-    navigate(`/dashboard/notes/${note.id}`);
-  };
+  // 🔧 FIX 3: Memoized handlers to prevent re-renders
+  const handleEditNote = useCallback(
+    (note: Note) => {
+      navigate(`/dashboard/notes/${note.id}`);
+    },
+    [navigate]
+  );
 
-  const handleDeleteNote = async (id: number) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
-      return;
-    }
+  const handleDeleteNote = useCallback(
+    async (id: number) => {
+      if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
+        return;
+      }
 
-    try {
-      await api.notes.delete(id);
-    } catch (error) {
-      console.error("Error deleting note:", error);
-    }
-  };
+      try {
+        await api.notes.delete(id);
+      } catch (error) {
+        console.error("Error deleting note:", error);
+      }
+    },
+    [api.notes]
+  );
 
-  const handleEditLink = (link: SavedLink) => {
-    navigate(`/dashboard/links/${link.id}`);
-  };
+  const handleEditLink = useCallback(
+    (link: SavedLink) => {
+      navigate(`/dashboard/links/${link.id}`);
+    },
+    [navigate]
+  );
 
-  const handleDeleteLink = async (id: number) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce lien ?")) {
-      return;
-    }
+  const handleDeleteLink = useCallback(
+    async (id: number) => {
+      if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce lien ?")) {
+        return;
+      }
 
-    try {
-      await api.links.delete(id);
-    } catch (error) {
-      console.error("Error deleting link:", error);
-    }
-  };
+      try {
+        await api.links.delete(id);
+      } catch (error) {
+        console.error("Error deleting link:", error);
+      }
+    },
+    [api.links]
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm("");
+    dispatch({ type: "RESET_FILTERS" });
+  }, [dispatch]);
+
+  // 🔧 FIX 4: Show loading state during initialization
+  if (!isInitialized) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-teal-500 rounded-full animate-spin mb-4"></div>
+              <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                Chargement de votre tableau de bord...
+              </h2>
+              <p className="text-gray-500">
+                Nous préparons vos données, veuillez patienter.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -128,10 +181,7 @@ const Dashboard: React.FC = () => {
                   state.ui.currentNotebook ||
                   state.ui.selectedLabels.length > 0) && (
                   <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      dispatch({ type: "RESET_FILTERS" });
-                    }}
+                    onClick={handleClearFilters}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     title="Effacer tous les filtres"
                   >

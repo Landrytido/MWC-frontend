@@ -13,26 +13,26 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const loadBlocNote = useCallback(() => {
-    if (!blocNote && !loading.isLoading) {
-      api.blocNote.get();
-    }
-  }, [blocNote, loading.isLoading]);
-
-  // CORRECTION 2: useEffect optimisé
+  // 🔧 FIX 1: Single initialization
   useEffect(() => {
-    loadBlocNote();
-  }, [loadBlocNote]);
+    if (!isInitialized && !blocNote && !loading.isLoading) {
+      console.log("🚀 Loading bloc note...");
+      setIsInitialized(true);
+      api.blocNote.get().catch((error) => {
+        console.error("❌ Error loading bloc note:", error);
+      });
+    }
+  }, [isInitialized, blocNote, loading.isLoading, api.blocNote]);
 
-  // Update local content when bloc note changes
   useEffect(() => {
     if (blocNote) {
       setContent(blocNote.content);
     }
   }, [blocNote]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     setError("");
 
@@ -44,15 +44,15 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [api.blocNote, content]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setContent(blocNote?.content || "");
     setIsEditing(false);
     setError("");
-  };
+  }, [blocNote]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!window.confirm("Êtes-vous sûr de vouloir vider le bloc-notes ?")) {
       return;
     }
@@ -66,9 +66,26 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
     }
-  };
+  }, [api.blocNote]);
 
   const isEmpty = !content.trim();
+
+  // 🔧 FIX 3: Show loading state properly
+  if (!isInitialized && loading.isLoading) {
+    return (
+      <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-800">
+            ✏️ Bloc-notes rapide
+          </h3>
+        </div>
+        <div className="p-4 text-center text-gray-500">
+          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
+          <p className="mt-2 text-sm">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
@@ -176,12 +193,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       )}
 
       <div className="relative">
-        {loading.isLoading ? (
-          <div className="p-4 text-center text-gray-500">
-            <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
-            <p className="mt-2 text-sm">Chargement...</p>
-          </div>
-        ) : isEditing ? (
+        {isEditing ? (
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
