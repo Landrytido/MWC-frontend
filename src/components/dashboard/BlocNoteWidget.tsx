@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useBlocNote } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 
@@ -13,18 +13,19 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
+  const loadedRef = useRef(false); // ✅ Contrôle de chargement
 
-  // 🔧 FIX 1: Single initialization
+  // ✅ FIX 1: Single initialization with ref control
   useEffect(() => {
-    if (!isInitialized && !blocNote && !loading.isLoading) {
+    if (!loadedRef.current && !blocNote && !loading.isLoading) {
       console.log("🚀 Loading bloc note...");
-      setIsInitialized(true);
+      loadedRef.current = true;
       api.blocNote.get().catch((error) => {
         console.error("❌ Error loading bloc note:", error);
+        loadedRef.current = false; // ✅ Retry on error
       });
     }
-  }, [isInitialized, blocNote, loading.isLoading, api.blocNote]);
+  }, [blocNote, loading.isLoading]); // ✅ Removed api.blocNote dependency
 
   useEffect(() => {
     if (blocNote) {
@@ -44,7 +45,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [api.blocNote, content]);
+  }, [content]); // ✅ Removed api.blocNote dependency
 
   const handleCancel = useCallback(() => {
     setContent(blocNote?.content || "");
@@ -66,12 +67,12 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
     }
-  }, [api.blocNote]);
+  }, []); // ✅ Removed api.blocNote dependency
 
   const isEmpty = !content.trim();
 
-  // 🔧 FIX 3: Show loading state properly
-  if (!isInitialized && loading.isLoading) {
+  // ✅ FIX 3: Show loading state properly
+  if (!loadedRef.current && loading.isLoading) {
     return (
       <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
         <div className="flex items-center justify-between mb-3">
@@ -86,7 +87,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       </div>
     );
   }
-
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">

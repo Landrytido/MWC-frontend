@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,7 +20,6 @@ import Dashboard from "./components/pages/Dashboard";
 import About from "./components/pages/About";
 import Privacy from "./components/pages/Privacy";
 import UserSettings from "./components/pages/UserSettings";
-import { useApiService } from "./components/services/apiService";
 import CreateNote from "./components/pages/CreateNote";
 import EditNote from "./components/pages/EditNote";
 import CreateLink from "./components/pages/CreateLink";
@@ -39,46 +38,61 @@ if (!clerkPubKey) {
   );
 }
 
-// Composant pour rediriger un utilisateur authentifié
 const AuthenticatedRedirect = () => {
   const { isSignedIn } = useAuth();
 
   if (isSignedIn) {
-    // Si l'utilisateur est connecté et accède à home, login ou signup,
-    // il sera redirigé vers le dashboard
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Sinon, render le contenu normalement
   return null;
 };
 
-// Composant pour synchroniser l'utilisateur avec le backend
+// ✅ COMPOSANT CORRIGÉ - Synchronisation utilisateur
 const UserSynchronizer = () => {
   const { isSignedIn, user } = useUser();
-  const api = useApiService();
+  const { getToken } = useAuth();
+  const syncedRef = useRef(false); // ✅ Empêche les synchronisations multiples
 
   useEffect(() => {
-    // Synchroniser l'utilisateur avec le backend quand il est connecté
+    // ✅ Synchroniser seulement UNE FOIS par session
     const syncUser = async () => {
-      if (isSignedIn && user) {
+      if (isSignedIn && user && !syncedRef.current) {
         try {
-          await api.user.syncUser({
-            clerkId: user.id,
-            email: user.primaryEmailAddress?.emailAddress || "",
-            firstName: user.firstName || undefined,
-            lastName: user.lastName || undefined,
+          syncedRef.current = true; // ✅ Marquer comme synchronisé
+
+          // const token = await getToken();
+
+          await fetch("http://localhost:8080/api/users/sync", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              clerkId: user.id,
+              email: user.primaryEmailAddress?.emailAddress || "",
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
+            }),
           });
 
           console.log("User synchronized with backend");
         } catch (error) {
           console.error("Error synchronizing user:", error);
+          syncedRef.current = false; // ✅ Réessayer en cas d'erreur
         }
       }
     };
 
     syncUser();
-  }, [isSignedIn, user, api.user]);
+  }, [isSignedIn, user?.id, getToken]); // ✅ Dépendances fixes
+
+  // ✅ Reset au déconnexion
+  useEffect(() => {
+    if (!isSignedIn) {
+      syncedRef.current = false;
+    }
+  }, [isSignedIn]);
 
   return null;
 };
@@ -90,8 +104,8 @@ const App: React.FC = () => {
         publishableKey={clerkPubKey}
         appearance={{
           variables: {
-            colorPrimary: "#38b2ac", // Couleur teal-500 pour correspondre au design
-            borderRadius: "0.375rem", // rounded-md en Tailwind
+            colorPrimary: "#38b2ac",
+            borderRadius: "0.375rem",
           },
           elements: {
             formButtonPrimary:
@@ -99,12 +113,12 @@ const App: React.FC = () => {
             card: "shadow-xl rounded-lg",
             formFieldInput:
               "rounded-md focus:ring-teal-500 focus:border-teal-500",
-            footer: "hidden", // Masquer le footer par défaut de Clerk
+            footer: "hidden",
           },
         }}
       >
         <Router>
-          {/* Ajouter le synchroniseur d'utilisateur ici pour qu'il soit actif sur toutes les routes */}
+          {/* ✅ Synchronisation contrôlée */}
           <SignedIn>
             <UserSynchronizer />
           </SignedIn>
@@ -152,7 +166,6 @@ const App: React.FC = () => {
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/settings" element={<UserSettings />} />
-                      {/* Ajouter routes pour les notes et les liens */}
                       <Route path="/notes/new" element={<CreateNote />} />
                       <Route path="/notes/:id" element={<EditNote />} />
                       <Route path="/links/new" element={<CreateLink />} />

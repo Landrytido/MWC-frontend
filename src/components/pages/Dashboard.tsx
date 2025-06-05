@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import Layout from "../layout/Layout";
@@ -21,37 +21,36 @@ const Dashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<"notes" | "links">("notes");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
+  const initializationRef = useRef(false); // ✅ Contrôle d'initialisation
 
-  // 🔧 FIX 1: Initialize data only once
+  // ✅ FIX 1: Initialize data only once per session
   useEffect(() => {
-    if (!isInitialized && user) {
+    if (!initializationRef.current && user) {
       console.log("🚀 Initializing dashboard data...");
+      initializationRef.current = true;
 
       const initializeData = async () => {
         try {
-          // Run all API calls in parallel
-          await Promise.allSettled([
+          // ✅ Exécuter en parallèle sans attendre
+          Promise.allSettled([
             api.notes.getAll(),
             api.notebooks.getAll(),
             api.labels.getAll(),
             api.links.getAll(),
             api.blocNote.get(),
-          ]);
-
-          setIsInitialized(true);
-          console.log("✅ Dashboard data initialized");
+          ]).then(() => {
+            console.log("✅ Dashboard data initialized");
+          });
         } catch (error) {
           console.error("❌ Error initializing dashboard data:", error);
-          setIsInitialized(true); // Set to true anyway to prevent infinite loop
         }
       };
 
       initializeData();
     }
-  }, [user, isInitialized, api]); // 🔧 Fixed dependencies
+  }, [user?.id]); // ✅ Dépendance fixe sur user.id seulement
 
-  // 🔧 FIX 2: Debounced search update
+  // ✅ FIX 2: Debounced search update
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       dispatch({ type: "SET_SEARCH_TERM", payload: searchTerm });
@@ -60,7 +59,7 @@ const Dashboard: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, dispatch]);
 
-  // 🔧 FIX 3: Memoized handlers to prevent re-renders
+  // ✅ FIX 3: Memoized handlers to prevent re-renders
   const handleEditNote = useCallback(
     (note: Note) => {
       navigate(`/dashboard/notes/${note.id}`);
@@ -110,8 +109,8 @@ const Dashboard: React.FC = () => {
     dispatch({ type: "RESET_FILTERS" });
   }, [dispatch]);
 
-  // 🔧 FIX 4: Show loading state during initialization
-  if (!isInitialized) {
+  // ✅ FIX 4: Show loading state during initialization
+  if (!initializationRef.current) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-6">

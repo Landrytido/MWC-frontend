@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-react";
 import { useApp, AppState } from "../contexts/AppContext";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Note,
   SavedLink,
@@ -23,7 +23,7 @@ export const useApiService = () => {
   const { getToken } = useAuth();
   const { dispatch } = useApp();
 
-  // Utility function for authenticated requests
+  // ✅ Utility function for authenticated requests (memoized)
   const fetchWithAuth = useCallback(
     async (url: string, options: RequestInit = {}) => {
       const token = await getToken();
@@ -57,7 +57,7 @@ export const useApiService = () => {
       dispatch({
         type: "SET_LOADING",
         payload: {
-          key: key as keyof AppState["loadingStates"], // ← Ici
+          key: key as keyof AppState["loadingStates"],
           loading: { isLoading, error },
         },
       });
@@ -65,34 +65,31 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // NOTES API
-  const notesApi = {
-    getAll: useCallback(async () => {
-      setLoading("notes", true);
-      try {
-        const notes = await fetchWithAuth("/notes");
-        dispatch({ type: "SET_NOTES", payload: notes });
-        setLoading("notes", false);
-        return notes;
-      } catch (error) {
-        setLoading(
-          "notes",
-          false,
-          error instanceof Error ? error.message : "Erreur inconnue"
-        );
-        throw error;
-      }
-    }, [fetchWithAuth, setLoading, dispatch]),
+  // ✅ NOTES API avec useMemo
+  const notesApi = useMemo(
+    () => ({
+      getAll: async () => {
+        setLoading("notes", true);
+        try {
+          const notes = await fetchWithAuth("/notes");
+          dispatch({ type: "SET_NOTES", payload: notes });
+          setLoading("notes", false);
+          return notes;
+        } catch (error) {
+          setLoading(
+            "notes",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
-    getById: useCallback(
-      async (id: number): Promise<Note> => {
+      getById: async (id: number): Promise<Note> => {
         return await fetchWithAuth(`/notes/${id}`);
       },
-      [fetchWithAuth]
-    ),
 
-    create: useCallback(
-      async (note: CreateNoteForm): Promise<Note> => {
+      create: async (note: CreateNoteForm): Promise<Note> => {
         const created = await fetchWithAuth("/notes", {
           method: "POST",
           body: JSON.stringify(note),
@@ -100,11 +97,11 @@ export const useApiService = () => {
         dispatch({ type: "ADD_NOTE", payload: created });
         return created;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    createInNotebook: useCallback(
-      async (notebookId: number, note: CreateNoteForm): Promise<Note> => {
+      createInNotebook: async (
+        notebookId: number,
+        note: CreateNoteForm
+      ): Promise<Note> => {
         const created = await fetchWithAuth(`/notes/notebooks/${notebookId}`, {
           method: "POST",
           body: JSON.stringify(note),
@@ -112,11 +109,8 @@ export const useApiService = () => {
         dispatch({ type: "ADD_NOTE", payload: created });
         return created;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    update: useCallback(
-      async (id: number, note: Partial<Note>): Promise<Note> => {
+      update: async (id: number, note: Partial<Note>): Promise<Note> => {
         const updated = await fetchWithAuth(`/notes/${id}`, {
           method: "PUT",
           body: JSON.stringify(note),
@@ -124,11 +118,11 @@ export const useApiService = () => {
         dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    moveToNotebook: useCallback(
-      async (noteId: number, notebookId: number | null): Promise<Note> => {
+      moveToNotebook: async (
+        noteId: number,
+        notebookId: number | null
+      ): Promise<Note> => {
         const updated = await fetchWithAuth(`/notes/${noteId}/notebook`, {
           method: "PUT",
           body: JSON.stringify({ notebookId }),
@@ -139,46 +133,40 @@ export const useApiService = () => {
         });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    delete: useCallback(
-      async (id: number): Promise<void> => {
+      delete: async (id: number): Promise<void> => {
         await fetchWithAuth(`/notes/${id}`, { method: "DELETE" });
         dispatch({ type: "DELETE_NOTE", payload: id });
       },
-      [fetchWithAuth, dispatch]
-    ),
-  };
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
 
-  // NOTEBOOKS API
-  const notebooksApi = {
-    getAll: useCallback(async () => {
-      setLoading("notebooks", true);
-      try {
-        const notebooks = await fetchWithAuth("/notebooks");
-        dispatch({ type: "SET_NOTEBOOKS", payload: notebooks });
-        setLoading("notebooks", false);
-        return notebooks;
-      } catch (error) {
-        setLoading(
-          "notebooks",
-          false,
-          error instanceof Error ? error.message : "Erreur inconnue"
-        );
-        throw error;
-      }
-    }, [fetchWithAuth, setLoading, dispatch]),
+  // ✅ NOTEBOOKS API avec useMemo
+  const notebooksApi = useMemo(
+    () => ({
+      getAll: async () => {
+        setLoading("notebooks", true);
+        try {
+          const notebooks = await fetchWithAuth("/notebooks");
+          dispatch({ type: "SET_NOTEBOOKS", payload: notebooks });
+          setLoading("notebooks", false);
+          return notebooks;
+        } catch (error) {
+          setLoading(
+            "notebooks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
-    getById: useCallback(
-      async (id: number): Promise<Notebook> => {
+      getById: async (id: number): Promise<Notebook> => {
         return await fetchWithAuth(`/notebooks/${id}`);
       },
-      [fetchWithAuth]
-    ),
 
-    create: useCallback(
-      async (notebook: CreateNotebookForm): Promise<Notebook> => {
+      create: async (notebook: CreateNotebookForm): Promise<Notebook> => {
         const created = await fetchWithAuth("/notebooks", {
           method: "POST",
           body: JSON.stringify(notebook),
@@ -186,11 +174,11 @@ export const useApiService = () => {
         dispatch({ type: "ADD_NOTEBOOK", payload: created });
         return created;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    update: useCallback(
-      async (id: number, notebook: Partial<Notebook>): Promise<Notebook> => {
+      update: async (
+        id: number,
+        notebook: Partial<Notebook>
+      ): Promise<Notebook> => {
         const updated = await fetchWithAuth(`/notebooks/${id}`, {
           method: "PUT",
           body: JSON.stringify(notebook),
@@ -201,53 +189,44 @@ export const useApiService = () => {
         });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    delete: useCallback(
-      async (id: number): Promise<void> => {
+      delete: async (id: number): Promise<void> => {
         await fetchWithAuth(`/notebooks/${id}`, { method: "DELETE" });
         dispatch({ type: "DELETE_NOTEBOOK", payload: id });
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    getNotes: useCallback(
-      async (notebookId: number): Promise<Note[]> => {
+      getNotes: async (notebookId: number): Promise<Note[]> => {
         return await fetchWithAuth(`/notes/notebooks/${notebookId}/notes`);
       },
-      [fetchWithAuth]
-    ),
-  };
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
 
-  // LABELS API
-  const labelsApi = {
-    getAll: useCallback(async () => {
-      setLoading("labels", true);
-      try {
-        const labels = await fetchWithAuth("/labels");
-        dispatch({ type: "SET_LABELS", payload: labels });
-        setLoading("labels", false);
-        return labels;
-      } catch (error) {
-        setLoading(
-          "labels",
-          false,
-          error instanceof Error ? error.message : "Erreur inconnue"
-        );
-        throw error;
-      }
-    }, [fetchWithAuth, setLoading, dispatch]),
+  // ✅ LABELS API avec useMemo
+  const labelsApi = useMemo(
+    () => ({
+      getAll: async () => {
+        setLoading("labels", true);
+        try {
+          const labels = await fetchWithAuth("/labels");
+          dispatch({ type: "SET_LABELS", payload: labels });
+          setLoading("labels", false);
+          return labels;
+        } catch (error) {
+          setLoading(
+            "labels",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
-    getById: useCallback(
-      async (id: string): Promise<Label> => {
+      getById: async (id: string): Promise<Label> => {
         return await fetchWithAuth(`/labels/${id}`);
       },
-      [fetchWithAuth]
-    ),
 
-    create: useCallback(
-      async (label: CreateLabelForm): Promise<Label> => {
+      create: async (label: CreateLabelForm): Promise<Label> => {
         const created = await fetchWithAuth("/labels", {
           method: "POST",
           body: JSON.stringify(label),
@@ -255,11 +234,8 @@ export const useApiService = () => {
         dispatch({ type: "ADD_LABEL", payload: created });
         return created;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    update: useCallback(
-      async (id: string, label: Partial<Label>): Promise<Label> => {
+      update: async (id: string, label: Partial<Label>): Promise<Label> => {
         const updated = await fetchWithAuth(`/labels/${id}`, {
           method: "PUT",
           body: JSON.stringify(label),
@@ -267,48 +243,42 @@ export const useApiService = () => {
         dispatch({ type: "UPDATE_LABEL", payload: { id, label: updated } });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    delete: useCallback(
-      async (id: string, forceDelete = false): Promise<void> => {
+      delete: async (id: string, forceDelete = false): Promise<void> => {
         await fetchWithAuth(`/labels/${id}?forceDelete=${forceDelete}`, {
           method: "DELETE",
         });
         dispatch({ type: "DELETE_LABEL", payload: id });
       },
-      [fetchWithAuth, dispatch]
-    ),
-  };
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
 
-  // LINKS API
-  const linksApi = {
-    getAll: useCallback(async () => {
-      setLoading("links", true);
-      try {
-        const links = await fetchWithAuth("/links");
-        dispatch({ type: "SET_LINKS", payload: links });
-        setLoading("links", false);
-        return links;
-      } catch (error) {
-        setLoading(
-          "links",
-          false,
-          error instanceof Error ? error.message : "Erreur inconnue"
-        );
-        throw error;
-      }
-    }, [fetchWithAuth, setLoading, dispatch]),
+  // ✅ LINKS API avec useMemo
+  const linksApi = useMemo(
+    () => ({
+      getAll: async () => {
+        setLoading("links", true);
+        try {
+          const links = await fetchWithAuth("/links");
+          dispatch({ type: "SET_LINKS", payload: links });
+          setLoading("links", false);
+          return links;
+        } catch (error) {
+          setLoading(
+            "links",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
-    getById: useCallback(
-      async (id: number): Promise<SavedLink> => {
+      getById: async (id: number): Promise<SavedLink> => {
         return await fetchWithAuth(`/links/${id}`);
       },
-      [fetchWithAuth]
-    ),
 
-    create: useCallback(
-      async (link: CreateLinkForm): Promise<SavedLink> => {
+      create: async (link: CreateLinkForm): Promise<SavedLink> => {
         const created = await fetchWithAuth("/links", {
           method: "POST",
           body: JSON.stringify(link),
@@ -316,11 +286,11 @@ export const useApiService = () => {
         dispatch({ type: "ADD_LINK", payload: created });
         return created;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    update: useCallback(
-      async (id: number, link: Partial<SavedLink>): Promise<SavedLink> => {
+      update: async (
+        id: number,
+        link: Partial<SavedLink>
+      ): Promise<SavedLink> => {
         const updated = await fetchWithAuth(`/links/${id}`, {
           method: "PUT",
           body: JSON.stringify(link),
@@ -328,39 +298,36 @@ export const useApiService = () => {
         dispatch({ type: "UPDATE_LINK", payload: { id, link: updated } });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    delete: useCallback(
-      async (id: number): Promise<void> => {
+      delete: async (id: number): Promise<void> => {
         await fetchWithAuth(`/links/${id}`, { method: "DELETE" });
         dispatch({ type: "DELETE_LINK", payload: id });
       },
-      [fetchWithAuth, dispatch]
-    ),
-  };
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
 
-  // BLOC NOTE API
-  const blocNoteApi = {
-    get: useCallback(async () => {
-      setLoading("blocNote", true);
-      try {
-        const blocNote = await fetchWithAuth("/bloc-note");
-        dispatch({ type: "SET_BLOC_NOTE", payload: blocNote });
-        setLoading("blocNote", false);
-        return blocNote;
-      } catch (error) {
-        setLoading(
-          "blocNote",
-          false,
-          error instanceof Error ? error.message : "Erreur inconnue"
-        );
-        throw error;
-      }
-    }, [fetchWithAuth, setLoading, dispatch]),
+  // ✅ BLOC NOTE API avec useMemo
+  const blocNoteApi = useMemo(
+    () => ({
+      get: async () => {
+        setLoading("blocNote", true);
+        try {
+          const blocNote = await fetchWithAuth("/bloc-note");
+          dispatch({ type: "SET_BLOC_NOTE", payload: blocNote });
+          setLoading("blocNote", false);
+          return blocNote;
+        } catch (error) {
+          setLoading(
+            "blocNote",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
-    update: useCallback(
-      async (content: string): Promise<BlocNote> => {
+      update: async (content: string): Promise<BlocNote> => {
         const updated = await fetchWithAuth("/bloc-note", {
           method: "PUT",
           body: JSON.stringify({ content }),
@@ -368,19 +335,19 @@ export const useApiService = () => {
         dispatch({ type: "UPDATE_BLOC_NOTE", payload: { content } });
         return updated;
       },
-      [fetchWithAuth, dispatch]
-    ),
 
-    delete: useCallback(async (): Promise<void> => {
-      await fetchWithAuth("/bloc-note", { method: "DELETE" });
-      dispatch({ type: "SET_BLOC_NOTE", payload: null });
-    }, [fetchWithAuth, dispatch]),
-  };
+      delete: async (): Promise<void> => {
+        await fetchWithAuth("/bloc-note", { method: "DELETE" });
+        dispatch({ type: "SET_BLOC_NOTE", payload: null });
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
 
-  // USER API (enhanced)
-  const userApi = {
-    syncUser: useCallback(
-      async (userData: {
+  // ✅ USER API avec useMemo
+  const userApi = useMemo(
+    () => ({
+      syncUser: async (userData: {
         clerkId: string;
         email: string;
         firstName?: string;
@@ -402,22 +369,26 @@ export const useApiService = () => {
         dispatch({ type: "SET_USER", payload: user });
         return user;
       },
-      [dispatch]
-    ),
 
-    getProfile: useCallback(async () => {
-      const profile = await fetchWithAuth("/users/profile");
-      dispatch({ type: "SET_USER", payload: profile });
-      return profile;
-    }, [fetchWithAuth, dispatch]),
-  };
+      getProfile: async () => {
+        const profile = await fetchWithAuth("/users/profile");
+        dispatch({ type: "SET_USER", payload: profile });
+        return profile;
+      },
+    }),
+    [fetchWithAuth, dispatch]
+  );
 
-  return {
-    notes: notesApi,
-    notebooks: notebooksApi,
-    labels: labelsApi,
-    links: linksApi,
-    blocNote: blocNoteApi,
-    user: userApi,
-  };
+  // ✅ Return ALL memoized APIs
+  return useMemo(
+    () => ({
+      notes: notesApi,
+      notebooks: notebooksApi,
+      labels: labelsApi,
+      links: linksApi,
+      blocNote: blocNoteApi,
+      user: userApi,
+    }),
+    [notesApi, notebooksApi, labelsApi, linksApi, blocNoteApi, userApi]
+  );
 };
