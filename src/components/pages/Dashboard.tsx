@@ -10,6 +10,7 @@ import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
+import TaskManager from "../dashboard/TaskManager";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ const Dashboard: React.FC = () => {
   const { links, loading: linksLoading } = useLinks();
   const api = useApiService();
 
-  const [activeTab, setActiveTab] = useState<"notes" | "links">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "links" | "tasks">(
+    "notes"
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const initializationRef = useRef(false); // ✅ Contrôle d'initialisation
 
@@ -38,6 +41,7 @@ const Dashboard: React.FC = () => {
             api.labels.getAll(),
             api.links.getAll(),
             api.blocNote.get(),
+            api.tasks.getAll(),
           ]).then(() => {
             console.log("✅ Dashboard data initialized");
           });
@@ -302,6 +306,17 @@ const Dashboard: React.FC = () => {
               >
                 Liens Sauvegardés ({links.length})
               </button>
+              {/* ✅ NOUVEAU TAB */}
+              <button
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "tasks"
+                    ? "text-teal-500 border-b-2 border-teal-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("tasks")}
+              >
+                Tâches
+              </button>
             </div>
 
             {/* Content */}
@@ -415,6 +430,7 @@ const Dashboard: React.FC = () => {
                 )}
               </div>
             )}
+            {activeTab === "tasks" && <TaskManager />}
           </div>
         </div>
       </div>

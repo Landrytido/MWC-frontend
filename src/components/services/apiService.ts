@@ -11,6 +11,8 @@ import {
   CreateLinkForm,
   CreateNotebookForm,
   CreateLabelForm,
+  Task,
+  CreateTaskForm,
 } from "../types";
 
 // API Base URL
@@ -141,7 +143,94 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
+  const tasksApi = useMemo(
+    () => ({
+      getAll: async () => {
+        setLoading("tasks", true);
+        try {
+          const tasks = await fetchWithAuth("/tasks");
+          dispatch({ type: "SET_TASKS", payload: tasks });
+          setLoading("tasks", false);
+          return tasks;
+        } catch (error) {
+          setLoading(
+            "tasks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
 
+      getPending: async () => {
+        setLoading("tasks", true);
+        try {
+          const tasks = await fetchWithAuth("/tasks/pending");
+          setLoading("tasks", false);
+          return tasks;
+        } catch (error) {
+          setLoading(
+            "tasks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getCompleted: async () => {
+        return await fetchWithAuth("/tasks/completed");
+      },
+
+      getOverdue: async () => {
+        return await fetchWithAuth("/tasks/overdue");
+      },
+
+      getDueInDays: async (days: number = 7) => {
+        return await fetchWithAuth(`/tasks/due-in-days?days=${days}`);
+      },
+
+      getById: async (id: number): Promise<Task> => {
+        return await fetchWithAuth(`/tasks/${id}`);
+      },
+
+      create: async (task: CreateTaskForm): Promise<Task> => {
+        const created = await fetchWithAuth("/tasks", {
+          method: "POST",
+          body: JSON.stringify(task),
+        });
+        dispatch({ type: "ADD_TASK", payload: created });
+        return created;
+      },
+
+      update: async (id: number, task: Partial<Task>): Promise<Task> => {
+        const updated = await fetchWithAuth(`/tasks/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(task),
+        });
+        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      toggle: async (id: number): Promise<Task> => {
+        const updated = await fetchWithAuth(`/tasks/${id}/toggle`, {
+          method: "PUT",
+        });
+        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/tasks/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_TASK", payload: id });
+      },
+
+      getPendingCount: async (): Promise<{ count: number }> => {
+        return await fetchWithAuth("/tasks/pending/count");
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
   // ✅ NOTEBOOKS API avec useMemo
   const notebooksApi = useMemo(
     () => ({
@@ -388,7 +477,16 @@ export const useApiService = () => {
       links: linksApi,
       blocNote: blocNoteApi,
       user: userApi,
+      tasks: tasksApi,
     }),
-    [notesApi, notebooksApi, labelsApi, linksApi, blocNoteApi, userApi]
+    [
+      notesApi,
+      notebooksApi,
+      labelsApi,
+      linksApi,
+      blocNoteApi,
+      userApi,
+      tasksApi,
+    ]
   );
 };

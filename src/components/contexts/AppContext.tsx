@@ -90,6 +90,7 @@ type AppAction =
   | { type: "ADD_TASK"; payload: Task }
   | { type: "UPDATE_TASK"; payload: { id: number; task: Partial<Task> } }
   | { type: "DELETE_TASK"; payload: number }
+  | { type: "TOGGLE_TASK"; payload: number }
 
   // Daily Tasks actions
   | { type: "SET_DAILY_TASKS"; payload: DailyTask[] }
@@ -321,7 +322,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
           (task) => task.id !== action.payload
         ),
       };
-
+    case "TOGGLE_TASK":
+      return {
+        ...state,
+        tasks: state.tasks.map((task) =>
+          task.id === action.payload
+            ? { ...task, completed: !task.completed }
+            : task
+        ),
+      };
     case "REORDER_DAILY_TASKS":
       return { ...state, dailyTasks: action.payload };
 
@@ -475,9 +484,13 @@ export const useTasks = () => {
   const { state } = useApp();
   return {
     tasks: state.tasks,
-    dailyTasks: state.dailyTasks,
-    loadingTasks: state.loadingStates.tasks,
-    loadingDailyTasks: state.loadingStates.dailyTasks,
+    pendingTasks: state.tasks.filter((task) => !task.completed),
+    completedTasks: state.tasks.filter((task) => task.completed),
+    overdueTasks: state.tasks.filter(
+      (task) =>
+        !task.completed && task.dueDate && new Date(task.dueDate) < new Date()
+    ),
+    loading: state.loadingStates.tasks,
   };
 };
 
