@@ -10,6 +10,8 @@ import {
   BlocNote,
   User,
   LoadingState,
+  Comment,
+  NoteTask,
 } from "../types";
 
 // State interface
@@ -23,6 +25,8 @@ interface AppState {
   tasks: Task[];
   dailyTasks: DailyTask[];
   blocNote: BlocNote | null;
+  comments: Comment[];
+  noteTasks: NoteTask[];
 
   // Loading states
   loadingStates: {
@@ -33,6 +37,8 @@ interface AppState {
     tasks: LoadingState;
     dailyTasks: LoadingState;
     blocNote: LoadingState;
+    comments: LoadingState;
+    noteTasks: LoadingState;
   };
 
   // UI state
@@ -117,7 +123,34 @@ type AppAction =
   | { type: "SET_CURRENT_NOTEBOOK"; payload: number | null }
   | { type: "SET_SELECTED_LABELS"; payload: string[] }
   | { type: "SET_SEARCH_TERM"; payload: string }
-  | { type: "RESET_FILTERS" };
+  | { type: "RESET_FILTERS" }
+
+  // Comments actions
+  | { type: "SET_COMMENTS"; payload: Comment[] }
+  | { type: "ADD_COMMENT"; payload: Comment }
+  | {
+      type: "UPDATE_COMMENT";
+      payload: { id: number; comment: Partial<Comment> };
+    }
+  | { type: "DELETE_COMMENT"; payload: number }
+  | {
+      type: "SET_NOTE_COMMENTS";
+      payload: { noteId: number; comments: Comment[] };
+    }
+
+  // Notes Tasks actions
+  | { type: "SET_NOTE_TASKS"; payload: NoteTask[] }
+  | { type: "ADD_NOTE_TASK"; payload: NoteTask }
+  | {
+      type: "UPDATE_NOTE_TASK";
+      payload: { id: number; task: Partial<NoteTask> };
+    }
+  | { type: "DELETE_NOTE_TASK"; payload: number }
+  | { type: "TOGGLE_NOTE_TASK"; payload: number }
+  | {
+      type: "SET_NOTE_TASKS_FOR_NOTE";
+      payload: { noteId: number; tasks: NoteTask[] };
+    };
 
 // Initial state
 const initialState: AppState = {
@@ -130,6 +163,8 @@ const initialState: AppState = {
   tasks: [],
   dailyTasks: [],
   blocNote: null,
+  comments: [],
+  noteTasks: [],
 
   loadingStates: {
     notes: { isLoading: false },
@@ -139,6 +174,8 @@ const initialState: AppState = {
     tasks: { isLoading: false },
     dailyTasks: { isLoading: false },
     blocNote: { isLoading: false },
+    comments: { isLoading: false },
+    noteTasks: { isLoading: false },
   },
 
   ui: {
@@ -392,6 +429,141 @@ function appReducer(state: AppState, action: AppAction): AppState {
         },
       };
 
+    // Comments actions
+    case "SET_COMMENTS":
+      return { ...state, comments: action.payload };
+
+    case "ADD_COMMENT":
+      return {
+        ...state,
+        comments: [action.payload, ...state.comments],
+        // Mettre à jour le compteur de commentaires de la note
+        notes: state.notes.map((note) =>
+          note.id === action.payload.noteId
+            ? { ...note, commentCount: (note.commentCount || 0) + 1 }
+            : note
+        ),
+      };
+
+    case "UPDATE_COMMENT":
+      return {
+        ...state,
+        comments: state.comments.map((comment) =>
+          comment.id === action.payload.id
+            ? { ...comment, ...action.payload.comment }
+            : comment
+        ),
+      };
+
+    case "DELETE_COMMENT": {
+      const deletedComment = state.comments.find(
+        (c) => c.id === action.payload
+      );
+      return {
+        ...state,
+        comments: state.comments.filter(
+          (comment) => comment.id !== action.payload
+        ),
+        // Décrémenter le compteur de commentaires de la note
+        notes: deletedComment
+          ? state.notes.map((note) =>
+              note.id === deletedComment.noteId
+                ? {
+                    ...note,
+                    commentCount: Math.max((note.commentCount || 0) - 1, 0),
+                  }
+                : note
+            )
+          : state.notes,
+      };
+    }
+
+    case "SET_NOTE_COMMENTS":
+      return {
+        ...state,
+        comments: [
+          ...state.comments.filter((c) => c.noteId !== action.payload.noteId),
+          ...action.payload.comments,
+        ],
+      };
+
+    // Note Tasks actions
+    case "SET_NOTE_TASKS":
+      return { ...state, noteTasks: action.payload };
+
+    case "ADD_NOTE_TASK":
+      return {
+        ...state,
+        noteTasks: [action.payload, ...state.noteTasks],
+        notes: state.notes.map((note) =>
+          note.id === action.payload.noteId
+            ? { ...note, taskCount: (note.taskCount || 0) + 1 }
+            : note
+        ),
+      };
+
+    case "UPDATE_NOTE_TASK":
+      return {
+        ...state,
+        noteTasks: state.noteTasks.map((task) =>
+          task.id === action.payload.id
+            ? { ...task, ...action.payload.task }
+            : task
+        ),
+      };
+
+    case "DELETE_NOTE_TASK": {
+      const deletedTask = state.noteTasks.find((t) => t.id === action.payload);
+      return {
+        ...state,
+        noteTasks: state.noteTasks.filter((task) => task.id !== action.payload),
+        notes: deletedTask
+          ? state.notes.map((note) =>
+              note.id === deletedTask.noteId
+                ? {
+                    ...note,
+                    taskCount: Math.max((note.taskCount || 0) - 1, 0),
+                    completedTaskCount: deletedTask.completed
+                      ? Math.max((note.completedTaskCount || 0) - 1, 0)
+                      : note.completedTaskCount,
+                  }
+                : note
+            )
+          : state.notes,
+      };
+    }
+
+    case "TOGGLE_NOTE_TASK": {
+      const task = state.noteTasks.find((t) => t.id === action.payload);
+      return {
+        ...state,
+        noteTasks: state.noteTasks.map((t) =>
+          t.id === action.payload ? { ...t, completed: !t.completed } : t
+        ),
+        notes: task
+          ? state.notes.map((note) =>
+              note.id === task.noteId
+                ? {
+                    ...note,
+                    completedTaskCount: task.completed
+                      ? Math.max((note.completedTaskCount || 0) - 1, 0)
+                      : (note.completedTaskCount || 0) + 1,
+                  }
+                : note
+            )
+          : state.notes,
+      };
+    }
+
+    case "SET_NOTE_TASKS_FOR_NOTE":
+      return {
+        ...state,
+        noteTasks: [
+          ...state.noteTasks.filter((t) => t.noteId !== action.payload.noteId),
+          ...action.payload.tasks,
+        ],
+      };
+
     default:
       return state;
   }
@@ -505,6 +677,30 @@ export const useBlocNote = () => {
 export const useUI = () => {
   const { state } = useApp();
   return state.ui;
+};
+export const useComments = () => {
+  const { state } = useApp();
+  return {
+    comments: state.comments,
+    loading: state.loadingStates.comments,
+    getCommentsByNoteId: (noteId: number) =>
+      state.comments.filter((comment) => comment.noteId === noteId),
+  };
+};
+
+export const useNoteTasks = () => {
+  const { state } = useApp();
+  return {
+    noteTasks: state.noteTasks,
+    loading: state.loadingStates.noteTasks,
+    getTasksByNoteId: (noteId: number) =>
+      state.noteTasks.filter(
+        (task) => task.noteId === noteId && !task.parentId
+      ),
+    getPendingTasks: () => state.noteTasks.filter((task) => !task.completed),
+    getTasksByParentId: (parentId: number) =>
+      state.noteTasks.filter((task) => task.parentId === parentId),
+  };
 };
 
 export type { AppState };

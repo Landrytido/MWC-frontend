@@ -13,6 +13,8 @@ import {
   CreateLabelForm,
   Task,
   CreateTaskForm,
+  Comment,
+  NoteTask,
 } from "../types";
 
 // API Base URL
@@ -468,6 +470,177 @@ export const useApiService = () => {
     [fetchWithAuth, dispatch]
   );
 
+  const commentsApi = useMemo(
+    () => ({
+      getByNoteId: async (noteId: number) => {
+        setLoading("comments", true);
+        try {
+          const comments = await fetchWithAuth(`/comments/notes/${noteId}`);
+          dispatch({
+            type: "SET_NOTE_COMMENTS",
+            payload: { noteId, comments },
+          });
+          setLoading("comments", false);
+          return comments;
+        } catch (error) {
+          setLoading(
+            "comments",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getMyComments: async () => {
+        setLoading("comments", true);
+        try {
+          const comments = await fetchWithAuth("/comments/my-comments");
+          dispatch({ type: "SET_COMMENTS", payload: comments });
+          setLoading("comments", false);
+          return comments;
+        } catch (error) {
+          setLoading(
+            "comments",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      create: async (noteId: number, content: string): Promise<Comment> => {
+        const created = await fetchWithAuth(`/comments/notes/${noteId}`, {
+          method: "POST",
+          body: JSON.stringify({ content }),
+        });
+        dispatch({ type: "ADD_COMMENT", payload: created });
+        return created;
+      },
+
+      update: async (id: number, content: string): Promise<Comment> => {
+        const updated = await fetchWithAuth(`/comments/${id}`, {
+          method: "PUT",
+          body: JSON.stringify({ content }),
+        });
+        dispatch({
+          type: "UPDATE_COMMENT",
+          payload: { id, comment: updated },
+        });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/comments/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_COMMENT", payload: id });
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
+  const noteTasksApi = useMemo(
+    () => ({
+      getByNoteId: async (noteId: number) => {
+        setLoading("noteTasks", true);
+        try {
+          const tasks = await fetchWithAuth(`/note-tasks/notes/${noteId}`);
+          dispatch({
+            type: "SET_NOTE_TASKS_FOR_NOTE",
+            payload: { noteId, tasks },
+          });
+          setLoading("noteTasks", false);
+          return tasks;
+        } catch (error) {
+          setLoading(
+            "noteTasks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getMyTasks: async () => {
+        setLoading("noteTasks", true);
+        try {
+          const tasks = await fetchWithAuth("/note-tasks/my-tasks");
+          dispatch({ type: "SET_NOTE_TASKS", payload: tasks });
+          setLoading("noteTasks", false);
+          return tasks;
+        } catch (error) {
+          setLoading(
+            "noteTasks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getPendingTasks: async () => {
+        return await fetchWithAuth("/note-tasks/my-tasks/pending");
+      },
+
+      getById: async (id: number): Promise<NoteTask> => {
+        return await fetchWithAuth(`/note-tasks/${id}`);
+      },
+
+      create: async (
+        noteId: number,
+        title: string,
+        parentId?: number
+      ): Promise<NoteTask> => {
+        const created = await fetchWithAuth(`/note-tasks/notes/${noteId}`, {
+          method: "POST",
+          body: JSON.stringify({ title, parentId }),
+        });
+        dispatch({ type: "ADD_NOTE_TASK", payload: created });
+        return created;
+      },
+
+      createSubtask: async (
+        parentId: number,
+        title: string
+      ): Promise<NoteTask> => {
+        const created = await fetchWithAuth(
+          `/note-tasks/${parentId}/subtasks`,
+          {
+            method: "POST",
+            body: JSON.stringify({ title }),
+          }
+        );
+        dispatch({ type: "ADD_NOTE_TASK", payload: created });
+        return created;
+      },
+
+      update: async (
+        id: number,
+        data: Partial<NoteTask>
+      ): Promise<NoteTask> => {
+        const updated = await fetchWithAuth(`/note-tasks/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+        dispatch({ type: "UPDATE_NOTE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      toggle: async (id: number): Promise<NoteTask> => {
+        const updated = await fetchWithAuth(`/note-tasks/${id}/toggle`, {
+          method: "PUT",
+        });
+        dispatch({ type: "UPDATE_NOTE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/note-tasks/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_NOTE_TASK", payload: id });
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
   // ✅ Return ALL memoized APIs
   return useMemo(
     () => ({
@@ -478,6 +651,8 @@ export const useApiService = () => {
       blocNote: blocNoteApi,
       user: userApi,
       tasks: tasksApi,
+      comments: commentsApi,
+      noteTasks: noteTasksApi,
     }),
     [
       notesApi,
@@ -487,6 +662,8 @@ export const useApiService = () => {
       blocNoteApi,
       userApi,
       tasksApi,
+      commentsApi,
+      noteTasksApi,
     ]
   );
 };

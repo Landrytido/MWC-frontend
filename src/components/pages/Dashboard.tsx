@@ -11,6 +11,7 @@ import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
+import PendingTasksWidget from "../dashboard/PendingTasksWidget";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const Dashboard: React.FC = () => {
             api.links.getAll(),
             api.blocNote.get(),
             api.tasks.getAll(),
+            api.noteTasks.getMyTasks(),
           ]).then(() => {
             console.log("✅ Dashboard data initialized");
           });
@@ -67,6 +69,13 @@ const Dashboard: React.FC = () => {
   const handleEditNote = useCallback(
     (note: Note) => {
       navigate(`/dashboard/notes/${note.id}`);
+    },
+    [navigate]
+  );
+
+  const handleViewNote = useCallback(
+    (note: Note) => {
+      navigate(`/dashboard/notes/${note.id}/view`);
     },
     [navigate]
   );
@@ -153,6 +162,7 @@ const Dashboard: React.FC = () => {
             <NotebookSidebar />
             <LabelManager />
             <BlocNoteWidget />
+            <PendingTasksWidget className="mt-6" />
           </div>
 
           {/* Main Content */}
@@ -367,6 +377,7 @@ const Dashboard: React.FC = () => {
                         note={note}
                         onEdit={handleEditNote}
                         onDelete={() => handleDeleteNote(note.id)}
+                        onView={handleViewNote}
                       />
                     ))}
                   </div>

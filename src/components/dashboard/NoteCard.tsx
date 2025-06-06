@@ -4,10 +4,16 @@ import { Note } from "../types/index";
 interface NoteCardProps {
   note: Note;
   onEdit: (note: Note) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
+  onView?: (note: Note) => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
+const NoteCard: React.FC<NoteCardProps> = ({
+  note,
+  onEdit,
+  onDelete,
+  onView,
+}) => {
   const formattedDate = note.createdAt
     ? new Date(note.createdAt).toLocaleDateString("fr-FR", {
         day: "numeric",
@@ -19,7 +25,12 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
   return (
     <div className="bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-800">{note.title}</h3>
+        <h3
+          className="font-semibold text-gray-800 cursor-pointer hover:text-teal-600 transition-colors"
+          onClick={() => onView?.(note)}
+        >
+          {note.title}
+        </h3>{" "}
         <div className="flex space-x-2">
           <button
             onClick={() => onEdit(note)}
@@ -63,7 +74,52 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
       </div>
 
       <p className="text-gray-600 mb-3 whitespace-pre-line">{note.content}</p>
+      {((note.commentCount ?? 0) > 0 || (note.taskCount ?? 0) > 0) && (
+        <div className="flex items-center space-x-4 mb-2 text-xs text-gray-500">
+          {(note.commentCount ?? 0) > 0 && (
+            <span className="flex items-center space-x-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>
+                {note.commentCount} commentaire
+                {(note.commentCount ?? 0) > 1 ? "s" : ""}
+              </span>
+            </span>
+          )}
 
+          {(note.taskCount ?? 0) > 0 && (
+            <span className="flex items-center space-x-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              <span>
+                {note.completedTaskCount || 0}/{note.taskCount} tâches
+              </span>
+            </span>
+          )}
+        </div>
+      )}
       <p className="text-xs text-gray-400">{formattedDate}</p>
     </div>
   );

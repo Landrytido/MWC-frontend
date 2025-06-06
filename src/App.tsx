@@ -25,6 +25,7 @@ import EditNote from "./components/pages/EditNote";
 import CreateLink from "./components/pages/CreateLink";
 import EditLink from "./components/pages/EditLink";
 import { AppProvider } from "./components/contexts/AppContext";
+import NoteDetail from "./components/pages/NoteDetail";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =
@@ -168,6 +169,7 @@ const App: React.FC = () => {
                       <Route path="/settings" element={<UserSettings />} />
                       <Route path="/notes/new" element={<CreateNote />} />
                       <Route path="/notes/:id" element={<EditNote />} />
+                      <Route path="/notes/:id/view" element={<NoteDetail />} />
                       <Route path="/links/new" element={<CreateLink />} />
                       <Route path="/links/:id" element={<EditLink />} />
                     </Routes>

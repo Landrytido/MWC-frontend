@@ -33,6 +33,7 @@ export interface Note {
   notebookId?: number;
   notebookTitle?: string;
   labels?: Label[];
+  comments?: Comment[];
 }
 
 export interface Comment {
@@ -203,4 +204,17 @@ export interface DashboardStats {
   pendingTasksCount: number;
   notebooksCount: number;
   labelsCount: number;
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  noteId: number;
+  createdAt: string;
+  author: User;
+}
+
+export interface CreateCommentForm {
+  content: string;
+  noteId: number;
 }
