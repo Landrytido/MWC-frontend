@@ -26,6 +26,7 @@ import CreateLink from "./components/pages/CreateLink";
 import EditLink from "./components/pages/EditLink";
 import { AppProvider } from "./components/contexts/AppContext";
 import NoteDetail from "./components/pages/NoteDetail";
+import VerifyEmail from "./components/pages/VerifyEmail";
 
 // Récupération de la clé Clerk API depuis .env
 const clerkPubKey =
@@ -180,6 +181,7 @@ const App: React.FC = () => {
                 </>
               }
             />
+            <Route path="/verify-email" element={<VerifyEmail />} />
           </Routes>
         </Router>
       </ClerkProvider>
