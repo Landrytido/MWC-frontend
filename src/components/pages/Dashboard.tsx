@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 import Layout from "../layout/Layout";
 import NoteCard from "../dashboard/NoteCard";
 import LinkCard from "../dashboard/LinkCard";
@@ -15,7 +15,7 @@ import PendingTasksWidget from "../dashboard/PendingTasksWidget";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { state: authState } = useAuth();
   const { state, dispatch } = useApp();
   const { notes, filteredNotes, loading: notesLoading } = useNotes();
   const { links, loading: linksLoading } = useLinks();
@@ -25,11 +25,11 @@ const Dashboard: React.FC = () => {
     "notes"
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const initializationRef = useRef(false); // ✅ Contrôle d'initialisation
+  const initializationRef = useRef(false);
 
   // ✅ FIX 1: Initialize data only once per session
   useEffect(() => {
-    if (!initializationRef.current && user) {
+    if (!initializationRef.current && authState.user) {
       console.log("🚀 Initializing dashboard data...");
       initializationRef.current = true;
 
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
 
       initializeData();
     }
-  }, [user?.id]); // ✅ Dépendance fixe sur user.id seulement
+  }, [authState.user?.id]); // ✅ Dépendance fixe sur user.id seulement
 
   // ✅ FIX 2: Debounced search update
   useEffect(() => {
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800">
-            Bonjour, {user?.firstName || "utilisateur"} 👋
+            Bonjour, {authState.user?.firstName || "utilisateur"} 👋
           </h1>
           <p className="text-gray-600">
             Bienvenue sur votre tableau de bord My Web Companion
@@ -316,7 +316,6 @@ const Dashboard: React.FC = () => {
               >
                 Liens Sauvegardés ({links.length})
               </button>
-              {/* ✅ NOUVEAU TAB */}
               <button
                 className={`px-4 py-2 font-medium text-sm ${
                   activeTab === "tasks"

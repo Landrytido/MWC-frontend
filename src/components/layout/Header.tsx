@@ -1,17 +1,29 @@
+// src/components/layout/Header.tsx (Version mise à jour)
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header: React.FC = () => {
-  const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
+  const { state, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Rediriger quand même en cas d'erreur
+      navigate("/");
+    }
+  };
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    const first = firstName?.charAt(0) || "";
+    const last = lastName?.charAt(0) || "";
+    return (first + last).toUpperCase() || "U";
   };
 
   return (
@@ -36,7 +48,8 @@ const Header: React.FC = () => {
             <Link to="/privacy" className="text-gray-600 hover:text-teal-500">
               Confidentialité
             </Link>
-            {!isSignedIn ? (
+
+            {!state.isAuthenticated ? (
               <>
                 <Link
                   to="/signup"
@@ -55,10 +68,10 @@ const Header: React.FC = () => {
                   className="flex items-center text-gray-600 hover:text-teal-500 focus:outline-none"
                 >
                   <span className="mr-2">
-                    {user?.firstName || "Utilisateur"}
+                    {state.user?.firstName || "Utilisateur"}
                   </span>
-                  <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
-                    {user?.firstName?.charAt(0) || "U"}
+                  <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white text-sm font-medium">
+                    {getInitials(state.user?.firstName, state.user?.lastName)}
                   </div>
                   <svg
                     className="ml-1 h-5 w-5"
@@ -77,6 +90,13 @@ const Header: React.FC = () => {
 
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Tableau de bord
+                    </Link>
                     <Link
                       to="/dashboard/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -146,8 +166,15 @@ const Header: React.FC = () => {
             >
               Pourquoi My Web Companion ?
             </Link>
+            <Link
+              to="/privacy"
+              className="block text-gray-600 hover:text-teal-500"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Confidentialité
+            </Link>
 
-            {!isSignedIn ? (
+            {!state.isAuthenticated ? (
               <>
                 <Link
                   to="/signup"
@@ -167,6 +194,13 @@ const Header: React.FC = () => {
             ) : (
               <>
                 <Link
+                  to="/dashboard"
+                  className="block text-gray-600 hover:text-teal-500"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Tableau de bord
+                </Link>
+                <Link
                   to="/dashboard/settings"
                   className="block text-gray-600 hover:text-teal-500"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -184,14 +218,6 @@ const Header: React.FC = () => {
                 </button>
               </>
             )}
-
-            <Link
-              to="/privacy"
-              className="block text-gray-600 hover:text-teal-500"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Confidentialité
-            </Link>
           </nav>
         )}
       </div>

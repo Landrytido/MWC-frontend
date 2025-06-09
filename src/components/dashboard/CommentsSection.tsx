@@ -1,5 +1,6 @@
+// src/components/dashboard/CommentsSection.tsx (Version mise à jour)
 import React, { useState, useEffect, useCallback } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 import { useComments } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import CommentCard from "./CommentCard";
@@ -13,7 +14,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   noteId,
   className = "",
 }) => {
-  const { user } = useUser();
+  const { state } = useAuth();
   const { getCommentsByNoteId, loading } = useComments();
   const api = useApiService();
 
@@ -77,6 +78,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
     [api.comments]
   );
 
+  const getInitials = (firstName?: string, lastName?: string) => {
+    const first = firstName?.charAt(0) || "";
+    const last = lastName?.charAt(0) || "";
+    return (first + last).toUpperCase() || "?";
+  };
+
   return (
     <div className={`${className}`}>
       {/* Header */}
@@ -93,9 +100,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
             {/* Avatar de l'utilisateur actuel */}
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                {user?.firstName?.charAt(0) ||
-                  user?.primaryEmailAddress?.emailAddress?.charAt(0) ||
-                  "?"}
+                {getInitials(state.user?.firstName, state.user?.lastName)}
               </div>
             </div>
 
@@ -158,7 +163,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
               <CommentCard
                 key={comment.id}
                 comment={comment}
-                currentUserClerkId={user?.id || ""}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />

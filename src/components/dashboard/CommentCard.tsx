@@ -1,23 +1,23 @@
 import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { Comment } from "../types/index";
 
 interface CommentCardProps {
   comment: Comment;
-  currentUserClerkId: string;
   onEdit: (id: number, content: string) => void;
   onDelete: (id: number) => void;
 }
 
 const CommentCard: React.FC<CommentCardProps> = ({
   comment,
-  currentUserClerkId,
   onEdit,
   onDelete,
 }) => {
+  const { state } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
 
-  const isOwnComment = comment.author.clerkId === currentUserClerkId;
+  const isOwnComment = comment.author.id === state.user?.id;
 
   const handleSave = () => {
     if (editContent.trim() && editContent !== comment.content) {

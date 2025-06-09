@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp, useLabels } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 
@@ -18,11 +18,29 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
   } | null>(null);
   const [error, setError] = useState("");
 
+  const labelsLoadedRef = useRef(false);
+
   useEffect(() => {
-    if (labels.length === 0 && !loading.isLoading) {
-      api.labels.getAll();
+    const shouldLoadLabels =
+      !labelsLoadedRef.current && labels.length === 0 && !loading.isLoading;
+
+    if (shouldLoadLabels) {
+      console.log("🚀 Loading labels...");
+      labelsLoadedRef.current = true;
+
+      api.labels.getAll().catch((error) => {
+        console.error("❌ Error loading labels:", error);
+        labelsLoadedRef.current = false; // ✅ Permettre un retry en cas d'erreur
+      });
     }
-  }, [labels.length, loading.isLoading]);
+  }, []); // ✅ Dépendances vides - exécution une seule fois
+
+  // ✅ Marquer comme chargé quand on reçoit des données
+  useEffect(() => {
+    if (labels.length > 0) {
+      labelsLoadedRef.current = true;
+    }
+  }, [labels.length]);
 
   const handleCreateLabel = async (e: React.FormEvent) => {
     e.preventDefault();

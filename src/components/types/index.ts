@@ -1,9 +1,14 @@
+// src/components/types/index.ts (Version mise à jour)
 // Enhanced types aligned with backend DTOs
 export interface User {
-  clerkId: string;
+  id: number;
   email: string;
   firstName?: string;
   lastName?: string;
+  enabled: boolean;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Notebook {
@@ -27,6 +32,7 @@ export interface Note {
   title: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
   commentCount?: number;
   taskCount?: number;
   completedTaskCount?: number;
@@ -50,6 +56,7 @@ export interface SavedLink {
   title: string;
   description?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface LinkGroup {
@@ -107,6 +114,7 @@ export interface NoteTask {
   subtasks?: NoteTask[];
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
   totalSubtasks?: number;
   completedSubtasks?: number;
 }
@@ -178,6 +186,11 @@ export interface CreateDailyTaskForm {
   priority: number;
 }
 
+export interface CreateCommentForm {
+  content: string;
+  noteId: number;
+}
+
 // Filter and sorting types
 export interface NotesFilter {
   notebookId?: number;
@@ -204,17 +217,4 @@ export interface DashboardStats {
   pendingTasksCount: number;
   notebooksCount: number;
   labelsCount: number;
-}
-
-export interface Comment {
-  id: number;
-  content: string;
-  noteId: number;
-  createdAt: string;
-  author: User;
-}
-
-export interface CreateCommentForm {
-  content: string;
-  noteId: number;
 }
