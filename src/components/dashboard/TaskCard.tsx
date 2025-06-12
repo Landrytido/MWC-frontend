@@ -1,6 +1,5 @@
-// src/components/dashboard/TaskCard.tsx - Version corrigée
 import React from "react";
-import { Task, PRIORITY_LABELS, getTaskStatus } from "../types";
+import { Task, PRIORITY_LABELS, getTaskStatus, TaskPriority } from "../types";
 
 interface TaskCardProps {
   task: Task;
@@ -8,9 +7,6 @@ interface TaskCardProps {
   onDelete: (id: number) => void;
   onToggle: (id: number) => void;
   showScheduleInfo?: boolean;
-  isSelected?: boolean;
-  onSelect?: (selected: boolean) => void;
-  showSelection?: boolean;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -19,17 +15,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onDelete,
   onToggle,
   showScheduleInfo = false,
-  isSelected = false,
-  onSelect,
-  showSelection = false,
 }) => {
-  const status = getTaskStatus(task);
-  const priorityConfig = PRIORITY_LABELS[task.priority];
+  const status = getTaskStatus(task); // Utilise votre fonction existante
+
+  // ✅ FIX: Gestion sécurisée de la priorité avec valeur par défaut
+  const priorityConfig =
+    PRIORITY_LABELS[task.priority] || PRIORITY_LABELS[TaskPriority.MEDIUM];
 
   const formattedDueDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("fr-FR", {
         day: "numeric",
-        month: "long",
+        month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
@@ -39,65 +35,74 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const formattedScheduledDate = task.scheduledDate
     ? new Date(task.scheduledDate).toLocaleDateString("fr-FR", {
         day: "numeric",
-        month: "long",
+        month: "short",
       })
     : null;
 
+  // ✅ Fonction pour obtenir la couleur du badge de priorité avec gestion d'erreur
+  const getPriorityBadgeColor = () => {
+    // Vérifier que la priorité est valide
+    if (!task.priority || ![1, 2, 3].includes(task.priority)) {
+      return "bg-gray-50 text-gray-700 border border-gray-200"; // Valeur par défaut
+    }
+
+    switch (task.priority) {
+      case 3: // HIGH
+        return "bg-red-50 text-red-700 border border-red-200";
+      case 2: // MEDIUM
+        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
+      case 1: // LOW
+        return "bg-gray-50 text-gray-700 border border-gray-200";
+      default:
+        return "bg-gray-50 text-gray-700 border border-gray-200";
+    }
+  };
+
+  // ✅ Fonction pour obtenir le badge de statut
   const getStatusDisplay = () => {
     switch (status) {
       case "completed":
-        return { text: "✅ Terminée", color: "text-green-600 bg-green-50" };
+        return { text: "✓ Terminée", color: "text-green-600", show: true };
       case "overdue":
-        return { text: "⚠️ En retard", color: "text-red-600 bg-red-50" };
+        return {
+          text: "(En retard)",
+          color: "text-red-600 font-medium",
+          show: true,
+        };
       case "today":
-        return { text: "📅 Aujourd'hui", color: "text-blue-600 bg-blue-50" };
+        return {
+          text: "Aujourd'hui",
+          color: "text-blue-600",
+          show: showScheduleInfo,
+        };
       case "tomorrow":
-        return { text: "🗓️ Demain", color: "text-purple-600 bg-purple-50" };
+        return {
+          text: "Demain",
+          color: "text-purple-600",
+          show: showScheduleInfo,
+        };
       default:
-        return { text: "📝 À faire", color: "text-gray-600 bg-gray-50" };
+        return { text: "", color: "", show: false };
     }
   };
 
   const statusDisplay = getStatusDisplay();
 
-  const getPriorityBorderColor = () => {
-    switch (task.priority) {
-      case 3:
-        return "border-red-500"; // Haute
-      case 2:
-        return "border-blue-500"; // Moyenne
-      case 1:
-        return "border-gray-500"; // Basse
-      default:
-        return "border-gray-300";
-    }
-  };
-
   return (
     <div
-      className={`bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow border-l-4 ${getPriorityBorderColor()} ${
-        isSelected ? "ring-2 ring-blue-500" : ""
+      className={`group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 ${
+        task.completed ? "bg-gray-50 opacity-90" : "hover:border-gray-300"
       }`}
     >
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
-          {/* Checkbox de sélection */}
-          {showSelection && onSelect && (
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={(e) => onSelect(e.target.checked)}
-              className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          )}
-
-          {/* Checkbox pour toggle */}
+          {/* Checkbox */}
           <button
             onClick={() => onToggle(task.id)}
             className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
               task.completed
                 ? "bg-green-500 border-green-500 text-white"
-                : "border-gray-300 hover:border-green-500"
+                : "border-gray-300 hover:border-green-400 hover:bg-green-50"
             }`}
           >
             {task.completed && (
@@ -111,35 +116,39 @@ const TaskCard: React.FC<TaskCardProps> = ({
             )}
           </button>
 
-          <div className="flex-1">
-            {/* Titre et priorité */}
-            <div className="flex items-center space-x-2 mb-1">
+          {/* Contenu */}
+          <div className="flex-1 min-w-0">
+            {/* Titre et badges */}
+            <div className="flex items-start flex-wrap gap-2 mb-2">
               <h3
-                className={`font-semibold ${
+                className={`font-medium text-base leading-tight ${
                   task.completed
                     ? "line-through text-gray-500"
-                    : "text-gray-800"
+                    : "text-gray-900"
                 }`}
               >
                 {task.title}
               </h3>
 
-              {/* Badge de priorité */}
-              <span
-                className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                  task.priority === 3
-                    ? "bg-red-100 text-red-800"
-                    : task.priority === 2
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {priorityConfig.icon} {priorityConfig.label}
-              </span>
+              {/* Badge de priorité - Style similaire à votre image avec protection */}
+              {priorityConfig && (
+                <span
+                  className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${getPriorityBadgeColor()}`}
+                >
+                  {priorityConfig.icon} {priorityConfig.label}
+                </span>
+              )}
 
-              {/* Badge "Reportée" si carriedOver */}
+              {/* Badge de statut */}
+              {statusDisplay.show && (
+                <span className={`text-xs ${statusDisplay.color}`}>
+                  {statusDisplay.text}
+                </span>
+              )}
+
+              {/* Badge "Reportée" */}
               {task.carriedOver && (
-                <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-orange-50 text-orange-700 border border-orange-200">
                   📅 Reportée
                 </span>
               )}
@@ -148,21 +157,79 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {/* Description */}
             {task.description && (
               <p
-                className={`text-sm mt-1 ${
+                className={`text-sm mt-2 leading-relaxed ${
                   task.completed ? "text-gray-400" : "text-gray-600"
                 }`}
               >
                 {task.description}
               </p>
             )}
+
+            {/* Informations de dates */}
+            {(formattedDueDate ||
+              (showScheduleInfo && formattedScheduledDate)) && (
+              <div className="flex items-center space-x-4 mt-3 text-xs">
+                {formattedDueDate && (
+                  <span
+                    className={`flex items-center ${
+                      status === "overdue"
+                        ? "text-red-600 font-medium"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Échéance: {formattedDueDate}
+                  </span>
+                )}
+
+                {showScheduleInfo && formattedScheduledDate && (
+                  <span className="flex items-center text-gray-500">
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Planifiée: {formattedScheduledDate}
+                  </span>
+                )}
+
+                {/* Date originale si reportée */}
+                {task.carriedOver && task.originalDate && (
+                  <span className="text-orange-600">
+                    Initialement:{" "}
+                    {new Date(task.originalDate).toLocaleDateString("fr-FR")}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex space-x-2 ml-4">
+        {/* Actions - Apparaissent au hover */}
+        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
           <button
             onClick={() => onEdit(task)}
-            className="text-gray-400 hover:text-blue-500 transition-colors"
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Modifier la tâche"
           >
             <svg
@@ -179,9 +246,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
               />
             </svg>
           </button>
+
           <button
             onClick={() => onDelete(task.id)}
-            className="text-gray-400 hover:text-red-500 transition-colors"
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Supprimer la tâche"
           >
             <svg
@@ -201,51 +269,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Informations de statut et dates */}
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center space-x-3">
-          {/* Statut */}
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${statusDisplay.color}`}
-          >
-            {statusDisplay.text}
+      {/* Ligne de séparation subtile en bas si ce n'est pas la dernière tâche */}
+      <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span>
+            Créée le {new Date(task.createdAt).toLocaleDateString("fr-FR")}
           </span>
-
-          {/* Infos de planification (seulement dans l'onglet "Toutes") */}
-          {showScheduleInfo && task.scheduledDate && (
-            <span className="text-xs text-gray-500">
-              📅 Planifiée: {formattedScheduledDate}
+          {task.completedAt && (
+            <span>
+              Terminée le{" "}
+              {new Date(task.completedAt).toLocaleDateString("fr-FR")}
             </span>
           )}
         </div>
-
-        {/* Date d'échéance */}
-        {formattedDueDate && (
-          <span
-            className={`text-xs ${
-              status === "overdue"
-                ? "text-red-600 font-medium"
-                : "text-gray-500"
-            }`}
-          >
-            ⏰ {formattedDueDate}
-          </span>
-        )}
-      </div>
-
-      {/* Date de création et infos supplémentaires */}
-      <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
-        <span>
-          Créée le {new Date(task.createdAt).toLocaleDateString("fr-FR")}
-        </span>
-
-        {/* Afficher la date originale si reportée */}
-        {task.carriedOver && task.originalDate && (
-          <span className="text-orange-600">
-            Initialement:{" "}
-            {new Date(task.originalDate).toLocaleDateString("fr-FR")}
-          </span>
-        )}
       </div>
     </div>
   );
