@@ -18,7 +18,6 @@ import {
   Comment,
   NoteTask,
   TaskPriority,
-  TaskStatus,
   TaskStats,
 } from "../types";
 
@@ -89,10 +88,10 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // ⭐ TASKS API AMÉLIORÉ avec nouvelles fonctionnalités
+  // ⭐ TASKS API CORRIGÉ pour correspondre au backend Spring Boot
   const tasksApi = useMemo(
     () => ({
-      // ⭐ Méthodes existantes mises à jour
+      // ✅ Méthodes de base qui correspondent aux endpoints du backend
       getAll: async () => {
         setLoading("tasks", true);
         try {
@@ -110,115 +109,54 @@ export const useApiService = () => {
         }
       },
 
-      // ⭐ NOUVELLES MÉTHODES pour filtres avancés
-      getByPriority: async (priority: TaskPriority): Promise<Task[]> => {
-        return await fetchWithAuth(`/tasks/priority/${priority}`);
+      // ✅ Méthodes existantes qui correspondent au backend
+      getPending: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/pending");
       },
 
-      getByStatus: async (status: TaskStatus): Promise<Task[]> => {
-        return await fetchWithAuth(`/tasks/status/${status}`);
-      },
-
-      searchTasks: async (query: string): Promise<Task[]> => {
-        return await fetchWithAuth(
-          `/tasks/search?query=${encodeURIComponent(query)}`
-        );
-      },
-
-      getByTag: async (tag: string): Promise<Task[]> => {
-        return await fetchWithAuth(`/tasks/tags/${encodeURIComponent(tag)}`);
-      },
-
-      getDueThisWeek: async (): Promise<Task[]> => {
-        return await fetchWithAuth("/tasks/due-this-week");
+      getCompleted: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/completed");
       },
 
       getOverdue: async (): Promise<Task[]> => {
         return await fetchWithAuth("/tasks/overdue");
       },
 
-      // ⭐ Pagination
-      getPaginated: async (
-        page = 0,
-        size = 10,
-        sortBy = "priority",
-        sortDir = "desc"
-      ): Promise<{
-        content: Task[];
-        totalPages: number;
-        totalElements: number;
-      }> => {
+      getTodayTasks: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/today");
+      },
+
+      getTomorrowTasks: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/tomorrow");
+      },
+
+      getTasksByDate: async (date: string): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/by-date?date=${date}`);
+      },
+
+      getCarriedOverTasks: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/carried-over");
+      },
+
+      getDueInDays: async (days: number): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/due-in-days?days=${days}`);
+      },
+
+      searchTasks: async (keyword: string): Promise<Task[]> => {
         return await fetchWithAuth(
-          `/tasks/paginated?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`
+          `/tasks/search?keyword=${encodeURIComponent(keyword)}`
         );
       },
 
-      // ⭐ GESTION DES SOUS-TÂCHES
-      createSubTask: async (
-        parentTaskId: number,
-        task: CreateTaskForm
-      ): Promise<Task> => {
-        const created = await fetchWithAuth(`/tasks/${parentTaskId}/subtasks`, {
-          method: "POST",
-          body: JSON.stringify(task),
-        });
-        dispatch({ type: "ADD_TASK", payload: created });
-        return created;
+      getTasksByPriority: async (priority: TaskPriority): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/by-priority?priority=${priority}`);
       },
 
-      getSubTasks: async (parentTaskId: number): Promise<Task[]> => {
-        return await fetchWithAuth(`/tasks/${parentTaskId}/subtasks`);
-      },
-
-      // ⭐ STATISTIQUES AVANCÉES
-      getStatistics: async (): Promise<TaskStats> => {
-        return await fetchWithAuth("/tasks/statistics");
-      },
-
-      getStatisticsSummary: async (): Promise<{
-        total: number;
-        completed: number;
-        pending: number;
-        overdue: number;
-        completionRate: number;
-      }> => {
-        return await fetchWithAuth("/tasks/statistics/summary");
-      },
-
-      // ⭐ OPÉRATIONS EN MASSE
-      updateStatusBatch: async (
-        taskIds: number[],
-        status: TaskStatus
-      ): Promise<void> => {
-        await fetchWithAuth("/tasks/batch/status", {
-          method: "PUT",
-          body: JSON.stringify({ taskIds, status: status.toString() }),
-        });
-        // Recharger les tâches après modification en masse
-        await tasksApi.getAll();
-      },
-
-      deleteBatch: async (taskIds: number[]): Promise<void> => {
-        await fetchWithAuth("/tasks/batch", {
-          method: "DELETE",
-          body: JSON.stringify({ taskIds }),
-        });
-        // Supprimer les tâches du state
-        taskIds.forEach((id) => {
-          dispatch({ type: "DELETE_TASK", payload: id });
-        });
-      },
-
-      // ⭐ Méthodes existantes mises à jour
+      // ✅ CRUD operations
       create: async (task: CreateTaskForm): Promise<Task> => {
         const created = await fetchWithAuth("/tasks", {
           method: "POST",
-          body: JSON.stringify({
-            ...task,
-            priority: task.priority || TaskPriority.MEDIUM,
-            status: task.status || TaskStatus.TODO,
-            tags: task.tags || [],
-          }),
+          body: JSON.stringify(task),
         });
         dispatch({ type: "ADD_TASK", payload: created });
         return created;
@@ -250,27 +188,100 @@ export const useApiService = () => {
         return await fetchWithAuth(`/tasks/${id}`);
       },
 
-      // ⭐ MÉTHODES UTILITAIRES pour les filtres
-      getPending: async (): Promise<Task[]> => {
-        return await fetchWithAuth("/tasks/pending");
+      // ✅ Statistiques (si disponibles dans le backend)
+      getStatistics: async (): Promise<any> => {
+        try {
+          return await fetchWithAuth("/tasks/summary");
+        } catch (error) {
+          // Si l'endpoint n'existe pas, retourner des stats calculées côté client
+          const tasks = await fetchWithAuth("/tasks");
+          const completed = tasks.filter((t: Task) => t.completed).length;
+          const total = tasks.length;
+          return {
+            totalTasks: total,
+            completedTasks: completed,
+            pendingTasks: total - completed,
+            overdueTasks: 0, // À calculer côté client si nécessaire
+            completionRate: total > 0 ? (completed / total) * 100 : 0,
+          };
+        }
       },
 
-      getCompleted: async (): Promise<Task[]> => {
-        return await fetchWithAuth("/tasks/completed");
+      getMonthlyStats: async (
+        year: number,
+        month: number
+      ): Promise<TaskStats> => {
+        try {
+          return await fetchWithAuth(
+            `/tasks/stats/monthly?year=${year}&month=${month}`
+          );
+        } catch (error) {
+          console.warn("Monthly stats endpoint not available, using fallback");
+          // Fallback: retourner des stats vides ou calculées côté client
+          return {
+            totalTasks: 0,
+            completedTasks: 0,
+            notCompletedTasks: 0,
+            completionPercentage: 0,
+            tasksByPriority: {},
+            dailyStats: {},
+          };
+        }
       },
 
-      getDueInDays: async (days: number): Promise<Task[]> => {
-        return await fetchWithAuth(`/tasks/due-in-days?days=${days}`);
+      // ✅ Nouvelles méthodes de planification
+      endDay: async (
+        date: string,
+        taskIdsToCarryOver: number[]
+      ): Promise<Task[]> => {
+        try {
+          return await fetchWithAuth("/tasks/end-day", {
+            method: "POST",
+            body: JSON.stringify({
+              date,
+              taskIdsToCarryOver,
+              markDayAsCompleted: true,
+            }),
+          });
+        } catch (error) {
+          console.warn("End day endpoint not available");
+          throw error;
+        }
       },
 
+      reorderTasks: async (
+        taskIds: number[],
+        scheduledDate?: string
+      ): Promise<Task[]> => {
+        try {
+          return await fetchWithAuth("/tasks/reorder", {
+            method: "POST",
+            body: JSON.stringify({
+              taskIds,
+              scheduledDate,
+            }),
+          });
+        } catch (error) {
+          console.warn("Reorder tasks endpoint not available");
+          throw error;
+        }
+      },
+
+      // ✅ Compte des tâches en attente
       getPendingCount: async (): Promise<{ count: number }> => {
-        return await fetchWithAuth("/tasks/pending/count");
+        try {
+          return await fetchWithAuth("/tasks/pending/count");
+        } catch (error) {
+          // Fallback: calculer côté client
+          const pendingTasks = await fetchWithAuth("/tasks/pending");
+          return { count: pendingTasks.length };
+        }
       },
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ CONSERVER TOUTES LES AUTRES API EXISTANTES
+  // ✅ CONSERVER TOUTES LES AUTRES API EXISTANTES INCHANGÉES
   const notesApi = useMemo(
     () => ({
       getAll: async () => {

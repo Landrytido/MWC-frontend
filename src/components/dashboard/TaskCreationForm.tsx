@@ -1,4 +1,4 @@
-// src/components/dashboard/TaskCreationForm.tsx
+// src/components/dashboard/TaskCreationForm.tsx - Version corrigée
 import React, { useState } from "react";
 import {
   CreateTaskForm,
@@ -6,6 +6,7 @@ import {
   ScheduleType,
   PRIORITY_LABELS,
   SCHEDULE_LABELS,
+  Task,
 } from "../types";
 
 interface TaskCreationFormProps {
@@ -13,7 +14,7 @@ interface TaskCreationFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   error?: string;
-  editingTask?: any;
+  editingTask?: Task;
 }
 
 const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
@@ -120,7 +121,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
           </label>
           <textarea
             id="description"
-            value={formData.description}
+            value={formData.description || ""}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, description: e.target.value }))
             }
@@ -138,7 +139,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
           </label>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(PRIORITY_LABELS).map(([priority, config]) => {
-              const priorityNum = parseInt(priority);
+              const priorityNum = parseInt(priority) as TaskPriority;
               const isSelected = formData.priority === priorityNum;
 
               return (
@@ -205,7 +206,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
             <input
               id="dueDate"
               type="datetime-local"
-              value={formData.dueDate}
+              value={formData.dueDate || ""}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, dueDate: e.target.value }))
               }

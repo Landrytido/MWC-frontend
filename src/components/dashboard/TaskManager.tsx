@@ -2,13 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useTasks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import TaskCard from "./TaskCard";
-import {
-  Task,
-  CreateTaskForm,
-  TaskPriority,
-  TaskStatus,
-  TaskStats,
-} from "../types";
+import TaskCreationForm from "./TaskCreationForm";
+import { Task, CreateTaskForm, TaskPriority, PRIORITY_LABELS } from "../types";
 
 interface TaskManagerProps {
   className?: string;
@@ -19,29 +14,16 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
     useTasks();
   const api = useApiService();
 
-  // ⭐ États étendus pour les nouvelles fonctionnalités
+  // États pour la gestion des tâches
   const [activeFilter, setActiveFilter] = useState<
-    "all" | "pending" | "completed" | "overdue" | TaskStatus | TaskPriority
+    "all" | "pending" | "completed" | "overdue" | TaskPriority
   >("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
-  const [stats, setStats] = useState<TaskStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [error, setError] = useState("");
-
-  // ⭐ Form state étendu
-  const [formData, setFormData] = useState<CreateTaskForm>({
-    title: "",
-    description: "",
-    dueDate: "",
-    priority: TaskPriority.MEDIUM,
-    status: TaskStatus.TODO,
-    tags: [],
-    estimatedMinutes: undefined,
-    reminderDate: "",
-  });
 
   // Charger les tâches et statistiques au montage
   useEffect(() => {
@@ -61,46 +43,20 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   };
 
   const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      dueDate: "",
-      priority: TaskPriority.MEDIUM,
-      status: TaskStatus.TODO,
-      tags: [],
-      estimatedMinutes: undefined,
-      reminderDate: "",
-    });
     setIsCreating(false);
     setEditingTask(null);
     setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.title.trim()) {
-      setError("Le titre est requis");
-      return;
-    }
-
+  const handleSubmit = async (taskData: CreateTaskForm) => {
     try {
-      const taskData = {
-        ...formData,
-        title: formData.title.trim(),
-        description: formData.description?.trim() || undefined,
-        dueDate: formData.dueDate || undefined,
-        reminderDate: formData.reminderDate || undefined,
-      };
-
       if (editingTask) {
         await api.tasks.update(editingTask.id, taskData);
       } else {
         await api.tasks.create(taskData);
       }
-
       resetForm();
-      loadStatistics(); // Recharger les stats
+      loadStatistics();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
@@ -108,16 +64,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   const handleEdit = useCallback((task: Task) => {
     setEditingTask(task);
-    setFormData({
-      title: task.title,
-      description: task.description || "",
-      dueDate: task.dueDate ? task.dueDate.slice(0, 16) : "",
-      priority: task.priority || TaskPriority.MEDIUM,
-      status: task.status || TaskStatus.TODO,
-      tags: task.tags || [],
-      estimatedMinutes: task.estimatedMinutes,
-      reminderDate: task.reminderDate ? task.reminderDate.slice(0, 16) : "",
-    });
     setIsCreating(true);
   }, []);
 
@@ -149,7 +95,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
     [api.tasks]
   );
 
-  // ⭐ Nouvelles fonctions pour les opérations en masse
+  // Gestion de la sélection
   const handleSelectTask = (taskId: number, selected: boolean) => {
     if (selected) {
       setSelectedTasks((prev) => [...prev, taskId]);
@@ -167,39 +113,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
     setSelectedTasks([]);
   };
 
-  const handleBulkStatusUpdate = async (status: TaskStatus) => {
-    if (selectedTasks.length === 0) return;
-
-    try {
-      await api.tasks.updateStatusBatch(selectedTasks, status);
-      setSelectedTasks([]);
-      loadStatistics();
-    } catch (error) {
-      console.error("Error updating tasks:", error);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedTasks.length === 0) return;
-
-    if (
-      !window.confirm(
-        `Êtes-vous sûr de vouloir supprimer ${selectedTasks.length} tâche(s) ?`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await api.tasks.deleteBatch(selectedTasks);
-      setSelectedTasks([]);
-      loadStatistics();
-    } catch (error) {
-      console.error("Error deleting tasks:", error);
-    }
-  };
-
-  // ⭐ Filtrage avancé
+  // Filtrage des tâches
   const getFilteredTasks = () => {
     let filtered = tasks;
 
@@ -214,17 +128,9 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
       case "overdue":
         filtered = overdueTasks;
         break;
-      case TaskStatus.TODO:
-      case TaskStatus.IN_PROGRESS:
-      case TaskStatus.WAITING:
-      case TaskStatus.COMPLETED:
-      case TaskStatus.CANCELLED:
-        filtered = tasks.filter((task) => task.status === activeFilter);
-        break;
       case TaskPriority.LOW:
       case TaskPriority.MEDIUM:
       case TaskPriority.HIGH:
-      case TaskPriority.URGENT:
         filtered = tasks.filter((task) => task.priority === activeFilter);
         break;
       default:
@@ -237,8 +143,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
       filtered = filtered.filter(
         (task) =>
           task.title.toLowerCase().includes(query) ||
-          task.description?.toLowerCase().includes(query) ||
-          task.tags?.some((tag) => tag.toLowerCase().includes(query))
+          task.description?.toLowerCase().includes(query)
       );
     }
 
@@ -247,37 +152,18 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   const filteredTasks = getFilteredTasks();
 
-  // ⭐ Fonction utilitaire pour les couleurs de priorité
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
-      case TaskPriority.URGENT:
-        return "bg-red-100 text-red-800 border-red-200";
       case TaskPriority.HIGH:
-        return "bg-orange-100 text-orange-800 border-orange-200";
+        return "bg-red-100 text-red-800 border-red-200";
       case TaskPriority.MEDIUM:
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case TaskPriority.LOW:
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.COMPLETED:
-        return "bg-green-100 text-green-800";
-      case TaskStatus.IN_PROGRESS:
-        return "bg-blue-100 text-blue-800";
-      case TaskStatus.WAITING:
-        return "bg-yellow-100 text-yellow-800";
-      case TaskStatus.CANCELLED:
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
       {/* Header avec statistiques */}

@@ -1,114 +1,107 @@
-// src/components/types/index.ts - Version mise à jour pour correspondre au backend
-
-// ⭐ NOUVEAUX ENUMS pour correspondre au backend
 export enum TaskPriority {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-  URGENT = "URGENT",
+  LOW = 1,
+  MEDIUM = 2,
+  HIGH = 3,
 }
 
-export enum TaskStatus {
-  TODO = "TODO",
-  IN_PROGRESS = "IN_PROGRESS",
-  WAITING = "WAITING",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
+export const PRIORITY_LABELS = {
+  [TaskPriority.LOW]: { label: "Basse", icon: "🔹", color: "gray" },
+  [TaskPriority.MEDIUM]: { label: "Moyenne", icon: "🔸", color: "blue" },
+  [TaskPriority.HIGH]: { label: "Haute", icon: "🔴", color: "red" },
+} as const;
+
+export type TaskStatus =
+  | "upcoming"
+  | "today"
+  | "tomorrow"
+  | "overdue"
+  | "completed";
+
+// ⭐ TYPES POUR LA PLANIFICATION (correspondant au backend)
+export enum ScheduleType {
+  NONE = "none",
+  TODAY = "today",
+  TOMORROW = "tomorrow",
 }
 
-// ⭐ INTERFACE TASK MISE À JOUR
+export const SCHEDULE_LABELS = {
+  [ScheduleType.NONE]: "Pas de planification",
+  [ScheduleType.TODAY]: "Pour aujourd'hui",
+  [ScheduleType.TOMORROW]: "Pour demain",
+} as const;
+
+// ⭐ INTERFACE TASK CORRIGÉE (basée sur le backend Spring Boot)
 export interface Task {
   id: number;
   title: string;
   description?: string;
-  dueDate?: string;
+  dueDate?: string; // LocalDateTime du backend
+  scheduledDate?: string; // LocalDate du backend
+  priority: TaskPriority; // 1, 2, 3
   completed: boolean;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
 
-  // ⭐ NOUVELLES PROPRIÉTÉS du backend amélioré
-  priority: TaskPriority;
-  status: TaskStatus;
-  completedAt?: string;
-  reminderDate?: string;
-  estimatedMinutes?: number;
-  actualMinutes?: number;
-  tags: string[];
+  // Propriétés de planification quotidienne (du backend)
+  carriedOver: boolean;
+  originalDate?: string;
+  orderIndex: number;
 
-  // Relations
-  parentTaskId?: number;
-  parentTaskTitle?: string;
-  subTasks?: Task[];
-  projectId?: number;
-  projectName?: string;
-
-  // Propriétés calculées
-  statusCalculated?: string; // "upcoming", "overdue", "completed", etc.
-  isOverdue?: boolean;
-  daysUntilDue?: number;
-  completionPercentage?: number;
-  totalSubTasks?: number;
-  completedSubTasks?: number;
+  // Propriétés calculées côté backend
+  status?: string; // "completed", "overdue", "today", "tomorrow", "upcoming"
 }
 
-// ⭐ INTERFACE POUR LES STATISTIQUES
-export interface TaskStats {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
-  tasksDueToday: number;
-  tasksCompletedThisWeek: number;
-  completionRate: number;
-  productivityScore: number;
-
-  // Statistiques par priorité
-  tasksByPriority: Record<TaskPriority, number>;
-  highPriorityPending: number;
-  mediumPriorityPending: number;
-  lowPriorityPending: number;
-
-  // Statistiques par statut
-  tasksByStatus: Record<TaskStatus, number>;
-
-  // Tendances
-  averageTaskDuration?: number;
-  tasksCreatedThisWeek: number;
-  tasksCreatedThisMonth: number;
-  weeklyCompletionTrend?: number;
-  monthlyCompletionTrend?: number;
-}
-
-// ⭐ FORM TYPES AMÉLIORÉS
+// ⭐ FORM TYPES CORRIGÉS
 export interface CreateTaskForm {
   title: string;
   description?: string;
   dueDate?: string;
+  scheduledDate?: string;
   priority?: TaskPriority;
-  status?: TaskStatus;
-  reminderDate?: string;
-  estimatedMinutes?: number;
-  tags?: string[];
-  parentTaskId?: number;
 }
 
 export interface UpdateTaskForm extends Partial<CreateTaskForm> {
-  id: number;
   completed?: boolean;
-  actualMinutes?: number;
+  carriedOver?: boolean;
+  originalDate?: string;
+  orderIndex?: number;
 }
 
-// ⭐ FILTRES AMÉLIORÉS
-export interface TasksFilter {
-  status?: TaskStatus | "all" | "pending" | "completed" | "overdue";
-  priority?: TaskPriority;
-  dueInDays?: number;
-  tags?: string[];
-  hasSubTasks?: boolean;
-  search?: string;
+// ⭐ STATISTIQUES SIMPLIFIÉES (basées sur ce que le backend peut fournir)
+export interface TaskStats {
+  totalTasks: number;
+  completedTasks: number;
+  notCompletedTasks: number;
+  completionPercentage: number;
+  tasksByPriority: Record<
+    number,
+    { total: number; completed: number; completionRate: number }
+  >;
+  dailyStats: Record<
+    string,
+    { date: string; total: number; completed: number; completionRate: number }
+  >;
 }
 
-// Reste des interfaces existantes...
+// ⭐ FONCTION UTILITAIRE pour calculer le statut
+export function getTaskStatus(task: Task): TaskStatus {
+  if (task.completed) return "completed";
+
+  const today = new Date().toISOString().split("T")[0];
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  if (task.scheduledDate === today) return "today";
+  if (task.scheduledDate === tomorrow) return "tomorrow";
+
+  if (task.dueDate && new Date(task.dueDate) < new Date()) return "overdue";
+
+  return "upcoming";
+}
+
+// Reste des interfaces existantes inchangées...
 export interface User {
   id: number;
   email: string;

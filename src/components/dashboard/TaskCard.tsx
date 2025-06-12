@@ -1,4 +1,4 @@
-// src/components/dashboard/TaskCard.tsx (Version mise à jour)
+// src/components/dashboard/TaskCard.tsx - Version corrigée
 import React from "react";
 import { Task, PRIORITY_LABELS, getTaskStatus } from "../types";
 
@@ -7,7 +7,10 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
   onToggle: (id: number) => void;
-  showScheduleInfo?: boolean; // Pour afficher infos de planification dans l'onglet "Toutes"
+  showScheduleInfo?: boolean;
+  isSelected?: boolean;
+  onSelect?: (selected: boolean) => void;
+  showSelection?: boolean;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -16,6 +19,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onDelete,
   onToggle,
   showScheduleInfo = false,
+  isSelected = false,
+  onSelect,
+  showSelection = false,
 }) => {
   const status = getTaskStatus(task);
   const priorityConfig = PRIORITY_LABELS[task.priority];
@@ -69,10 +75,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <div
-      className={`bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow border-l-4 ${getPriorityBorderColor()}`}
+      className={`bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow border-l-4 ${getPriorityBorderColor()} ${
+        isSelected ? "ring-2 ring-blue-500" : ""
+      }`}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-start space-x-3 flex-1">
+          {/* Checkbox de sélection */}
+          {showSelection && onSelect && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => onSelect(e.target.checked)}
+              className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+          )}
+
           {/* Checkbox pour toggle */}
           <button
             onClick={() => onToggle(task.id)}
