@@ -1,11 +1,13 @@
+// src/components/dashboard/TaskCard.tsx (Version mise à jour)
 import React from "react";
-import { Task } from "../types/index";
+import { Task, PRIORITY_LABELS, getTaskStatus } from "../types";
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
   onToggle: (id: number) => void;
+  showScheduleInfo?: boolean; // Pour afficher infos de planification dans l'onglet "Toutes"
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -13,7 +15,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   onDelete,
   onToggle,
+  showScheduleInfo = false,
 }) => {
+  const status = getTaskStatus(task);
+  const priorityConfig = PRIORITY_LABELS[task.priority];
+
   const formattedDueDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("fr-FR", {
         day: "numeric",
@@ -24,37 +30,46 @@ const TaskCard: React.FC<TaskCardProps> = ({
       })
     : null;
 
-  const getStatusColor = (status: string) => {
+  const formattedScheduledDate = task.scheduledDate
+    ? new Date(task.scheduledDate).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+      })
+    : null;
+
+  const getStatusDisplay = () => {
     switch (status) {
       case "completed":
-        return "text-green-600 bg-green-50";
+        return { text: "✅ Terminée", color: "text-green-600 bg-green-50" };
       case "overdue":
-        return "text-red-600 bg-red-50";
+        return { text: "⚠️ En retard", color: "text-red-600 bg-red-50" };
+      case "today":
+        return { text: "📅 Aujourd'hui", color: "text-blue-600 bg-blue-50" };
+      case "tomorrow":
+        return { text: "🗓️ Demain", color: "text-purple-600 bg-purple-50" };
       default:
-        return "text-blue-600 bg-blue-50";
+        return { text: "📝 À faire", color: "text-gray-600 bg-gray-50" };
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "✅ Terminée";
-      case "overdue":
-        return "⚠️ En retard";
+  const statusDisplay = getStatusDisplay();
+
+  const getPriorityBorderColor = () => {
+    switch (task.priority) {
+      case 3:
+        return "border-red-500"; // Haute
+      case 2:
+        return "border-blue-500"; // Moyenne
+      case 1:
+        return "border-gray-500"; // Basse
       default:
-        return "📝 À faire";
+        return "border-gray-300";
     }
   };
 
   return (
     <div
-      className={`bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow border-l-4 ${
-        task.completed
-          ? "border-green-500"
-          : task.status === "overdue"
-          ? "border-red-500"
-          : "border-blue-500"
-      }`}
+      className={`bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow border-l-4 ${getPriorityBorderColor()}`}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-start space-x-3 flex-1">
@@ -79,13 +94,40 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </button>
 
           <div className="flex-1">
-            <h3
-              className={`font-semibold ${
-                task.completed ? "line-through text-gray-500" : "text-gray-800"
-              }`}
-            >
-              {task.title}
-            </h3>
+            {/* Titre et priorité */}
+            <div className="flex items-center space-x-2 mb-1">
+              <h3
+                className={`font-semibold ${
+                  task.completed
+                    ? "line-through text-gray-500"
+                    : "text-gray-800"
+                }`}
+              >
+                {task.title}
+              </h3>
+
+              {/* Badge de priorité */}
+              <span
+                className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
+                  task.priority === 3
+                    ? "bg-red-100 text-red-800"
+                    : task.priority === 2
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {priorityConfig.icon} {priorityConfig.label}
+              </span>
+
+              {/* Badge "Reportée" si carriedOver */}
+              {task.carriedOver && (
+                <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                  📅 Reportée
+                </span>
+              )}
+            </div>
+
+            {/* Description */}
             {task.description && (
               <p
                 className={`text-sm mt-1 ${
@@ -141,32 +183,51 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Informations de la tâche */}
+      {/* Informations de statut et dates */}
       <div className="flex items-center justify-between text-sm">
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-            task.status
-          )}`}
-        >
-          {getStatusText(task.status)}
-        </span>
+        <div className="flex items-center space-x-3">
+          {/* Statut */}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${statusDisplay.color}`}
+          >
+            {statusDisplay.text}
+          </span>
 
+          {/* Infos de planification (seulement dans l'onglet "Toutes") */}
+          {showScheduleInfo && task.scheduledDate && (
+            <span className="text-xs text-gray-500">
+              📅 Planifiée: {formattedScheduledDate}
+            </span>
+          )}
+        </div>
+
+        {/* Date d'échéance */}
         {formattedDueDate && (
           <span
             className={`text-xs ${
-              task.status === "overdue"
+              status === "overdue"
                 ? "text-red-600 font-medium"
                 : "text-gray-500"
             }`}
           >
-            📅 {formattedDueDate}
+            ⏰ {formattedDueDate}
           </span>
         )}
       </div>
 
-      {/* Date de création */}
-      <div className="mt-2 text-xs text-gray-400">
-        Créée le {new Date(task.createdAt).toLocaleDateString("fr-FR")}
+      {/* Date de création et infos supplémentaires */}
+      <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+        <span>
+          Créée le {new Date(task.createdAt).toLocaleDateString("fr-FR")}
+        </span>
+
+        {/* Afficher la date originale si reportée */}
+        {task.carriedOver && task.originalDate && (
+          <span className="text-orange-600">
+            Initialement:{" "}
+            {new Date(task.originalDate).toLocaleDateString("fr-FR")}
+          </span>
+        )}
       </div>
     </div>
   );

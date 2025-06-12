@@ -1,5 +1,114 @@
-// src/components/types/index.ts (Version mise à jour)
-// Enhanced types aligned with backend DTOs
+// src/components/types/index.ts - Version mise à jour pour correspondre au backend
+
+// ⭐ NOUVEAUX ENUMS pour correspondre au backend
+export enum TaskPriority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  URGENT = "URGENT",
+}
+
+export enum TaskStatus {
+  TODO = "TODO",
+  IN_PROGRESS = "IN_PROGRESS",
+  WAITING = "WAITING",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+
+// ⭐ INTERFACE TASK MISE À JOUR
+export interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+
+  // ⭐ NOUVELLES PROPRIÉTÉS du backend amélioré
+  priority: TaskPriority;
+  status: TaskStatus;
+  completedAt?: string;
+  reminderDate?: string;
+  estimatedMinutes?: number;
+  actualMinutes?: number;
+  tags: string[];
+
+  // Relations
+  parentTaskId?: number;
+  parentTaskTitle?: string;
+  subTasks?: Task[];
+  projectId?: number;
+  projectName?: string;
+
+  // Propriétés calculées
+  statusCalculated?: string; // "upcoming", "overdue", "completed", etc.
+  isOverdue?: boolean;
+  daysUntilDue?: number;
+  completionPercentage?: number;
+  totalSubTasks?: number;
+  completedSubTasks?: number;
+}
+
+// ⭐ INTERFACE POUR LES STATISTIQUES
+export interface TaskStats {
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  tasksDueToday: number;
+  tasksCompletedThisWeek: number;
+  completionRate: number;
+  productivityScore: number;
+
+  // Statistiques par priorité
+  tasksByPriority: Record<TaskPriority, number>;
+  highPriorityPending: number;
+  mediumPriorityPending: number;
+  lowPriorityPending: number;
+
+  // Statistiques par statut
+  tasksByStatus: Record<TaskStatus, number>;
+
+  // Tendances
+  averageTaskDuration?: number;
+  tasksCreatedThisWeek: number;
+  tasksCreatedThisMonth: number;
+  weeklyCompletionTrend?: number;
+  monthlyCompletionTrend?: number;
+}
+
+// ⭐ FORM TYPES AMÉLIORÉS
+export interface CreateTaskForm {
+  title: string;
+  description?: string;
+  dueDate?: string;
+  priority?: TaskPriority;
+  status?: TaskStatus;
+  reminderDate?: string;
+  estimatedMinutes?: number;
+  tags?: string[];
+  parentTaskId?: number;
+}
+
+export interface UpdateTaskForm extends Partial<CreateTaskForm> {
+  id: number;
+  completed?: boolean;
+  actualMinutes?: number;
+}
+
+// ⭐ FILTRES AMÉLIORÉS
+export interface TasksFilter {
+  status?: TaskStatus | "all" | "pending" | "completed" | "overdue";
+  priority?: TaskPriority;
+  dueInDays?: number;
+  tags?: string[];
+  hasSubTasks?: boolean;
+  search?: string;
+}
+
+// Reste des interfaces existantes...
 export interface User {
   id: number;
   email: string;
@@ -78,17 +187,6 @@ export interface SavedLinkGroup {
   savedLinkDetails: SavedLink;
 }
 
-export interface Task {
-  id: number;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  completed: boolean;
-  createdAt: string;
-  updatedAt: string;
-  status: "upcoming" | "overdue" | "completed";
-}
-
 export interface DailyTask {
   id: number;
   uniqueTaskId: string;
@@ -151,7 +249,7 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
-// Form types
+// Form types existants
 export interface CreateNoteForm {
   title: string;
   content: string;
@@ -173,12 +271,6 @@ export interface CreateLinkForm {
   description?: string;
 }
 
-export interface CreateTaskForm {
-  title: string;
-  description?: string;
-  dueDate?: string;
-}
-
 export interface CreateDailyTaskForm {
   title: string;
   description?: string;
@@ -196,11 +288,6 @@ export interface NotesFilter {
   notebookId?: number;
   labelIds?: string[];
   searchTerm?: string;
-}
-
-export interface TasksFilter {
-  status?: "all" | "pending" | "completed" | "overdue";
-  dueInDays?: number;
 }
 
 // Loading states

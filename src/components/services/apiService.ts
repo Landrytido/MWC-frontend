@@ -14,8 +14,12 @@ import {
   CreateLabelForm,
   Task,
   CreateTaskForm,
+  UpdateTaskForm,
   Comment,
   NoteTask,
+  TaskPriority,
+  TaskStatus,
+  TaskStats,
 } from "../types";
 
 // API Base URL
@@ -85,7 +89,188 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // ✅ NOTES API
+  // ⭐ TASKS API AMÉLIORÉ avec nouvelles fonctionnalités
+  const tasksApi = useMemo(
+    () => ({
+      // ⭐ Méthodes existantes mises à jour
+      getAll: async () => {
+        setLoading("tasks", true);
+        try {
+          const tasks = await fetchWithAuth("/tasks");
+          dispatch({ type: "SET_TASKS", payload: tasks });
+          setLoading("tasks", false);
+          return tasks;
+        } catch (error) {
+          setLoading(
+            "tasks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      // ⭐ NOUVELLES MÉTHODES pour filtres avancés
+      getByPriority: async (priority: TaskPriority): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/priority/${priority}`);
+      },
+
+      getByStatus: async (status: TaskStatus): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/status/${status}`);
+      },
+
+      searchTasks: async (query: string): Promise<Task[]> => {
+        return await fetchWithAuth(
+          `/tasks/search?query=${encodeURIComponent(query)}`
+        );
+      },
+
+      getByTag: async (tag: string): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/tags/${encodeURIComponent(tag)}`);
+      },
+
+      getDueThisWeek: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/due-this-week");
+      },
+
+      getOverdue: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/overdue");
+      },
+
+      // ⭐ Pagination
+      getPaginated: async (
+        page = 0,
+        size = 10,
+        sortBy = "priority",
+        sortDir = "desc"
+      ): Promise<{
+        content: Task[];
+        totalPages: number;
+        totalElements: number;
+      }> => {
+        return await fetchWithAuth(
+          `/tasks/paginated?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`
+        );
+      },
+
+      // ⭐ GESTION DES SOUS-TÂCHES
+      createSubTask: async (
+        parentTaskId: number,
+        task: CreateTaskForm
+      ): Promise<Task> => {
+        const created = await fetchWithAuth(`/tasks/${parentTaskId}/subtasks`, {
+          method: "POST",
+          body: JSON.stringify(task),
+        });
+        dispatch({ type: "ADD_TASK", payload: created });
+        return created;
+      },
+
+      getSubTasks: async (parentTaskId: number): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/${parentTaskId}/subtasks`);
+      },
+
+      // ⭐ STATISTIQUES AVANCÉES
+      getStatistics: async (): Promise<TaskStats> => {
+        return await fetchWithAuth("/tasks/statistics");
+      },
+
+      getStatisticsSummary: async (): Promise<{
+        total: number;
+        completed: number;
+        pending: number;
+        overdue: number;
+        completionRate: number;
+      }> => {
+        return await fetchWithAuth("/tasks/statistics/summary");
+      },
+
+      // ⭐ OPÉRATIONS EN MASSE
+      updateStatusBatch: async (
+        taskIds: number[],
+        status: TaskStatus
+      ): Promise<void> => {
+        await fetchWithAuth("/tasks/batch/status", {
+          method: "PUT",
+          body: JSON.stringify({ taskIds, status: status.toString() }),
+        });
+        // Recharger les tâches après modification en masse
+        await tasksApi.getAll();
+      },
+
+      deleteBatch: async (taskIds: number[]): Promise<void> => {
+        await fetchWithAuth("/tasks/batch", {
+          method: "DELETE",
+          body: JSON.stringify({ taskIds }),
+        });
+        // Supprimer les tâches du state
+        taskIds.forEach((id) => {
+          dispatch({ type: "DELETE_TASK", payload: id });
+        });
+      },
+
+      // ⭐ Méthodes existantes mises à jour
+      create: async (task: CreateTaskForm): Promise<Task> => {
+        const created = await fetchWithAuth("/tasks", {
+          method: "POST",
+          body: JSON.stringify({
+            ...task,
+            priority: task.priority || TaskPriority.MEDIUM,
+            status: task.status || TaskStatus.TODO,
+            tags: task.tags || [],
+          }),
+        });
+        dispatch({ type: "ADD_TASK", payload: created });
+        return created;
+      },
+
+      update: async (id: number, task: UpdateTaskForm): Promise<Task> => {
+        const updated = await fetchWithAuth(`/tasks/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(task),
+        });
+        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      toggle: async (id: number): Promise<Task> => {
+        const updated = await fetchWithAuth(`/tasks/${id}/toggle`, {
+          method: "PUT",
+        });
+        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/tasks/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_TASK", payload: id });
+      },
+
+      getById: async (id: number): Promise<Task> => {
+        return await fetchWithAuth(`/tasks/${id}`);
+      },
+
+      // ⭐ MÉTHODES UTILITAIRES pour les filtres
+      getPending: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/pending");
+      },
+
+      getCompleted: async (): Promise<Task[]> => {
+        return await fetchWithAuth("/tasks/completed");
+      },
+
+      getDueInDays: async (days: number): Promise<Task[]> => {
+        return await fetchWithAuth(`/tasks/due-in-days?days=${days}`);
+      },
+
+      getPendingCount: async (): Promise<{ count: number }> => {
+        return await fetchWithAuth("/tasks/pending/count");
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
+  // ✅ CONSERVER TOUTES LES AUTRES API EXISTANTES
   const notesApi = useMemo(
     () => ({
       getAll: async () => {
@@ -171,7 +356,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ LABELS API - CORRIGÉ pour éviter les boucles
   const labelsApi = useMemo(
     () => ({
       getAll: async () => {
@@ -223,7 +407,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ LINKS API
   const linksApi = useMemo(
     () => ({
       getAll: async () => {
@@ -272,7 +455,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ BLOC NOTE API
   const blocNoteApi = useMemo(
     () => ({
       get: async () => {
@@ -309,61 +491,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ TASKS API
-  const tasksApi = useMemo(
-    () => ({
-      getAll: async () => {
-        setLoading("tasks", true);
-        try {
-          const tasks = await fetchWithAuth("/tasks");
-          dispatch({ type: "SET_TASKS", payload: tasks });
-          setLoading("tasks", false);
-          return tasks;
-        } catch (error) {
-          setLoading(
-            "tasks",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      create: async (task: CreateTaskForm): Promise<Task> => {
-        const created = await fetchWithAuth("/tasks", {
-          method: "POST",
-          body: JSON.stringify(task),
-        });
-        dispatch({ type: "ADD_TASK", payload: created });
-        return created;
-      },
-
-      update: async (id: number, task: Partial<Task>): Promise<Task> => {
-        const updated = await fetchWithAuth(`/tasks/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(task),
-        });
-        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
-        return updated;
-      },
-
-      toggle: async (id: number): Promise<Task> => {
-        const updated = await fetchWithAuth(`/tasks/${id}/toggle`, {
-          method: "PUT",
-        });
-        dispatch({ type: "UPDATE_TASK", payload: { id, task: updated } });
-        return updated;
-      },
-
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/tasks/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_TASK", payload: id });
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
-  // ✅ USER API
   const userApi = useMemo(
     () => ({
       getProfile: async () => {
@@ -385,7 +512,6 @@ export const useApiService = () => {
     [fetchWithAuth]
   );
 
-  // ✅ COMMENTS API
   const commentsApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {
@@ -437,7 +563,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ NOTE TASKS API
   const noteTasksApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {
@@ -497,6 +622,15 @@ export const useApiService = () => {
         return created;
       },
 
+      createSubtask: async (
+        parentId: number,
+        title: string
+      ): Promise<NoteTask> => {
+        // Récupérer la tâche parent pour connaître le noteId
+        const parent = await fetchWithAuth(`/note-tasks/${parentId}`);
+        return await noteTasksApi.create(parent.noteId, title, parentId);
+      },
+
       update: async (
         id: number,
         data: Partial<NoteTask>
@@ -525,7 +659,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ Return ALL memoized APIs
   return useMemo(
     () => ({
       notes: notesApi,
