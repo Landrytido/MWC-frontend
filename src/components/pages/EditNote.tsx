@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../layout/Layout";
 import { useApiService } from "../services/apiService";
 import { Note } from "../types";
+import { useConfirmation } from "../dashboard/useConfirmation";
 
 const EditNote: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ const EditNote: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
+  const { confirm } = useConfirmation();
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -129,15 +131,23 @@ const EditNote: React.FC = () => {
                 <div className="space-x-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Êtes-vous sûr de vouloir supprimer cette note ?"
-                        )
-                      ) {
-                        api.notes.delete(id || "").then(() => {
-                          navigate("/dashboard");
-                        });
+                    onClick={async () => {
+                      const confirmed = await confirm({
+                        title: "Supprimer la note",
+                        message:
+                          "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
+                        confirmText: "Supprimer",
+                        cancelText: "Annuler",
+                        variant: "danger",
+                      });
+
+                      if (!confirmed) return;
+
+                      try {
+                        await api.notes.delete(id || "");
+                        navigate("/dashboard");
+                      } catch (error) {
+                        console.error("Erreur lors de la suppression:", error);
                       }
                     }}
                     className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"

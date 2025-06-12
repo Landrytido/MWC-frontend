@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useApp, useNotebooks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { CreateNotebookForm } from "../types";
+import { useConfirmation } from "../dashboard/useConfirmation";
 
 interface NotebookSidebarProps {
   className?: string;
@@ -16,6 +17,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState("");
   const [error, setError] = useState("");
+  const { confirm } = useConfirmation();
 
   const handleCreateNotebook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +46,19 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
   };
 
   const handleDeleteNotebook = async (notebookId: number) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce carnet ?")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Supprimer le carnet",
+      message:
+        "Êtes-vous sûr de vouloir supprimer ce carnet ? Cette action est irréversible.",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
 
     try {
       await api.notebooks.delete(notebookId);
-      // Reset current notebook if it was deleted
       if (state.ui.currentNotebook === notebookId) {
         dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: null });
       }

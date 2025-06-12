@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useApp, useLabels } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
+import { useConfirmation } from "./useConfirmation";
 
 interface LabelManagerProps {
   className?: string;
@@ -17,6 +18,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     name: string;
   } | null>(null);
   const [error, setError] = useState("");
+  const { confirm } = useConfirmation();
 
   const labelsLoadedRef = useRef(false);
 
@@ -82,10 +84,15 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     const hasNotes = (label.noteCount || 0) > 0;
 
     if (hasNotes && !forceDelete) {
-      const confirmMessage = `Ce label est utilisé par ${label.noteCount} note(s). Voulez-vous vraiment le supprimer ? Cela le retirera de toutes les notes.`;
-      if (!window.confirm(confirmMessage)) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer le label",
+        message: `Ce label est utilisé par ${label.noteCount} note(s). Voulez-vous vraiment le supprimer ? Cela le retirera de toutes les notes.`,
+        confirmText: "Supprimer le label",
+        cancelText: "Annuler",
+        variant: "warning", // ← warning car c'est une action importante mais pas destructrice
+      });
+
+      if (!confirmed) return;
     }
 
     try {

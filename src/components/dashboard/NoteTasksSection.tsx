@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNoteTasks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import NoteTaskCard from "./NoteTaskCard";
+import { useConfirmation } from "./useConfirmation";
 
 interface NoteTasksSectionProps {
   noteId: number;
@@ -19,10 +20,10 @@ const NoteTasksSection: React.FC<NoteTasksSectionProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const tasks = getTasksByNoteId(noteId);
 
-  // Charger les tâches au montage
   useEffect(() => {
     api.noteTasks.getByNoteId(noteId);
   }, [noteId]);
@@ -61,9 +62,16 @@ const NoteTasksSection: React.FC<NoteTasksSectionProps> = ({
 
   const handleDelete = useCallback(
     async (taskId: number) => {
-      if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette tâche ?")) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer la tâche",
+        message:
+          "Êtes-vous sûr de vouloir supprimer cette tâche ? Cette action est irréversible.",
+        confirmText: "Supprimer",
+        cancelText: "Annuler",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
 
       try {
         await api.noteTasks.delete(taskId);
@@ -71,7 +79,7 @@ const NoteTasksSection: React.FC<NoteTasksSectionProps> = ({
         console.error("Error deleting note task:", error);
       }
     },
-    [api.noteTasks]
+    [confirm, api.noteTasks]
   );
 
   const handleToggle = useCallback(
@@ -110,7 +118,6 @@ const NoteTasksSection: React.FC<NoteTasksSectionProps> = ({
             ✅ Tâches ({completedTasks}/{totalTasks})
           </h3>
 
-          {/* Barre de progression globale */}
           {totalTasks > 0 && (
             <div className="flex items-center space-x-2">
               <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -223,6 +230,7 @@ const NoteTasksSection: React.FC<NoteTasksSectionProps> = ({
           </div>
         </div>
       )}
+      <ConfirmationComponent />
     </div>
   );
 };

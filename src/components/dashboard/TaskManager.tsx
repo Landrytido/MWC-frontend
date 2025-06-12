@@ -5,6 +5,7 @@ import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
 import MonthlyTaskReport from "./MonthlyTaskReport";
 import { Task, CreateTaskForm } from "../types";
+import { useConfirmation } from "./useConfirmation";
 
 interface TaskManagerProps {
   className?: string;
@@ -24,6 +25,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   const { tasks, pendingTasks, completedTasks, overdueTasks, loading } =
     useTasks();
   const api = useApiService();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("pending");
   const [currentPage, setCurrentPage] = useState(1);
@@ -116,16 +118,24 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   const handleDelete = useCallback(
     async (id: number) => {
-      if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette tâche ?")) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer la tâche",
+        message:
+          "Êtes-vous sûr de vouloir supprimer cette tâche ? Cette action est irréversible.",
+        confirmText: "Supprimer",
+        cancelText: "Annuler",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
+
       try {
         await api.tasks.delete(id);
       } catch (error) {
         console.error("Error deleting task:", error);
       }
     },
-    [api.tasks]
+    [confirm, api.tasks]
   );
 
   const handleToggle = useCallback(
@@ -287,7 +297,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
                 </div>
               )}
             </div>
-
+            <ConfirmationComponent />
             {/* Pagination */}
             {filteredTasks.length > TASKS_PER_PAGE && (
               <div className="mt-6 flex justify-center">

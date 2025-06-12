@@ -6,11 +6,13 @@ import CommentsSection from "../dashboard/CommentsSection";
 import { useApiService } from "../services/apiService";
 import { Note } from "../types";
 import NoteTasksSection from "../dashboard/NoteTasksSection";
+import { useConfirmation } from "../dashboard/useConfirmation";
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const api = useApiService();
+  const { confirm } = useConfirmation();
 
   const [note, setNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,12 +44,18 @@ const NoteDetail: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (
-      !note ||
-      !window.confirm("Êtes-vous sûr de vouloir supprimer cette note ?")
-    ) {
-      return;
-    }
+    if (!note) return;
+
+    const confirmed = await confirm({
+      title: "Supprimer la note",
+      message:
+        "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
 
     try {
       await api.notes.delete(note.id);

@@ -11,7 +11,7 @@ import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
-// import PendingTasksWidget from "../dashboard/PendingTasksWidget";
+import { useConfirmation } from "../dashboard/useConfirmation";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ const Dashboard: React.FC = () => {
   const { notes, filteredNotes, loading: notesLoading } = useNotes();
   const { links, loading: linksLoading } = useLinks();
   const api = useApiService();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [activeTab, setActiveTab] = useState<"notes" | "links" | "tasks">(
     "notes"
@@ -82,9 +83,16 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteNote = useCallback(
     async (id: number) => {
-      if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer la note",
+        message:
+          "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
+        confirmText: "Supprimer",
+        cancelText: "Annuler",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
 
       try {
         await api.notes.delete(id);
@@ -92,7 +100,7 @@ const Dashboard: React.FC = () => {
         console.error("Error deleting note:", error);
       }
     },
-    [api.notes]
+    [confirm, api.notes]
   );
 
   const handleEditLink = useCallback(
@@ -104,9 +112,16 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteLink = useCallback(
     async (id: number) => {
-      if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce lien ?")) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer le lien",
+        message:
+          "Êtes-vous sûr de vouloir supprimer ce lien ? Cette action est irréversible.",
+        confirmText: "Supprimer",
+        cancelText: "Annuler",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
 
       try {
         await api.links.delete(id);
@@ -114,9 +129,8 @@ const Dashboard: React.FC = () => {
         console.error("Error deleting link:", error);
       }
     },
-    [api.links]
+    [confirm, api.links]
   );
-
   const handleClearFilters = useCallback(() => {
     setSearchTerm("");
     dispatch({ type: "RESET_FILTERS" });
@@ -444,6 +458,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <ConfirmationComponent />
     </Layout>
   );
 };

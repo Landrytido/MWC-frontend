@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useComments } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import CommentCard from "./CommentCard";
+import { useConfirmation } from "./useConfirmation";
 
 interface CommentsSectionProps {
   noteId: number;
@@ -21,7 +22,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const [newComment, setNewComment] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { confirm } = useConfirmation();
   const comments = getCommentsByNoteId(noteId);
 
   // Charger les commentaires au montage
@@ -63,11 +64,16 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
 
   const handleDelete = useCallback(
     async (commentId: number) => {
-      if (
-        !window.confirm("Êtes-vous sûr de vouloir supprimer ce commentaire ?")
-      ) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Supprimer le commentaire",
+        message:
+          "Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible.",
+        confirmText: "Supprimer",
+        cancelText: "Annuler",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
 
       try {
         await api.comments.delete(commentId);
@@ -75,7 +81,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
         console.error("Error deleting comment:", error);
       }
     },
-    [api.comments]
+    [confirm, api.comments]
   );
 
   const getInitials = (firstName?: string, lastName?: string) => {

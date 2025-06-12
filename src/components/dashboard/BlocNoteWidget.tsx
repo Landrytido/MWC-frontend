@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useBlocNote } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
+import { useConfirmation } from "./useConfirmation";
 
 interface BlocNoteWidgetProps {
   className?: string;
@@ -13,9 +14,9 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const loadedRef = useRef(false); // ✅ Contrôle de chargement
+  const loadedRef = useRef(false);
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
-  // ✅ FIX 1: Single initialization with ref control
   useEffect(() => {
     if (!loadedRef.current && !blocNote && !loading.isLoading) {
       console.log("🚀 Loading bloc note...");
@@ -54,9 +55,16 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   }, [blocNote]);
 
   const handleDelete = useCallback(async () => {
-    if (!window.confirm("Êtes-vous sûr de vouloir vider le bloc-notes ?")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Vider le bloc-notes",
+      message:
+        "Êtes-vous sûr de vouloir vider le bloc-notes ? Tout le contenu sera définitivement supprimé.",
+      confirmText: "Vider",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
 
     try {
       await api.blocNote.delete();
@@ -67,14 +75,16 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
     }
-  }, []); // ✅ Removed api.blocNote dependency
+  }, [confirm, api.blocNote]);
 
   const isEmpty = !content.trim();
 
-  // ✅ FIX 3: Show loading state properly
   if (!loadedRef.current && loading.isLoading) {
     return (
-      <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
+      <div
+        className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
+      >
+        {" "}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800">
             ✏️ Bloc-notes rapide
@@ -88,7 +98,10 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     );
   }
   return (
-    <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
+    <div
+      className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
+    >
+      {" "}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-800">
           ✏️ Bloc-notes rapide
@@ -185,13 +198,11 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
           )}
         </div>
       </div>
-
       {error && (
         <div className="mb-3 p-2 bg-red-50 text-red-700 text-sm rounded-md">
           {error}
         </div>
       )}
-
       <div className="relative">
         {isEditing ? (
           <textarea
@@ -216,7 +227,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
           </div>
         )}
       </div>
-
       {blocNote?.updatedAt && !isEditing && (
         <div className="mt-3 text-xs text-gray-400">
           Dernière modification :{" "}
@@ -229,6 +239,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
           })}
         </div>
       )}
+      <ConfirmationComponent />
     </div>
   );
 };
