@@ -1,4 +1,3 @@
-// src/components/dashboard/PendingTasksWidget.tsx
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNoteTasks } from "../contexts/AppContext";

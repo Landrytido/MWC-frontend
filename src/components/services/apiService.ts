@@ -88,7 +88,6 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // ⭐ TASKS API CORRIGÉ pour correspondre au backend Spring Boot
   const tasksApi = useMemo(
     () => ({
       // ✅ Méthodes de base qui correspondent aux endpoints du backend
@@ -189,21 +188,21 @@ export const useApiService = () => {
       },
 
       // ✅ Statistiques (si disponibles dans le backend)
-      getStatistics: async (): Promise<any> => {
+      getStatistics: async (): Promise<TaskStats> => {
         try {
           return await fetchWithAuth("/tasks/summary");
-        } catch (error) {
-          // Si l'endpoint n'existe pas, retourner des stats calculées côté client
+        } catch {
           const tasks = await fetchWithAuth("/tasks");
           const completed = tasks.filter((t: Task) => t.completed).length;
           const total = tasks.length;
           return {
             totalTasks: total,
             completedTasks: completed,
-            pendingTasks: total - completed,
-            overdueTasks: 0, // À calculer côté client si nécessaire
-            completionRate: total > 0 ? (completed / total) * 100 : 0,
-          };
+            notCompletedTasks: total - completed,
+            completionPercentage: total > 0 ? (completed / total) * 100 : 0,
+            tasksByPriority: {},
+            dailyStats: {},
+          } as TaskStats;
         }
       },
 
@@ -215,7 +214,7 @@ export const useApiService = () => {
           return await fetchWithAuth(
             `/tasks/stats/monthly?year=${year}&month=${month}`
           );
-        } catch (error) {
+        } catch {
           console.warn("Monthly stats endpoint not available, using fallback");
           // Fallback: retourner des stats vides ou calculées côté client
           return {
@@ -271,7 +270,7 @@ export const useApiService = () => {
       getPendingCount: async (): Promise<{ count: number }> => {
         try {
           return await fetchWithAuth("/tasks/pending/count");
-        } catch (error) {
+        } catch {
           // Fallback: calculer côté client
           const pendingTasks = await fetchWithAuth("/tasks/pending");
           return { count: pendingTasks.length };

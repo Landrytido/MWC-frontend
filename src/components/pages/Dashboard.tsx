@@ -11,7 +11,7 @@ import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
-import PendingTasksWidget from "../dashboard/PendingTasksWidget";
+// import PendingTasksWidget from "../dashboard/PendingTasksWidget";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
             <NotebookSidebar />
             <LabelManager />
             <BlocNoteWidget />
-            <PendingTasksWidget className="mt-6" />
+            {/* <PendingTasksWidget className="mt-6" /> */}
           </div>
 
           {/* Main Content */}

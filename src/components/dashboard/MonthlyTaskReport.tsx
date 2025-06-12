@@ -55,12 +55,10 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       },
     };
 
-    // Données quotidiennes pour le graphique
     const dailyCompletion = [];
     const daysInMonth = new Date(year, month, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayDate = new Date(year, month - 1, day);
       const dayTasks = monthTasks.filter((task) => {
         const taskDate = new Date(task.createdAt);
         return taskDate.getDate() === day;
