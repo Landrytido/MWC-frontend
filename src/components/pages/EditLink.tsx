@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../layout/Layout";
 import { useApiService } from "../services/apiService";
-import { SavedLink } from "../types";
 import { useConfirmation } from "../dashboard/useConfirmation";
 
 const EditLink: React.FC = () => {
@@ -23,7 +22,7 @@ const EditLink: React.FC = () => {
       if (!id) return;
 
       try {
-        const link = await api.links.getById(id);
+        const link = await api.links.getById(parseInt(id));
         setUrl(link.url);
         setTitle(link.title);
         setDescription(link.description || "");
@@ -66,7 +65,7 @@ const EditLink: React.FC = () => {
     setError("");
 
     try {
-      await api.links.update(id, {
+      await api.links.update(parseInt(id), {
         url,
         title: title || new URL(url).hostname,
         description,
@@ -181,7 +180,7 @@ const EditLink: React.FC = () => {
                       if (!confirmed) return;
 
                       try {
-                        await api.links.delete(id || "");
+                        await api.links.delete(parseInt(id || "0"));
                         navigate("/dashboard");
                       } catch (error) {
                         console.error("Erreur lors de la suppression:", error);

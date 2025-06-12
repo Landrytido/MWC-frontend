@@ -187,7 +187,6 @@ export const useApiService = () => {
         return await fetchWithAuth(`/tasks/${id}`);
       },
 
-      // ✅ Statistiques (si disponibles dans le backend)
       getStatistics: async (): Promise<TaskStats> => {
         try {
           return await fetchWithAuth("/tasks/summary");
@@ -435,7 +434,9 @@ export const useApiService = () => {
           throw error;
         }
       },
-
+      getById: async (id: number): Promise<SavedLink> => {
+        return await fetchWithAuth(`/links/${id}`);
+      },
       create: async (link: CreateLinkForm): Promise<SavedLink> => {
         const created = await fetchWithAuth("/links", {
           method: "POST",
@@ -482,6 +483,9 @@ export const useApiService = () => {
           );
           throw error;
         }
+      },
+      getById: async (id: number): Promise<Note> => {
+        return await fetchWithAuth(`/notes/${id}`);
       },
 
       update: async (content: string): Promise<BlocNote> => {

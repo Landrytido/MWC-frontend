@@ -32,15 +32,21 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-script text-gray-800">
+            <Link
+              to={state.isAuthenticated ? "/dashboard" : "/"}
+              className="text-2xl font-script text-gray-800"
+            >
               My Web Companion
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-teal-500">
-              Accueil
+            <Link
+              to={state.isAuthenticated ? "/dashboard" : "/"}
+              className="text-gray-600 hover:text-teal-500"
+            >
+              {state.isAuthenticated ? "Tableau de bord" : "Accueil"}
             </Link>
             <Link to="/about" className="text-gray-600 hover:text-teal-500">
               Pourquoi My Web Companion ?
@@ -153,11 +159,11 @@ const Header: React.FC = () => {
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 space-y-3">
             <Link
-              to="/"
+              to={state.isAuthenticated ? "/dashboard" : "/"}
               className="block text-gray-600 hover:text-teal-500"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Accueil
+              {state.isAuthenticated ? "Tableau de bord" : "Accueil"}
             </Link>
             <Link
               to="/about"

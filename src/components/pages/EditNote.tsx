@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../layout/Layout";
 import { useApiService } from "../services/apiService";
-import { Note } from "../types";
 import { useConfirmation } from "../dashboard/useConfirmation";
 
 const EditNote: React.FC = () => {
@@ -22,7 +21,7 @@ const EditNote: React.FC = () => {
       if (!id) return;
 
       try {
-        const note = await api.notes.getById(id);
+        const note = await api.notes.getById(parseInt(id));
         setTitle(note.title);
         setContent(note.content);
       } catch (err) {
@@ -49,7 +48,7 @@ const EditNote: React.FC = () => {
     setError("");
 
     try {
-      await api.notes.update(id, { title, content });
+      await api.notes.update(parseInt(id), { title, content });
       navigate("/dashboard");
     } catch (err) {
       console.error("Erreur lors de la mise à jour de la note:", err);
@@ -144,7 +143,7 @@ const EditNote: React.FC = () => {
                       if (!confirmed) return;
 
                       try {
-                        await api.notes.delete(id || "");
+                        api.notes.delete(parseInt(id || "0"));
                         navigate("/dashboard");
                       } catch (error) {
                         console.error("Erreur lors de la suppression:", error);

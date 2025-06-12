@@ -150,13 +150,13 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   );
 
   const filters = [
-    {
-      key: "pending",
-      label: "À faire",
-      count: pendingTasks.length,
-      icon: "🔹",
-      hasCount: true,
-    },
+    // {
+    //   key: "pending",
+    //   label: "À faire",
+    //   count: pendingTasks.length,
+    //   icon: "🔹",
+    //   hasCount: true,
+    // },
     {
       key: "overdue",
       label: "En retard",
@@ -378,8 +378,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   function getEmptyMessage() {
     switch (activeFilter) {
-      case "pending":
-        return "Aucune tâche en attente";
+      // case "pending":
+      //   return "Aucune tâche en attente";
       case "completed":
         return "Aucune tâche terminée";
       case "overdue":
