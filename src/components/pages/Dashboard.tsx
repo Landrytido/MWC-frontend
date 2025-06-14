@@ -12,6 +12,7 @@ import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
 import { useConfirmation } from "../dashboard/useConfirmation";
+import ToolsManager from "../dashboard/ToolsManager";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -22,9 +23,10 @@ const Dashboard: React.FC = () => {
   const api = useApiService();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  const [activeTab, setActiveTab] = useState<"notes" | "links" | "tasks">(
-    "notes"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "notes" | "links" | "tasks" | "tools"
+  >("notes");
+
   const [searchTerm, setSearchTerm] = useState("");
   const initializationRef = useRef(false);
 
@@ -340,6 +342,16 @@ const Dashboard: React.FC = () => {
               >
                 Tâches
               </button>
+              <button
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "tools"
+                    ? "text-teal-500 border-b-2 border-teal-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("tools")}
+              >
+                🛠️ Outils
+              </button>
             </div>
 
             {/* Content */}
@@ -455,6 +467,7 @@ const Dashboard: React.FC = () => {
               </div>
             )}
             {activeTab === "tasks" && <TaskManager />}
+            {activeTab === "tools" && <ToolsManager />}
           </div>
         </div>
       </div>
