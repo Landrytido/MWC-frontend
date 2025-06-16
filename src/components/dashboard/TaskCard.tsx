@@ -1,5 +1,7 @@
+// src/components/dashboard/TaskCard.tsx - VERSION CORRIGÉE
+
 import React from "react";
-import { Task, PRIORITY_LABELS, getTaskStatus, TaskPriority } from "../types";
+import { Task, getPriorityConfig, getTaskStatus } from "../types";
 
 interface TaskCardProps {
   task: Task;
@@ -16,11 +18,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onToggle,
   showScheduleInfo = false,
 }) => {
-  const status = getTaskStatus(task); // Utilise votre fonction existante
+  // ✅ CORRECTION: Utiliser la fonction helper sécurisée
+  const priorityConfig = getPriorityConfig(task.priority);
 
-  // ✅ FIX: Gestion sécurisée de la priorité avec valeur par défaut
-  const priorityConfig =
-    PRIORITY_LABELS[task.priority] || PRIORITY_LABELS[TaskPriority.MEDIUM];
+  // ✅ CORRECTION: Utiliser le status du backend ou calculer côté client
+  const status = task.status || getTaskStatus(task);
 
   const formattedDueDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("fr-FR", {
@@ -39,13 +41,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
       })
     : null;
 
-  // ✅ Fonction pour obtenir la couleur du badge de priorité avec gestion d'erreur
+  // ✅ CORRECTION: Fonction pour obtenir la couleur du badge de priorité
   const getPriorityBadgeColor = () => {
-    // Vérifier que la priorité est valide
-    if (!task.priority || ![1, 2, 3].includes(task.priority)) {
-      return "bg-gray-50 text-gray-700 border border-gray-200"; // Valeur par défaut
-    }
-
     switch (task.priority) {
       case 3: // HIGH
         return "bg-red-50 text-red-700 border border-red-200";
@@ -58,7 +55,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  // ✅ Fonction pour obtenir le badge de statut
+  // ✅ CORRECTION: Fonction pour obtenir le badge de statut
   const getStatusDisplay = () => {
     switch (status) {
       case "completed":
@@ -130,7 +127,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {task.title}
               </h3>
 
-              {/* Badge de priorité - Style similaire à votre image avec protection */}
+              {/* Badge de priorité - Avec protection contre les valeurs nulles */}
               {priorityConfig && (
                 <span
                   className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${getPriorityBadgeColor()}`}
@@ -269,7 +266,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Ligne de séparation subtile en bas si ce n'est pas la dernière tâche */}
+      {/* Ligne de séparation subtile en bas */}
       <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
         <div className="flex items-center justify-between text-xs text-gray-400">
           <span>

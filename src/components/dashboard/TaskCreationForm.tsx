@@ -1,12 +1,12 @@
-// src/components/dashboard/TaskCreationForm.tsx - Version corrigée
+// src/components/dashboard/TaskCreationForm.tsx - VERSION CORRIGÉE
+
 import React, { useState } from "react";
 import {
   CreateTaskForm,
-  TaskPriority,
   ScheduleType,
-  PRIORITY_LABELS,
   SCHEDULE_LABELS,
   Task,
+  getPriorityConfig,
 } from "../types";
 
 interface TaskCreationFormProps {
@@ -29,7 +29,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
     description: editingTask?.description || "",
     dueDate: editingTask?.dueDate ? editingTask.dueDate.slice(0, 16) : "",
     scheduledDate: editingTask?.scheduledDate || "",
-    priority: editingTask?.priority || TaskPriority.MEDIUM,
+    priority: editingTask?.priority || 2,
   });
 
   const [scheduleType, setScheduleType] = useState<ScheduleType>(() => {
@@ -75,6 +75,13 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     await onSubmit(taskData);
   };
+
+  // ✅ CORRECTION: Définition des priorités avec valeurs numériques
+  const priorityOptions = [
+    { value: 1, config: getPriorityConfig(1) }, // LOW
+    { value: 2, config: getPriorityConfig(2) }, // MEDIUM
+    { value: 3, config: getPriorityConfig(3) }, // HIGH
+  ];
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg border">
@@ -138,21 +145,24 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
             Priorité *
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {Object.entries(PRIORITY_LABELS).map(([priority, config]) => {
-              const priorityNum = parseInt(priority) as TaskPriority;
-              const isSelected = formData.priority === priorityNum;
+            {priorityOptions.map(({ value, config }) => {
+              const isSelected = formData.priority === value;
 
               return (
                 <button
-                  key={priority}
+                  key={value}
                   type="button"
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, priority: priorityNum }))
+                    setFormData((prev) => ({ ...prev, priority: value }))
                   }
                   disabled={isLoading}
                   className={`p-3 text-sm font-medium rounded-md border-2 transition-colors ${
                     isSelected
-                      ? `border-${config.color}-500 bg-${config.color}-50 text-${config.color}-700`
+                      ? value === 3
+                        ? "border-red-500 bg-red-50 text-red-700"
+                        : value === 2
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-500 bg-gray-50 text-gray-700"
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >

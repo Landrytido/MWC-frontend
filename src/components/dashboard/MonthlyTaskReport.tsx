@@ -1,86 +1,28 @@
-import React, { useMemo, useState } from "react";
-import { Task, TaskPriority, PRIORITY_LABELS } from "../types";
+import React, { useState, useEffect, useCallback } from "react";
+import { ApiTaskStats, TaskPriority, PRIORITY_LABELS } from "../types";
+import { useApiService } from "../services/apiService";
 
 interface MonthlyTaskReportProps {
-  tasks: Task[];
   className?: string;
 }
 
 const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
-  tasks,
   className = "",
 }) => {
+  const api = useApiService();
+
+  // État pour la sélection du mois
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return { month: now.getMonth() + 1, year: now.getFullYear() };
   });
 
-  const monthlyData = useMemo(() => {
-    const { month, year } = selectedMonth;
+  // États pour les données et le chargement
+  const [monthlyData, setMonthlyData] = useState<ApiTaskStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    // Filtrer les tâches du mois sélectionné
-    const monthTasks = tasks.filter((task) => {
-      const taskDate = new Date(task.createdAt);
-      return (
-        taskDate.getMonth() + 1 === month && taskDate.getFullYear() === year
-      );
-    });
-
-    const completedTasks = monthTasks.filter((task) => task.completed);
-    const totalTasks = monthTasks.length;
-    const completionPercentage =
-      totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
-
-    // Statistiques par priorité
-    const tasksByPriority = {
-      [TaskPriority.HIGH]: {
-        total: monthTasks.filter((t) => t.priority === TaskPriority.HIGH)
-          .length,
-        completed: monthTasks.filter(
-          (t) => t.priority === TaskPriority.HIGH && t.completed
-        ).length,
-      },
-      [TaskPriority.MEDIUM]: {
-        total: monthTasks.filter((t) => t.priority === TaskPriority.MEDIUM)
-          .length,
-        completed: monthTasks.filter(
-          (t) => t.priority === TaskPriority.MEDIUM && t.completed
-        ).length,
-      },
-      [TaskPriority.LOW]: {
-        total: monthTasks.filter((t) => t.priority === TaskPriority.LOW).length,
-        completed: monthTasks.filter(
-          (t) => t.priority === TaskPriority.LOW && t.completed
-        ).length,
-      },
-    };
-
-    const dailyCompletion = [];
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayTasks = monthTasks.filter((task) => {
-        const taskDate = new Date(task.createdAt);
-        return taskDate.getDate() === day;
-      });
-
-      dailyCompletion.push({
-        date: day.toString(),
-        total: dayTasks.length,
-        completed: dayTasks.filter((t) => t.completed).length,
-      });
-    }
-
-    return {
-      totalTasks,
-      completedTasks: completedTasks.length,
-      notCompletedTasks: totalTasks - completedTasks.length,
-      completionPercentage,
-      tasksByPriority,
-      dailyCompletion,
-    };
-  }, [tasks, selectedMonth]);
-
+  // Noms des mois en français
   const monthNames = [
     "Janvier",
     "Février",
@@ -96,6 +38,31 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     "Décembre",
   ];
 
+  // Chargement des données depuis l'API
+  const loadMonthlyStats = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const stats = await api.tasks.getMonthlyStats(
+        selectedMonth.year,
+        selectedMonth.month
+      );
+      setMonthlyData(stats);
+    } catch (err) {
+      setError("Erreur lors du chargement des statistiques");
+      console.error("Erreur chargement stats mensuelles:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedMonth, api.tasks]);
+
+  // Effet pour charger les données quand le mois change
+  useEffect(() => {
+    loadMonthlyStats();
+  }, [loadMonthlyStats]);
+
+  // Gestion du changement de mois
   const handleMonthChange = (direction: "prev" | "next") => {
     setSelectedMonth((prev) => {
       if (direction === "prev") {
@@ -110,7 +77,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     });
   };
 
-  // 🎯 Nouveau composant : Diagramme circulaire (Pie Chart)
+  // Composant : Diagramme circulaire
   const CircularChart: React.FC<{
     completed: number;
     total: number;
@@ -173,47 +140,46 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     );
   };
 
-  // Composant simple de graphique en barres (votre version existante améliorée)
-  const SimpleBarChart: React.FC<{
-    data: typeof monthlyData.dailyCompletion;
-  }> = ({ data }) => {
-    const maxValue = Math.max(...data.map((d) => d.total), 1);
-
+  // États de chargement et d'erreur
+  if (loading) {
     return (
-      <div className="flex items-end space-x-1 h-32 overflow-x-auto pb-2">
-        {data.slice(0, 31).map((day, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center min-w-[20px] group"
-          >
-            <div className="flex flex-col-reverse h-24 w-4 bg-gray-100 rounded-sm transition-all duration-200 group-hover:shadow-sm">
-              {day.total > 0 && (
-                <>
-                  <div
-                    className="bg-gradient-to-t from-green-400 to-green-500 rounded-sm transition-all duration-300"
-                    style={{ height: `${(day.completed / maxValue) * 100}%` }}
-                    title={`${day.completed} complétées`}
-                  />
-                  <div
-                    className="bg-gradient-to-t from-blue-300 to-blue-400 rounded-sm transition-all duration-300"
-                    style={{
-                      height: `${
-                        ((day.total - day.completed) / maxValue) * 100
-                      }%`,
-                    }}
-                    title={`${day.total - day.completed} en cours`}
-                  />
-                </>
-              )}
-            </div>
-            <span className="text-xs text-gray-500 mt-1 group-hover:text-gray-700 transition-colors">
-              {day.date}
-            </span>
-          </div>
-        ))}
+      <div className={`space-y-6 ${className}`}>
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500">Chargement des statistiques...</p>
+        </div>
       </div>
     );
-  };
+  }
+
+  if (error) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        <div className="text-center py-12 text-red-500 bg-red-50 rounded-xl border border-red-200">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
+          <p className="text-sm">{error}</p>
+          <button
+            onClick={loadMonthlyStats}
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!monthlyData) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-4xl mb-4">📊</div>
+          <p>Aucune donnée disponible</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -223,6 +189,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
           <button
             onClick={() => handleMonthChange("prev")}
             className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+            aria-label="Mois précédent"
           >
             <svg
               className="w-4 h-4"
@@ -247,6 +214,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
           <button
             onClick={() => handleMonthChange("next")}
             className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+            aria-label="Mois suivant"
           >
             <svg
               className="w-4 h-4"
@@ -265,7 +233,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       </div>
 
-      {/* Statistiques principales avec cartes améliorées */}
+      {/* Statistiques principales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 transition-transform hover:scale-105">
           <div className="flex items-center justify-between">
@@ -356,7 +324,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       </div>
 
-      {/* 🎯 Nouvelle section : Diagramme circulaire + Barre de progression */}
+      {/* Vue d'ensemble avec diagramme circulaire */}
       {monthlyData.totalTasks > 0 && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h4 className="text-lg font-semibold text-gray-800 mb-6">
@@ -428,77 +396,61 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       )}
 
-      {/* Statistiques par priorité (votre version existante améliorée) */}
-      <div className="bg-white p-6 rounded-xl border shadow-sm">
-        <h4 className="text-lg font-semibold text-gray-800 mb-6">
-          Répartition par priorité
-        </h4>
-        <div className="space-y-4">
-          {Object.entries(monthlyData.tasksByPriority).map(
-            ([priority, stats]) => {
-              const priorityNum = parseInt(priority) as TaskPriority;
-              const config = PRIORITY_LABELS[priorityNum];
-              const completionRate =
-                stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
-
-              return (
-                <div
-                  key={priority}
-                  className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3 w-32">
-                    <span className="text-lg">{config.icon}</span>
-                    <span className="text-sm font-medium">{config.label}</span>
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium">
-                        {stats.completed}/{stats.total} tâches
-                      </span>
-                      <span className="font-semibold">
-                        {completionRate.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className={`h-3 rounded-full transition-all duration-500 ${
-                          priorityNum === TaskPriority.HIGH
-                            ? "bg-gradient-to-r from-red-400 to-red-500"
-                            : priorityNum === TaskPriority.MEDIUM
-                            ? "bg-gradient-to-r from-blue-400 to-blue-500"
-                            : "bg-gradient-to-r from-gray-400 to-gray-500"
-                        }`}
-                        style={{ width: `${Math.max(completionRate, 3)}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-          )}
-        </div>
-      </div>
-
-      {/* Graphique quotidien (votre version existante améliorée) */}
+      {/* Statistiques par priorité */}
       {monthlyData.totalTasks > 0 && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h4 className="text-lg font-semibold text-gray-800 mb-6">
-            Activité quotidienne
+            Répartition par priorité
           </h4>
-          <div className="mb-4">
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-green-500 rounded"></div>
-                <span className="font-medium">Tâches complétées</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gradient-to-r from-blue-300 to-blue-400 rounded"></div>
-                <span className="font-medium">Tâches en cours</span>
-              </div>
-            </div>
+          <div className="space-y-4">
+            {Object.entries(monthlyData.tasksByPriority).map(
+              ([priority, stats]) => {
+                const priorityNum = parseInt(priority) as TaskPriority;
+                const config = PRIORITY_LABELS[priorityNum];
+
+                if (!config) return null; // Protection contre les priorités invalides
+
+                return (
+                  <div
+                    key={priority}
+                    className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3 w-32">
+                      <span className="text-lg">{config.icon}</span>
+                      <span className="text-sm font-medium">
+                        {config.label}
+                      </span>
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-medium">
+                          {stats.completed}/{stats.total} tâches
+                        </span>
+                        <span className="font-semibold">
+                          {stats.completionRate.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className={`h-3 rounded-full transition-all duration-500 ${
+                            priorityNum === TaskPriority.HIGH
+                              ? "bg-gradient-to-r from-red-400 to-red-500"
+                              : priorityNum === TaskPriority.MEDIUM
+                              ? "bg-gradient-to-r from-blue-400 to-blue-500"
+                              : "bg-gradient-to-r from-gray-400 to-gray-500"
+                          }`}
+                          style={{
+                            width: `${Math.max(stats.completionRate, 3)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
           </div>
-          <SimpleBarChart data={monthlyData.dailyCompletion} />
         </div>
       )}
 

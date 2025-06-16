@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
             api.links.getAll(),
             api.blocNote.get(),
             api.tasks.getAll(),
-            api.noteTasks.getMyTasks(),
+            api.noteTasks.getAll,
           ]).then(() => {
             console.log("✅ Dashboard data initialized");
           });
@@ -57,9 +57,18 @@ const Dashboard: React.FC = () => {
 
       initializeData();
     }
-  }, [authState.user?.id]); // ✅ Dépendance fixe sur user.id seulement
+  }, [
+    authState.user?.id,
+    authState.user,
+    api.notes,
+    api.tasks,
+    api.links,
+    api.notebooks,
+    api.labels,
+    api.noteTasks.getAll,
+    api.blocNote,
+  ]);
 
-  // ✅ FIX 2: Debounced search update
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       dispatch({ type: "SET_SEARCH_TERM", payload: searchTerm });
@@ -68,7 +77,6 @@ const Dashboard: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, dispatch]);
 
-  // ✅ FIX 3: Memoized handlers to prevent re-renders
   const handleEditNote = useCallback(
     (note: Note) => {
       navigate(`/dashboard/notes/${note.id}`);

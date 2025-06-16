@@ -35,9 +35,9 @@ export interface Task {
   id: number;
   title: string;
   description?: string;
-  dueDate?: string; // LocalDateTime du backend
-  scheduledDate?: string; // LocalDate du backend
-  priority: TaskPriority; // 1, 2, 3
+  dueDate?: string; // ISO string du backend
+  scheduledDate?: string; // ISO string du backend
+  priority: number;
   completed: boolean;
   completedAt?: string;
   createdAt: string;
@@ -58,7 +58,8 @@ export interface CreateTaskForm {
   description?: string;
   dueDate?: string;
   scheduledDate?: string;
-  priority?: TaskPriority;
+  priority?: number;
+  orderIndex?: number;
 }
 
 export interface UpdateTaskForm extends Partial<CreateTaskForm> {
@@ -68,24 +69,65 @@ export interface UpdateTaskForm extends Partial<CreateTaskForm> {
   orderIndex?: number;
 }
 
-// ⭐ STATISTIQUES SIMPLIFIÉES (basées sur ce que le backend peut fournir)
-export interface TaskStats {
+// ⭐ NOUVEAUX TYPES pour les retours API backend
+export interface ApiTaskSummary {
+  totalTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  todayTasks: number;
+  tomorrowTasks: number;
+}
+
+export interface ApiTaskStats {
+  month: number;
+  year: number;
   totalTasks: number;
   completedTasks: number;
   notCompletedTasks: number;
   completionPercentage: number;
   tasksByPriority: Record<
     number,
-    { total: number; completed: number; completionRate: number }
+    {
+      total: number;
+      completed: number;
+      completionRate: number;
+    }
   >;
   dailyStats: Record<
     string,
-    { date: string; total: number; completed: number; completionRate: number }
+    {
+      date: string;
+      total: number;
+      completed: number;
+      completionRate: number;
+    }
   >;
 }
 
+// ⭐ STATISTIQUES SIMPLIFIÉES (basées sur ce que le backend peut fournir)
+export interface TaskStats {
+  totalTasks: number;
+  completedTasks: number;
+  notCompletedTasks: number;
+  completionPercentage: number;
+  tasksByPriority: Record<number, { total: number; completed: number }>;
+  dailyStats: Record<string, { total: number; completed: number }>;
+}
+
+export function getTaskPriorityEnum(priority: number): TaskPriority {
+  // Protection contre les valeurs invalides
+  if (priority === 1) return TaskPriority.LOW;
+  if (priority === 3) return TaskPriority.HIGH;
+  return TaskPriority.MEDIUM; // défaut
+}
+
+export function getPriorityConfig(priority: number) {
+  const priorityEnum = getTaskPriorityEnum(priority);
+  return PRIORITY_LABELS[priorityEnum];
+}
+
 // ⭐ FONCTION UTILITAIRE pour calculer le statut
-export function getTaskStatus(task: Task): TaskStatus {
+export function getTaskStatus(task: Task): string {
   if (task.completed) return "completed";
 
   const today = new Date().toISOString().split("T")[0];
@@ -96,12 +138,16 @@ export function getTaskStatus(task: Task): TaskStatus {
   if (task.scheduledDate === today) return "today";
   if (task.scheduledDate === tomorrow) return "tomorrow";
 
-  if (task.dueDate && new Date(task.dueDate) < new Date()) return "overdue";
+  if (task.dueDate) {
+    const dueDate = new Date(task.dueDate);
+    const now = new Date();
+    if (dueDate < now) return "overdue";
+  }
 
   return "upcoming";
 }
 
-// Reste des interfaces existantes inchangées...
+// ⭐ INTERFACES UTILISATEUR
 export interface User {
   id: number;
   email: string;
@@ -113,6 +159,25 @@ export interface User {
   updatedAt: string;
 }
 
+export interface AuthResponse {
+  token: string;
+  refreshToken: string;
+  user: User;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+// ⭐ INTERFACES NOTEBOOKS
 export interface Notebook {
   id: number;
   title: string;
@@ -121,14 +186,16 @@ export interface Notebook {
   noteCount?: number;
 }
 
+// ⭐ INTERFACES LABELS
 export interface Label {
-  id: string;
+  id: string; // ✅ String car UUID côté backend
   name: string;
   createdAt: string;
   updatedAt: string;
   noteCount?: number;
 }
 
+// ⭐ INTERFACES NOTES
 export interface Note {
   id: number;
   title: string;
@@ -144,14 +211,22 @@ export interface Note {
   comments?: Comment[];
 }
 
+// ⭐ INTERFACES COMMENTS
 export interface Comment {
   id: number;
   content: string;
   noteId: number;
+  author: {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+  };
   createdAt: string;
-  author: User;
+  updatedAt?: string;
 }
 
+// ⭐ INTERFACES SAVED LINKS
 export interface SavedLink {
   id: number;
   url: string;
@@ -161,8 +236,9 @@ export interface SavedLink {
   updatedAt: string;
 }
 
+// ⭐ NOUVELLES INTERFACES LINK GROUPS
 export interface LinkGroup {
-  id: string;
+  id: string; // ✅ String car UUID côté backend
   title: string;
   description?: string;
   createdAt: string;
@@ -180,6 +256,57 @@ export interface SavedLinkGroup {
   savedLinkDetails: SavedLink;
 }
 
+// ⭐ INTERFACES NOTE TASKS
+export interface NoteTask {
+  id: number;
+  title: string;
+  completed: boolean;
+  noteId: number;
+  parentId?: number;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+
+  // Propriétés calculées côté backend
+  subtasks?: NoteTask[];
+  completedSubtasks?: number;
+  totalSubtasks?: number;
+}
+
+// ⭐ NOUVELLES INTERFACES FILES
+export interface FileInfo {
+  id: number;
+  filename: string;
+  initialFilename: string;
+  uri: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FileUploadResponse {
+  id: number;
+  filename: string;
+  uri: string;
+  message: string;
+}
+
+export interface FileStatistics {
+  totalFiles: number;
+  totalSizeMB: number;
+  filesByType: Record<string, number>;
+}
+
+// ⭐ INTERFACE BLOC NOTE
+export interface BlocNote {
+  id: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ⭐ INTERFACESDAILY TASKS (si utilisées)
 export interface DailyTask {
   id: number;
   uniqueTaskId: string;
@@ -196,38 +323,7 @@ export interface DailyTask {
   updatedAt: string;
 }
 
-export interface NoteTask {
-  id: number;
-  title: string;
-  completed: boolean;
-  noteId: number;
-  parentId?: number;
-  subtasks?: NoteTask[];
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-  totalSubtasks?: number;
-  completedSubtasks?: number;
-}
-
-export interface FileInfo {
-  id: number;
-  filename: string;
-  initialFilename: string;
-  uri: string;
-  contentType: string;
-  fileSize: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BlocNote {
-  id: number;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+// ⭐ INTERFACE MONTHLY REPORT
 export interface MonthlyReport {
   totalTasks: number;
   completedTasks: number;
@@ -235,19 +331,18 @@ export interface MonthlyReport {
   completionPercentage: number;
 }
 
-// API Response wrapper
+// ⭐ API RESPONSE WRAPPER
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
   success: boolean;
 }
 
-// Form types existants
+// ⭐ FORM TYPES
 export interface CreateNoteForm {
   title: string;
   content: string;
   notebookId?: number;
-  labelIds?: string[];
 }
 
 export interface CreateNotebookForm {
@@ -276,20 +371,32 @@ export interface CreateCommentForm {
   noteId: number;
 }
 
-// Filter and sorting types
+export interface CreateLinkGroupForm {
+  title: string;
+  description?: string;
+}
+
+// ⭐ FILTER AND SORTING TYPES
 export interface NotesFilter {
   notebookId?: number;
   labelIds?: string[];
   searchTerm?: string;
 }
 
-// Loading states
+export interface TasksFilter {
+  status?: TaskStatus;
+  priority?: number;
+  scheduledDate?: string;
+  searchTerm?: string;
+}
+
+// ⭐ LOADING STATES
 export interface LoadingState {
   isLoading: boolean;
   error?: string;
 }
 
-// Dashboard statistics
+// ⭐ DASHBOARD STATISTICS
 export interface DashboardStats {
   notesCount: number;
   linksCount: number;
@@ -297,4 +404,23 @@ export interface DashboardStats {
   pendingTasksCount: number;
   notebooksCount: number;
   labelsCount: number;
+  filesCount: number;
+  linkGroupsCount: number;
+}
+
+// ⭐ TYPES POUR ENDPOINTS SPÉCIAUX
+export interface EndDayRequest {
+  date?: string;
+  taskIdsToCarryOver?: number[];
+  markDayAsCompleted?: boolean;
+}
+
+export interface ReorderTasksRequest {
+  taskIds: number[];
+  scheduledDate?: string;
+}
+
+// ⭐ HEALTH CHECK
+export interface HealthStatus {
+  status: string;
 }
