@@ -1,3 +1,4 @@
+// ✅ TASK TYPES - Inchangés
 export enum TaskPriority {
   LOW = 1,
   MEDIUM = 2,
@@ -40,13 +41,10 @@ export interface Task {
   completedAt?: string;
   createdAt: string;
   updatedAt: string;
-
   carriedOver: boolean;
   originalDate?: string;
   orderIndex: number;
-
   status: TaskStatus;
-
   overdue: boolean;
   scheduledForToday: boolean;
   scheduledForTomorrow: boolean;
@@ -111,6 +109,7 @@ export interface TaskStats {
   dailyStats: Record<string, { total: number; completed: number }>;
 }
 
+// ✅ TASK UTILITY FUNCTIONS - Inchangées
 export function getTaskPriorityEnum(priority: number): TaskPriority {
   if (priority === 1) return TaskPriority.LOW;
   if (priority === 3) return TaskPriority.HIGH;
@@ -164,6 +163,7 @@ export function getTaskStatusColor(status: TaskStatus): string {
   return colors[status];
 }
 
+// ✅ USER TYPES - Inchangés
 export interface User {
   id: number;
   email: string;
@@ -207,6 +207,8 @@ export interface Label {
   createdAt: string;
   updatedAt: string;
   noteCount?: number;
+  color?: string;
+  isSelected?: boolean;
 }
 
 export interface Note {
@@ -218,9 +220,12 @@ export interface Note {
   commentCount?: number;
   taskCount?: number;
   completedTaskCount?: number;
+
   notebookId?: number;
   notebookTitle?: string;
+
   labels?: Label[];
+
   comments?: Comment[];
 }
 
@@ -236,6 +241,161 @@ export interface Comment {
   };
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface CreateNoteForm {
+  title: string;
+  content: string;
+  notebookId?: number | null;
+  labelIds?: string[];
+}
+
+export interface UpdateNoteForm {
+  title?: string;
+  content?: string;
+  notebookId?: number | null;
+}
+
+export interface CreateNotebookForm {
+  title: string;
+}
+
+export interface CreateLabelForm {
+  name: string;
+  color?: string;
+}
+
+export interface NotesFilter {
+  notebookId?: number | null;
+  labelIds?: string[];
+  searchTerm?: string;
+  sortBy?: "createdAt" | "updatedAt" | "title";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface NotesSearchParams {
+  query?: string;
+  notebookId?: number;
+  labelIds?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface LabelUsageStats {
+  totalLabels: number;
+  mostUsedLabels: Array<{
+    label: Label;
+    noteCount: number;
+  }>;
+  unusedLabels: Label[];
+}
+
+export interface NotebookUsageStats {
+  totalNotebooks: number;
+  notebooksWithMostNotes: Array<{
+    notebook: Notebook;
+    noteCount: number;
+  }>;
+  emptyNotebooks: Notebook[];
+}
+
+export interface DashboardStats {
+  notesCount: number;
+  linksCount: number;
+  tasksCount: number;
+  pendingTasksCount: number;
+  notebooksCount: number;
+  labelsCount: number;
+  filesCount: number;
+  linkGroupsCount: number;
+
+  notesWithoutNotebook: number;
+  notesWithoutLabels: number;
+  averageLabelsPerNote: number;
+  averageNotesPerNotebook: number;
+}
+
+export interface LabelBadgeProps {
+  label: Label;
+  removable?: boolean;
+  onRemove?: (labelId: string) => void;
+  clickable?: boolean;
+  onClick?: (labelId: string) => void;
+  size?: "sm" | "md" | "lg";
+}
+
+export interface NotebookSelectorProps {
+  selectedNotebookId?: number | null;
+  onNotebookChange: (notebookId: number | null) => void;
+  includeNone?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+}
+
+export interface LabelSelectorProps {
+  selectedLabelIds: string[];
+  onLabelsChange: (labelIds: string[]) => void;
+  maxSelections?: number;
+  creatable?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+}
+
+export interface DragDropNote {
+  id: number;
+  title: string;
+  type: "note";
+}
+
+export interface DropTarget {
+  type: "notebook" | "label" | "trash";
+  id: string | number;
+}
+
+export interface ExportData {
+  notes: Note[];
+  notebooks: Notebook[];
+  labels: Label[];
+  exportedAt: string;
+  version: string;
+}
+
+export interface ImportResult {
+  importedNotes: number;
+  importedNotebooks: number;
+  importedLabels: number;
+  skippedDuplicates: number;
+  errors: string[];
+}
+
+export interface BulkNoteAction {
+  type: "moveToNotebook" | "addLabels" | "removeLabels" | "delete";
+  noteIds: number[];
+  targetNotebookId?: number | null;
+  labelIds?: string[];
+}
+
+export interface BulkActionResult {
+  successCount: number;
+  failureCount: number;
+  errors: string[];
+}
+
+export interface NavigationState {
+  currentNotebook: number | null;
+  selectedLabels: string[];
+  searchTerm: string;
+  viewMode: "grid" | "list" | "compact";
+  sortBy: "createdAt" | "updatedAt" | "title";
+  sortOrder: "asc" | "desc";
+}
+
+export interface SyncStatus {
+  isOnline: boolean;
+  lastSyncAt?: string;
+  pendingChanges: number;
+  syncInProgress: boolean;
+  syncErrors: string[];
 }
 
 export interface SavedLink {
@@ -264,6 +424,12 @@ export interface SavedLinkGroup {
   url: string;
   clickCounter: number;
   savedLinkDetails: SavedLink;
+}
+
+export interface CreateLinkForm {
+  url: string;
+  title: string;
+  description?: string;
 }
 
 export interface FileInfo {
@@ -326,26 +492,6 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
-export interface CreateNoteForm {
-  title: string;
-  content: string;
-  notebookId?: number;
-}
-
-export interface CreateNotebookForm {
-  title: string;
-}
-
-export interface CreateLabelForm {
-  name: string;
-}
-
-export interface CreateLinkForm {
-  url: string;
-  title: string;
-  description?: string;
-}
-
 export interface CreateDailyTaskForm {
   title: string;
   description?: string;
@@ -363,12 +509,6 @@ export interface CreateLinkGroupForm {
   description?: string;
 }
 
-export interface NotesFilter {
-  notebookId?: number;
-  labelIds?: string[];
-  searchTerm?: string;
-}
-
 export interface TasksFilter {
   status?: TaskStatus;
   priority?: number;
@@ -379,17 +519,6 @@ export interface TasksFilter {
 export interface LoadingState {
   isLoading: boolean;
   error?: string;
-}
-
-export interface DashboardStats {
-  notesCount: number;
-  linksCount: number;
-  tasksCount: number;
-  pendingTasksCount: number;
-  notebooksCount: number;
-  labelsCount: number;
-  filesCount: number;
-  linkGroupsCount: number;
 }
 
 export interface EndDayRequest {

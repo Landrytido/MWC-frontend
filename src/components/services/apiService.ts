@@ -75,7 +75,6 @@ export const useApiService = () => {
     [getToken]
   );
 
-  // ✅ NOUVEAU: Fetch pour upload de fichiers
   const fetchWithAuthMultipart = useCallback(
     async (url: string, formData: FormData) => {
       const token = getToken();
@@ -86,7 +85,6 @@ export const useApiService = () => {
 
       const headers = {
         Authorization: `Bearer ${token}`,
-        // ✅ Pas de Content-Type pour FormData (navigateur le gère)
       };
 
       try {
@@ -131,6 +129,360 @@ export const useApiService = () => {
     [dispatch]
   );
 
+  // 🆕 NOTES API - Améliorée avec gestion des relations
+  const notesApi = useMemo(
+    () => ({
+      getAll: async (): Promise<Note[]> => {
+        setLoading("notes", true);
+        try {
+          const notes = await fetchWithAuth("/notes");
+          dispatch({ type: "SET_NOTES", payload: notes });
+          setLoading("notes", false);
+          return notes;
+        } catch (error) {
+          setLoading(
+            "notes",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getById: async (id: number): Promise<Note> => {
+        return await fetchWithAuth(`/notes/${id}`);
+      },
+
+      getByNotebook: async (notebookId: number): Promise<Note[]> => {
+        return await fetchWithAuth(`/notes/notebooks/${notebookId}/notes`);
+      },
+
+      // 🆕 Création avec notebook optionnel
+      create: async (note: CreateNoteForm): Promise<Note> => {
+        // Nettoyer les données avant envoi
+        const cleanedNote = {
+          ...note,
+          notebookId: note.notebookId || undefined, // Convertir null en undefined pour l'API
+        };
+
+        const created = await fetchWithAuth("/notes", {
+          method: "POST",
+          body: JSON.stringify(cleanedNote),
+        });
+        dispatch({ type: "ADD_NOTE", payload: created });
+        return created;
+      },
+      // 🆕 Création directe dans un notebook
+      createInNotebook: async (
+        notebookId: number,
+        note: Omit<CreateNoteForm, "notebookId">
+      ): Promise<Note> => {
+        const noteData = { ...note, notebookId };
+        const created = await fetchWithAuth("/notes", {
+          method: "POST",
+          body: JSON.stringify(noteData),
+        });
+        dispatch({ type: "ADD_NOTE", payload: created });
+        return created;
+      },
+
+      update: async (id: number, note: Partial<Note>): Promise<Note> => {
+        const updated = await fetchWithAuth(`/notes/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(note),
+        });
+        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
+        return updated;
+      },
+
+      // 🆕 Déplacer une note vers un notebook
+      moveToNotebook: async (
+        id: number,
+        notebookId: number | null
+      ): Promise<Note> => {
+        const updated = await fetchWithAuth(`/notes/${id}/notebook`, {
+          method: "PUT",
+          body: JSON.stringify({ notebookId }),
+        });
+        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/notes/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_NOTE", payload: id });
+      },
+
+      // 🆕 GESTION DES LABELS SUR LES NOTES
+      addLabel: async (noteId: number, labelId: string): Promise<Note> => {
+        const updated = await fetchWithAuth(
+          `/notes/${noteId}/labels/${labelId}`,
+          {
+            method: "POST",
+          }
+        );
+        dispatch({
+          type: "UPDATE_NOTE",
+          payload: { id: noteId, note: updated },
+        });
+        return updated;
+      },
+
+      removeLabel: async (noteId: number, labelId: string): Promise<Note> => {
+        const updated = await fetchWithAuth(
+          `/notes/${noteId}/labels/${labelId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        dispatch({
+          type: "UPDATE_NOTE",
+          payload: { id: noteId, note: updated },
+        });
+        return updated;
+      },
+
+      getByLabel: async (labelId: string): Promise<Note[]> => {
+        return await fetchWithAuth(`/labels/${labelId}/notes`);
+      },
+
+      search: async (params: {
+        query?: string;
+        notebookId?: number | null;
+        labelIds?: string[];
+        limit?: number;
+        offset?: number;
+      }): Promise<{ notes: Note[]; total?: number }> => {
+        const searchParams = new URLSearchParams();
+
+        if (params.query) searchParams.append("query", params.query);
+        if (params.notebookId)
+          searchParams.append("notebookId", params.notebookId.toString());
+        if (params.labelIds?.length) {
+          params.labelIds.forEach((id) => searchParams.append("labelIds", id));
+        }
+        if (params.limit) searchParams.append("limit", params.limit.toString());
+        if (params.offset)
+          searchParams.append("offset", params.offset.toString());
+
+        return await fetchWithAuth(`/notes/search?${searchParams.toString()}`);
+      },
+
+      getRecentNotes: async (limit: number = 10): Promise<Note[]> => {
+        return await fetchWithAuth(`/notes/recent?limit=${limit}`);
+      },
+
+      getFavoriteNotes: async (): Promise<Note[]> => {
+        return await fetchWithAuth("/notes/favorites");
+      },
+
+      toggleFavorite: async (noteId: number): Promise<Note> => {
+        const updated = await fetchWithAuth(`/notes/${noteId}/favorite`, {
+          method: "POST",
+        });
+        dispatch({
+          type: "UPDATE_NOTE",
+          payload: { id: noteId, note: updated },
+        });
+        return updated;
+      },
+
+      // 🆕 Méthodes batch pour optimiser les performances
+      batchAddLabels: async (
+        noteId: number,
+        labelIds: string[]
+      ): Promise<Note> => {
+        const updated = await fetchWithAuth(`/notes/${noteId}/labels`, {
+          method: "POST",
+          body: JSON.stringify({ labelIds }),
+        });
+        dispatch({
+          type: "UPDATE_NOTE",
+          payload: { id: noteId, note: updated },
+        });
+        return updated;
+      },
+
+      batchRemoveLabels: async (
+        noteId: number,
+        labelIds: string[]
+      ): Promise<Note> => {
+        const updated = await fetchWithAuth(`/notes/${noteId}/labels`, {
+          method: "DELETE",
+          body: JSON.stringify({ labelIds }),
+        });
+        dispatch({
+          type: "UPDATE_NOTE",
+          payload: { id: noteId, note: updated },
+        });
+        return updated;
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
+  // 🆕 LABELS API - Améliorée
+  const labelsApi = useMemo(
+    () => ({
+      getAll: async (): Promise<Label[]> => {
+        setLoading("labels", true);
+        try {
+          const labels = await fetchWithAuth("/labels");
+          dispatch({ type: "SET_LABELS", payload: labels });
+          setLoading("labels", false);
+          return labels;
+        } catch (error) {
+          setLoading(
+            "labels",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getById: async (id: string): Promise<Label> => {
+        return await fetchWithAuth(`/labels/${id}`);
+      },
+
+      // 🆕 Obtenir les notes d'un label
+      getNotes: async (labelId: string): Promise<Note[]> => {
+        return await fetchWithAuth(`/labels/${labelId}/notes`);
+      },
+
+      search: async (keyword: string): Promise<Label[]> => {
+        return await fetchWithAuth(
+          `/labels/search?keyword=${encodeURIComponent(keyword)}`
+        );
+      },
+
+      create: async (label: CreateLabelForm): Promise<Label> => {
+        const created = await fetchWithAuth(
+          `/labels?name=${encodeURIComponent(label.name)}`,
+          {
+            method: "POST",
+          }
+        );
+        dispatch({ type: "ADD_LABEL", payload: created });
+        return created;
+      },
+
+      update: async (id: string, label: { name: string }): Promise<Label> => {
+        const updated = await fetchWithAuth(
+          `/labels/${id}?name=${encodeURIComponent(label.name)}`,
+          { method: "PUT" }
+        );
+        dispatch({ type: "UPDATE_LABEL", payload: { id, label: updated } });
+        return updated;
+      },
+
+      delete: async (id: string, forceDelete = false): Promise<void> => {
+        await fetchWithAuth(`/labels/${id}?forceDelete=${forceDelete}`, {
+          method: "DELETE",
+        });
+        dispatch({ type: "DELETE_LABEL", payload: id });
+      },
+
+      // 🆕 Statistiques d'utilisation
+      getUsageStats: async (): Promise<{
+        totalLabels: number;
+        mostUsedLabels: Array<{ label: Label; noteCount: number }>;
+        unusedLabels: Label[];
+      }> => {
+        return await fetchWithAuth("/labels/stats");
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
+  // 🆕 NOTEBOOKS API - Améliorée
+  const notebooksApi = useMemo(
+    () => ({
+      getAll: async (): Promise<Notebook[]> => {
+        setLoading("notebooks", true);
+        try {
+          const notebooks = await fetchWithAuth("/notebooks");
+          dispatch({ type: "SET_NOTEBOOKS", payload: notebooks });
+          setLoading("notebooks", false);
+          return notebooks;
+        } catch (error) {
+          setLoading(
+            "notebooks",
+            false,
+            error instanceof Error ? error.message : "Erreur inconnue"
+          );
+          throw error;
+        }
+      },
+
+      getById: async (id: number): Promise<Notebook> => {
+        return await fetchWithAuth(`/notebooks/${id}`);
+      },
+
+      // 🆕 Obtenir les notes d'un notebook avec pagination
+      getNotes: async (
+        notebookId: number,
+        params?: { limit?: number; offset?: number }
+      ): Promise<{ notes: Note[]; total: number }> => {
+        const searchParams = new URLSearchParams();
+        if (params?.limit)
+          searchParams.append("limit", params.limit.toString());
+        if (params?.offset)
+          searchParams.append("offset", params.offset.toString());
+
+        const queryString = searchParams.toString();
+        const url = `/notebooks/${notebookId}/notes${
+          queryString ? `?${queryString}` : ""
+        }`;
+
+        return await fetchWithAuth(url);
+      },
+
+      create: async (notebook: CreateNotebookForm): Promise<Notebook> => {
+        const created = await fetchWithAuth("/notebooks", {
+          method: "POST",
+          body: JSON.stringify(notebook),
+        });
+        dispatch({ type: "ADD_NOTEBOOK", payload: created });
+        return created;
+      },
+
+      update: async (
+        id: number,
+        notebook: CreateNotebookForm
+      ): Promise<Notebook> => {
+        const updated = await fetchWithAuth(`/notebooks/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(notebook),
+        });
+        dispatch({
+          type: "UPDATE_NOTEBOOK",
+          payload: { id, notebook: updated },
+        });
+        return updated;
+      },
+
+      delete: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/notebooks/${id}`, { method: "DELETE" });
+        dispatch({ type: "DELETE_NOTEBOOK", payload: id });
+      },
+
+      // 🆕 Statistiques d'utilisation
+      getUsageStats: async (): Promise<{
+        totalNotebooks: number;
+        notebooksWithMostNotes: Array<{
+          notebook: Notebook;
+          noteCount: number;
+        }>;
+        emptyNotebooks: Notebook[];
+      }> => {
+        return await fetchWithAuth("/notebooks/stats");
+      },
+    }),
+    [fetchWithAuth, setLoading, dispatch]
+  );
+
+  // ✅ HEALTH API
   const healthApi = useMemo(
     () => ({
       check: async (): Promise<{ status: string }> => {
@@ -140,12 +492,12 @@ export const useApiService = () => {
     [fetchWithAuth]
   );
 
+  // ✅ USER API
   const userApi = useMemo(
     () => ({
       getProfile: async () => {
         return await fetchWithAuth("/users/profile");
       },
-
       getMe: async () => {
         return await fetchWithAuth("/users/me");
       },
@@ -160,13 +512,13 @@ export const useApiService = () => {
           },
           body: JSON.stringify(userData),
         });
-
         return updatedUser;
       },
     }),
     [fetchWithAuth]
   );
 
+  // ✅ TASKS API
   const tasksApi = useMemo(
     () => ({
       getAll: async (): Promise<Task[]> => {
@@ -190,7 +542,6 @@ export const useApiService = () => {
         return await fetchWithAuth(`/tasks/${id}`);
       },
 
-      // Endpoints par statut
       getPending: async (): Promise<Task[]> => {
         return await fetchWithAuth("/tasks/pending");
       },
@@ -203,7 +554,6 @@ export const useApiService = () => {
         return await fetchWithAuth("/tasks/overdue");
       },
 
-      // Endpoints de planification quotidienne
       getTodayTasks: async (): Promise<Task[]> => {
         return await fetchWithAuth("/tasks/today");
       },
@@ -224,7 +574,6 @@ export const useApiService = () => {
         return await fetchWithAuth(`/tasks/due-in-days?days=${days}`);
       },
 
-      // Recherche et filtres
       searchTasks: async (keyword: string): Promise<Task[]> => {
         return await fetchWithAuth(
           `/tasks/search?keyword=${encodeURIComponent(keyword)}`
@@ -235,12 +584,10 @@ export const useApiService = () => {
         return await fetchWithAuth(`/tasks/by-priority?priority=${priority}`);
       },
 
-      // Statistiques et compteurs
       getPendingCount: async (): Promise<{ count: number }> => {
         return await fetchWithAuth("/tasks/pending/count");
       },
 
-      // ✅ CORRECTION: Utiliser l'endpoint backend réel
       getSummary: async (): Promise<ApiTaskSummary> => {
         return await fetchWithAuth("/tasks/summary");
       },
@@ -254,7 +601,6 @@ export const useApiService = () => {
         );
       },
 
-      // CRUD operations
       create: async (task: CreateTaskForm): Promise<Task> => {
         const created = await fetchWithAuth("/tasks", {
           method: "POST",
@@ -286,7 +632,6 @@ export const useApiService = () => {
         dispatch({ type: "DELETE_TASK", payload: id });
       },
 
-      // Endpoints de planification avancée
       endDay: async (data: {
         date?: string;
         taskIdsToCarryOver?: number[];
@@ -311,6 +656,7 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
+  // ✅ COMMENTS API
   const commentsApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {
@@ -363,202 +709,7 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ NOTES API - déjà correcte
-  const notesApi = useMemo(
-    () => ({
-      getAll: async (): Promise<Note[]> => {
-        setLoading("notes", true);
-        try {
-          const notes = await fetchWithAuth("/notes");
-          dispatch({ type: "SET_NOTES", payload: notes });
-          setLoading("notes", false);
-          return notes;
-        } catch (error) {
-          setLoading(
-            "notes",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getById: async (id: number): Promise<Note> => {
-        return await fetchWithAuth(`/notes/${id}`);
-      },
-
-      getByNotebook: async (notebookId: number): Promise<Note[]> => {
-        return await fetchWithAuth(`/notes/notebooks/${notebookId}/notes`);
-      },
-
-      create: async (note: CreateNoteForm): Promise<Note> => {
-        const created = await fetchWithAuth("/notes", {
-          method: "POST",
-          body: JSON.stringify(note),
-        });
-        dispatch({ type: "ADD_NOTE", payload: created });
-        return created;
-      },
-
-      createInNotebook: async (
-        notebookId: number,
-        note: Omit<CreateNoteForm, "notebookId">
-      ): Promise<Note> => {
-        const created = await fetchWithAuth(`/notes/notebooks/${notebookId}`, {
-          method: "POST",
-          body: JSON.stringify(note),
-        });
-        dispatch({ type: "ADD_NOTE", payload: created });
-        return created;
-      },
-
-      update: async (id: number, note: Partial<Note>): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(note),
-        });
-        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
-        return updated;
-      },
-
-      moveToNotebook: async (
-        id: number,
-        notebookId: number | null
-      ): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${id}/notebook`, {
-          method: "PUT",
-          body: JSON.stringify({ notebookId }),
-        });
-        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
-        return updated;
-      },
-
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/notes/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_NOTE", payload: id });
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
-  // ✅ NOTEBOOKS API - déjà correcte
-  const notebooksApi = useMemo(
-    () => ({
-      getAll: async (): Promise<Notebook[]> => {
-        setLoading("notebooks", true);
-        try {
-          const notebooks = await fetchWithAuth("/notebooks");
-          dispatch({ type: "SET_NOTEBOOKS", payload: notebooks });
-          setLoading("notebooks", false);
-          return notebooks;
-        } catch (error) {
-          setLoading(
-            "notebooks",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getById: async (id: number): Promise<Notebook> => {
-        return await fetchWithAuth(`/notebooks/${id}`);
-      },
-
-      create: async (notebook: CreateNotebookForm): Promise<Notebook> => {
-        const created = await fetchWithAuth("/notebooks", {
-          method: "POST",
-          body: JSON.stringify(notebook),
-        });
-        dispatch({ type: "ADD_NOTEBOOK", payload: created });
-        return created;
-      },
-
-      update: async (
-        id: number,
-        notebook: CreateNotebookForm
-      ): Promise<Notebook> => {
-        const updated = await fetchWithAuth(`/notebooks/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(notebook),
-        });
-        dispatch({
-          type: "UPDATE_NOTEBOOK",
-          payload: { id, notebook: updated },
-        });
-        return updated;
-      },
-
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/notebooks/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_NOTEBOOK", payload: id });
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
-  // ✅ LABELS API corrigée pour utiliser query params
-  const labelsApi = useMemo(
-    () => ({
-      getAll: async (): Promise<Label[]> => {
-        setLoading("labels", true);
-        try {
-          const labels = await fetchWithAuth("/labels");
-          dispatch({ type: "SET_LABELS", payload: labels });
-          setLoading("labels", false);
-          return labels;
-        } catch (error) {
-          setLoading(
-            "labels",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getById: async (id: string): Promise<Label> => {
-        return await fetchWithAuth(`/labels/${id}`);
-      },
-
-      search: async (keyword: string): Promise<Label[]> => {
-        return await fetchWithAuth(
-          `/labels/search?keyword=${encodeURIComponent(keyword)}`
-        );
-      },
-
-      // ✅ CORRECTION: Utiliser CreateLabelForm pour la cohérence
-      create: async (label: CreateLabelForm): Promise<Label> => {
-        const created = await fetchWithAuth(
-          `/labels?name=${encodeURIComponent(label.name)}`,
-          {
-            method: "POST",
-          }
-        );
-        dispatch({ type: "ADD_LABEL", payload: created });
-        return created;
-      },
-
-      update: async (id: string, label: { name: string }): Promise<Label> => {
-        const updated = await fetchWithAuth(
-          `/labels/${id}?name=${encodeURIComponent(label.name)}`,
-          { method: "PUT" }
-        );
-        dispatch({ type: "UPDATE_LABEL", payload: { id, label: updated } });
-        return updated;
-      },
-
-      delete: async (id: string, forceDelete = false): Promise<void> => {
-        await fetchWithAuth(`/labels/${id}?forceDelete=${forceDelete}`, {
-          method: "DELETE",
-        });
-        dispatch({ type: "DELETE_LABEL", payload: id });
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
-  // ✅ SAVED LINKS API - déjà correcte
+  // ✅ LINKS API
   const linksApi = useMemo(
     () => ({
       getAll: async (): Promise<SavedLink[]> => {
@@ -611,7 +762,7 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ NOUVEAU: LINK GROUPS API complète
+  // ✅ LINK GROUPS API
   const linkGroupsApi = useMemo(
     () => ({
       getAll: async (): Promise<LinkGroup[]> => {
@@ -646,7 +797,6 @@ export const useApiService = () => {
         await fetchWithAuth(`/link-groups/${id}`, { method: "DELETE" });
       },
 
-      // Gestion des liens dans les groupes
       getLinksInGroup: async (groupId: string): Promise<SavedLinkGroup[]> => {
         return await fetchWithAuth(`/link-groups/${groupId}/links`);
       },
@@ -707,7 +857,7 @@ export const useApiService = () => {
     [fetchWithAuth]
   );
 
-  // ✅ BLOC NOTE API - déjà correcte
+  // ✅ BLOC NOTE API
   const blocNoteApi = useMemo(
     () => ({
       get: async (): Promise<BlocNote> => {
@@ -746,7 +896,7 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ NOUVEAU: FILES API complète
+  // ✅ FILES API
   const filesApi = useMemo(
     () => ({
       getAll: async (): Promise<FileInfo[]> => {
@@ -797,6 +947,7 @@ export const useApiService = () => {
     [fetchWithAuth, fetchWithAuthMultipart, getToken]
   );
 
+  // ✅ RETURN FINAL - Toutes les APIs
   return useMemo(
     () => ({
       health: healthApi,
