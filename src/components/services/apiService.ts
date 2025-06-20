@@ -23,6 +23,7 @@ import {
   ApiTaskStats,
   FileUploadResponse,
   FileStatistics,
+  User,
 } from "../types";
 
 const API_BASE_URL =
@@ -130,7 +131,6 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // ✅ NOUVEAU: Health API
   const healthApi = useMemo(
     () => ({
       check: async (): Promise<{ status: string }> => {
@@ -140,7 +140,6 @@ export const useApiService = () => {
     [fetchWithAuth]
   );
 
-  // ✅ USER API améliorée
   const userApi = useMemo(
     () => ({
       getProfile: async () => {
@@ -150,24 +149,26 @@ export const useApiService = () => {
       getMe: async () => {
         return await fetchWithAuth("/users/me");
       },
-
       updateProfile: async (userData: {
         firstName?: string;
         lastName?: string;
-      }) => {
-        return await fetchWithAuth("/users/profile", {
+      }): Promise<User> => {
+        const updatedUser = await fetchWithAuth("/users/profile", {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(userData),
         });
+
+        return updatedUser;
       },
     }),
     [fetchWithAuth]
   );
 
-  // ✅ TASKS API complètement corrigée avec tous les endpoints
   const tasksApi = useMemo(
     () => ({
-      // Endpoints de base
       getAll: async (): Promise<Task[]> => {
         setLoading("tasks", true);
         try {

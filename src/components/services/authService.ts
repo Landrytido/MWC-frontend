@@ -82,7 +82,13 @@ class AuthService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Erreur de connexion");
+      console.log("🔍 Données d'erreur reçues:", errorData);
+      const errorMessage =
+        errorData?.message || errorData?.error || "Erreur de connexion";
+      console.log("🔍 Message d'erreur final:", errorMessage);
+      throw new Error(
+        errorData?.message || errorData?.error || "Erreur de connexion"
+      );
     }
 
     const authResponse: AuthResponse = await response.json();
@@ -101,7 +107,9 @@ class AuthService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Erreur lors de l'inscription");
+      throw new Error(
+        errorData?.message || errorData?.error || "Erreur de connexion"
+      );
     }
 
     const authResponse: AuthResponse = await response.json();

@@ -25,7 +25,35 @@ const SignUp: React.FC = () => {
     if (state.error) {
       clearError();
     }
-  }, [firstName, lastName, emailAddress, password, clearError]);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (state.error) {
+        clearError();
+      }
+    };
+  }, [clearError, state.error]);
+  const handleInputChange = (field: string, value: string) => {
+    if (state.error) {
+      clearError();
+    }
+
+    switch (field) {
+      case "firstName":
+        setFirstName(value);
+        break;
+      case "lastName":
+        setLastName(value);
+        break;
+      case "email":
+        setEmailAddress(value);
+        break;
+      case "password":
+        setPassword(value);
+        break;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,8 +174,22 @@ const SignUp: React.FC = () => {
               </h2>
 
               {state.error && (
-                <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-md">
-                  {state.error}
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="font-medium">Erreur d'inscription</span>
+                  </div>
+                  <p className="mt-1 text-sm">{state.error}</p>
                 </div>
               )}
 
@@ -162,7 +204,9 @@ const SignUp: React.FC = () => {
                       type="text"
                       placeholder="Prénom"
                       value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
                       required
                       disabled={state.isLoading}
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -178,7 +222,9 @@ const SignUp: React.FC = () => {
                       type="text"
                       placeholder="Nom"
                       value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
                       required
                       disabled={state.isLoading}
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -195,7 +241,7 @@ const SignUp: React.FC = () => {
                     type="email"
                     placeholder="Email"
                     value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     required
                     disabled={state.isLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -211,7 +257,9 @@ const SignUp: React.FC = () => {
                     type="password"
                     placeholder="Mot de passe"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     required
                     disabled={state.isLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -228,11 +276,11 @@ const SignUp: React.FC = () => {
                     !emailAddress.trim() ||
                     !password.trim()
                   }
-                  className="w-full py-3 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-teal-400 hover:bg-teal-500 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {state.isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                       Inscription en cours...
                     </div>
                   ) : (
@@ -244,7 +292,11 @@ const SignUp: React.FC = () => {
               <div className="mt-6 text-center">
                 <p className="text-gray-600">
                   Vous avez déjà un compte ?{" "}
-                  <Link to="/login" className="text-teal-500 hover:underline">
+                  <Link
+                    to="/login"
+                    className="text-teal-500 hover:underline"
+                    onClick={() => clearError()}
+                  >
                     Se Connecter
                   </Link>
                 </p>

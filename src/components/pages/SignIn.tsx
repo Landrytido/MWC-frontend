@@ -1,4 +1,3 @@
-// src/components/pages/SignIn.tsx (Version mise à jour)
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -14,22 +13,39 @@ const SignIn: React.FC = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  // Récupérer l'URL de redirection depuis l'état de navigation
   const from = location.state?.from?.pathname || "/dashboard";
 
-  // Rediriger si déjà connecté
   useEffect(() => {
     if (state.isAuthenticated) {
       navigate(from, { replace: true });
     }
   }, [state.isAuthenticated, navigate, from]);
 
-  // Effacer les erreurs au changement de champs
   useEffect(() => {
     if (state.error) {
       clearError();
     }
-  }, [emailAddress, password, clearError]);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (state.error) {
+        clearError();
+      }
+    };
+  }, [clearError, state.error]);
+
+  const handleInputChange = (field: "email" | "password", value: string) => {
+    if (state.error) {
+      clearError();
+    }
+
+    if (field === "email") {
+      setEmailAddress(value);
+    } else {
+      setPassword(value);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +56,7 @@ const SignIn: React.FC = () => {
 
     try {
       await login({ email: emailAddress, password });
-      // La redirection sera gérée par l'useEffect ci-dessus
     } catch (error) {
-      // L'erreur est déjà gérée par le contexte
       console.error("Login error:", error);
     }
   };
@@ -54,15 +68,28 @@ const SignIn: React.FC = () => {
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
-            {/* Form container */}
             <div className="bg-white shadow-lg rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-center text-gray-800 mb-8">
                 Connexion
               </h2>
 
               {state.error && (
-                <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-md">
-                  {state.error}
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="font-medium">Erreur de connexion</span>
+                  </div>
+                  <p className="mt-1 text-sm">{state.error}</p>
                 </div>
               )}
 
@@ -76,7 +103,7 @@ const SignIn: React.FC = () => {
                     type="email"
                     placeholder="Email"
                     value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     required
                     disabled={state.isLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -92,7 +119,9 @@ const SignIn: React.FC = () => {
                     type="password"
                     placeholder="Mot de passe"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     required
                     disabled={state.isLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
@@ -145,7 +174,11 @@ const SignIn: React.FC = () => {
               <div className="mt-6 text-center">
                 <p className="text-gray-600">
                   Vous n'avez pas de compte ?{" "}
-                  <Link to="/signup" className="text-teal-500 hover:underline">
+                  <Link
+                    to="/signup"
+                    className="text-teal-500 hover:underline"
+                    onClick={() => clearError()}
+                  >
                     S'inscrire
                   </Link>
                 </p>

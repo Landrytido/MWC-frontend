@@ -4,7 +4,7 @@ import Layout from "../layout/Layout";
 import { useApiService } from "../services/apiService";
 
 const UserSettings: React.FC = () => {
-  const { state } = useAuth();
+  const { state, updateUser } = useAuth();
   const api = useApiService();
 
   const [firstName, setFirstName] = useState("");
@@ -27,10 +27,12 @@ const UserSettings: React.FC = () => {
     setMessage({ type: "", content: "" });
 
     try {
-      await api.user.updateProfile({
+      const updatedUser = await api.user.updateProfile({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
+
+      updateUser(updatedUser);
 
       setMessage({
         type: "success",
