@@ -1,7 +1,5 @@
-// src/components/dashboard/TaskCard.tsx - VERSION CORRIGÉE
-
 import React from "react";
-import { Task, getPriorityConfig, getTaskStatus } from "../types";
+import { Task, getPriorityConfig } from "../types";
 
 interface TaskCardProps {
   task: Task;
@@ -18,11 +16,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onToggle,
   showScheduleInfo = false,
 }) => {
-  // ✅ CORRECTION: Utiliser la fonction helper sécurisée
   const priorityConfig = getPriorityConfig(task.priority);
 
-  // ✅ CORRECTION: Utiliser le status du backend ou calculer côté client
-  const status = task.status || getTaskStatus(task);
+  const status = task.status;
 
   const formattedDueDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("fr-FR", {
@@ -41,7 +37,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
       })
     : null;
 
-  // ✅ CORRECTION: Fonction pour obtenir la couleur du badge de priorité
   const getPriorityBadgeColor = () => {
     switch (task.priority) {
       case 3: // HIGH
@@ -55,27 +50,32 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  // ✅ CORRECTION: Fonction pour obtenir le badge de statut
   const getStatusDisplay = () => {
     switch (status) {
       case "completed":
         return { text: "✓ Terminée", color: "text-green-600", show: true };
       case "overdue":
         return {
-          text: "(En retard)",
+          text: "⚠️ En retard",
           color: "text-red-600 font-medium",
           show: true,
         };
       case "today":
         return {
-          text: "Aujourd'hui",
+          text: "📅 Aujourd'hui",
           color: "text-blue-600",
           show: showScheduleInfo,
         };
       case "tomorrow":
         return {
-          text: "Demain",
+          text: "🗓️ Demain",
           color: "text-purple-600",
+          show: showScheduleInfo,
+        };
+      case "upcoming":
+        return {
+          text: "⏰ À venir",
+          color: "text-gray-600",
           show: showScheduleInfo,
         };
       default:
@@ -93,7 +93,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
-          {/* Checkbox */}
           <button
             onClick={() => onToggle(task.id)}
             className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
@@ -113,9 +112,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             )}
           </button>
 
-          {/* Contenu */}
           <div className="flex-1 min-w-0">
-            {/* Titre et badges */}
             <div className="flex items-start flex-wrap gap-2 mb-2">
               <h3
                 className={`font-medium text-base leading-tight ${
@@ -127,7 +124,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {task.title}
               </h3>
 
-              {/* Badge de priorité - Avec protection contre les valeurs nulles */}
               {priorityConfig && (
                 <span
                   className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${getPriorityBadgeColor()}`}
@@ -136,14 +132,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </span>
               )}
 
-              {/* Badge de statut */}
               {statusDisplay.show && (
                 <span className={`text-xs ${statusDisplay.color}`}>
                   {statusDisplay.text}
                 </span>
               )}
 
-              {/* Badge "Reportée" */}
               {task.carriedOver && (
                 <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-orange-50 text-orange-700 border border-orange-200">
                   📅 Reportée
@@ -151,7 +145,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               )}
             </div>
 
-            {/* Description */}
             {task.description && (
               <p
                 className={`text-sm mt-2 leading-relaxed ${
@@ -162,7 +155,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </p>
             )}
 
-            {/* Informations de dates */}
             {(formattedDueDate ||
               (showScheduleInfo && formattedScheduledDate)) && (
               <div className="flex items-center space-x-4 mt-3 text-xs">
@@ -222,7 +214,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        {/* Actions - Apparaissent au hover */}
         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
           <button
             onClick={() => onEdit(task)}
@@ -266,7 +257,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Ligne de séparation subtile en bas */}
       <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
         <div className="flex items-center justify-between text-xs text-gray-400">
           <span>

@@ -160,7 +160,6 @@ class AuthService {
     return !!this.token && !!this.user;
   }
 
-  // Méthode pour faire des requêtes authentifiées avec refresh automatique
   async authenticatedFetch(
     url: string,
     options: RequestInit = {}
@@ -176,7 +175,6 @@ class AuthService {
         Authorization: `Bearer ${this.token}`,
       },
     });
-
     // Si le token a expiré, essayer de le rafraîchir
     if (response.status === 401 && this.refreshToken) {
       try {
@@ -188,7 +186,7 @@ class AuthService {
             Authorization: `Bearer ${this.token}`,
           },
         });
-      } catch (error) {
+      } catch {
         this.clearStorage();
         throw new Error("Session expired, please login again");
       }

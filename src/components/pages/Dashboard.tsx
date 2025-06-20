@@ -7,7 +7,7 @@ import LinkCard from "../dashboard/LinkCard";
 import NotebookSidebar from "../dashboard/NotebookSidebar";
 import LabelManager from "../dashboard/LabelManager";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
-import { useApp, useNotes, useLinks } from "../contexts/AppContext";
+import { useApp, useNotes, useLinks, useUI } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
@@ -27,10 +27,8 @@ const Dashboard: React.FC = () => {
     "notes" | "links" | "tasks" | "tools"
   >("notes");
 
-  const [searchTerm, setSearchTerm] = useState("");
   const initializationRef = useRef(false);
-
-  // ✅ FIX 1: Initialize data only once per session
+  const { searchTerm } = useUI();
   useEffect(() => {
     if (!initializationRef.current && authState.user) {
       console.log("🚀 Initializing dashboard data...");
@@ -38,7 +36,6 @@ const Dashboard: React.FC = () => {
 
       const initializeData = async () => {
         try {
-          // ✅ Exécuter en parallèle sans attendre
           Promise.allSettled([
             api.notes.getAll(),
             api.notebooks.getAll(),
@@ -46,7 +43,6 @@ const Dashboard: React.FC = () => {
             api.links.getAll(),
             api.blocNote.get(),
             api.tasks.getAll(),
-            api.noteTasks.getAll,
           ]).then(() => {
             console.log("✅ Dashboard data initialized");
           });
@@ -65,17 +61,8 @@ const Dashboard: React.FC = () => {
     api.links,
     api.notebooks,
     api.labels,
-    api.noteTasks.getAll,
     api.blocNote,
   ]);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      dispatch({ type: "SET_SEARCH_TERM", payload: searchTerm });
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, dispatch]);
 
   const handleEditNote = useCallback(
     (note: Note) => {
@@ -142,11 +129,9 @@ const Dashboard: React.FC = () => {
     [confirm, api.links]
   );
   const handleClearFilters = useCallback(() => {
-    setSearchTerm("");
     dispatch({ type: "RESET_FILTERS" });
   }, [dispatch]);
 
-  // ✅ FIX 4: Show loading state during initialization
   if (!initializationRef.current) {
     return (
       <Layout>
@@ -186,7 +171,6 @@ const Dashboard: React.FC = () => {
             <NotebookSidebar />
             <LabelManager />
             <BlocNoteWidget />
-            {/* <PendingTasksWidget className="mt-6" /> */}
           </div>
 
           {/* Main Content */}
@@ -198,7 +182,12 @@ const Dashboard: React.FC = () => {
                   type="text"
                   placeholder="Rechercher..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "SET_SEARCH_TERM",
+                      payload: e.target.value,
+                    })
+                  }
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 <svg

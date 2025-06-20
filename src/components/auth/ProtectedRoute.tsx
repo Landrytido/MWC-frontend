@@ -23,7 +23,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!state.isAuthenticated) {
-    // Rediriger vers la page de connexion en gardant l'URL de destination
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

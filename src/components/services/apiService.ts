@@ -16,7 +16,6 @@ import {
   CreateTaskForm,
   UpdateTaskForm,
   Comment,
-  NoteTask,
   FileInfo,
   LinkGroup,
   SavedLinkGroup,
@@ -311,105 +310,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ NOTE TASKS API corrigée avec les bons formats
-  const noteTasksApi = useMemo(
-    () => ({
-      getByNoteId: async (noteId: number) => {
-        setLoading("noteTasks", true);
-        try {
-          const tasks = await fetchWithAuth(`/note-tasks/note/${noteId}`);
-          dispatch({
-            type: "SET_NOTE_TASKS_FOR_NOTE",
-            payload: { noteId, tasks },
-          });
-          setLoading("noteTasks", false);
-          return tasks;
-        } catch (error) {
-          setLoading(
-            "noteTasks",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getAll: async (): Promise<NoteTask[]> => {
-        setLoading("noteTasks", true);
-        try {
-          const tasks = await fetchWithAuth("/note-tasks");
-          dispatch({ type: "SET_NOTE_TASKS", payload: tasks });
-          setLoading("noteTasks", false);
-          return tasks;
-        } catch (error) {
-          setLoading(
-            "noteTasks",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getPending: async (): Promise<NoteTask[]> => {
-        return await fetchWithAuth("/note-tasks/pending");
-      },
-
-      getById: async (taskId: number): Promise<NoteTask> => {
-        return await fetchWithAuth(`/note-tasks/${taskId}`);
-      },
-
-      // ✅ CORRECTION: Utiliser query params comme attendu par le backend
-      create: async (
-        noteId: number,
-        title: string,
-        parentId?: number
-      ): Promise<NoteTask> => {
-        const params = new URLSearchParams({ title });
-        if (parentId) {
-          params.append("parentId", parentId.toString());
-        }
-
-        const created = await fetchWithAuth(
-          `/note-tasks/note/${noteId}?${params}`,
-          {
-            method: "POST",
-          }
-        );
-        dispatch({ type: "ADD_NOTE_TASK", payload: created });
-        return created;
-      },
-
-      update: async (
-        id: number,
-        data: Partial<NoteTask>
-      ): Promise<NoteTask> => {
-        const updated = await fetchWithAuth(`/note-tasks/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(data),
-        });
-        dispatch({ type: "UPDATE_NOTE_TASK", payload: { id, task: updated } });
-        return updated;
-      },
-
-      // ✅ CORRECTION: PATCH au lieu de PUT
-      toggle: async (id: number): Promise<NoteTask> => {
-        const updated = await fetchWithAuth(`/note-tasks/${id}/toggle`, {
-          method: "PATCH",
-        });
-        dispatch({ type: "UPDATE_NOTE_TASK", payload: { id, task: updated } });
-        return updated;
-      },
-
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/note-tasks/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_NOTE_TASK", payload: id });
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
-  // ✅ COMMENTS API - déjà correcte
   const commentsApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {
@@ -831,7 +731,9 @@ export const useApiService = () => {
           method: "PUT",
           body: JSON.stringify({ content }),
         });
-        dispatch({ type: "UPDATE_BLOC_NOTE", payload: { content } });
+
+        dispatch({ type: "SET_BLOC_NOTE", payload: updated });
+
         return updated;
       },
 
@@ -906,7 +808,6 @@ export const useApiService = () => {
       blocNote: blocNoteApi,
       tasks: tasksApi,
       comments: commentsApi,
-      noteTasks: noteTasksApi,
       files: filesApi,
     }),
     [
@@ -920,7 +821,6 @@ export const useApiService = () => {
       blocNoteApi,
       tasksApi,
       commentsApi,
-      noteTasksApi,
       filesApi,
     ]
   );

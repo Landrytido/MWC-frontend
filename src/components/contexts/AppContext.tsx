@@ -11,10 +11,8 @@ import {
   User,
   LoadingState,
   Comment,
-  NoteTask,
 } from "../types";
 
-// State interface
 interface AppState {
   user: User | null;
   notes: Note[];
@@ -26,9 +24,7 @@ interface AppState {
   dailyTasks: DailyTask[];
   blocNote: BlocNote | null;
   comments: Comment[];
-  noteTasks: NoteTask[];
 
-  // Loading states
   loadingStates: {
     notes: LoadingState;
     notebooks: LoadingState;
@@ -38,7 +34,6 @@ interface AppState {
     dailyTasks: LoadingState;
     blocNote: LoadingState;
     comments: LoadingState;
-    noteTasks: LoadingState;
   };
 
   // UI state
@@ -136,20 +131,6 @@ type AppAction =
   | {
       type: "SET_NOTE_COMMENTS";
       payload: { noteId: number; comments: Comment[] };
-    }
-
-  // Notes Tasks actions
-  | { type: "SET_NOTE_TASKS"; payload: NoteTask[] }
-  | { type: "ADD_NOTE_TASK"; payload: NoteTask }
-  | {
-      type: "UPDATE_NOTE_TASK";
-      payload: { id: number; task: Partial<NoteTask> };
-    }
-  | { type: "DELETE_NOTE_TASK"; payload: number }
-  | { type: "TOGGLE_NOTE_TASK"; payload: number }
-  | {
-      type: "SET_NOTE_TASKS_FOR_NOTE";
-      payload: { noteId: number; tasks: NoteTask[] };
     };
 
 // Initial state
@@ -164,7 +145,6 @@ const initialState: AppState = {
   dailyTasks: [],
   blocNote: null,
   comments: [],
-  noteTasks: [],
 
   loadingStates: {
     notes: { isLoading: false },
@@ -175,7 +155,6 @@ const initialState: AppState = {
     dailyTasks: { isLoading: false },
     blocNote: { isLoading: false },
     comments: { isLoading: false },
-    noteTasks: { isLoading: false },
   },
 
   ui: {
@@ -487,83 +466,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ],
       };
 
-    // Note Tasks actions
-    case "SET_NOTE_TASKS":
-      return { ...state, noteTasks: action.payload };
-
-    case "ADD_NOTE_TASK":
-      return {
-        ...state,
-        noteTasks: [action.payload, ...state.noteTasks],
-        notes: state.notes.map((note) =>
-          note.id === action.payload.noteId
-            ? { ...note, taskCount: (note.taskCount || 0) + 1 }
-            : note
-        ),
-      };
-
-    case "UPDATE_NOTE_TASK":
-      return {
-        ...state,
-        noteTasks: state.noteTasks.map((task) =>
-          task.id === action.payload.id
-            ? { ...task, ...action.payload.task }
-            : task
-        ),
-      };
-
-    case "DELETE_NOTE_TASK": {
-      const deletedTask = state.noteTasks.find((t) => t.id === action.payload);
-      return {
-        ...state,
-        noteTasks: state.noteTasks.filter((task) => task.id !== action.payload),
-        notes: deletedTask
-          ? state.notes.map((note) =>
-              note.id === deletedTask.noteId
-                ? {
-                    ...note,
-                    taskCount: Math.max((note.taskCount || 0) - 1, 0),
-                    completedTaskCount: deletedTask.completed
-                      ? Math.max((note.completedTaskCount || 0) - 1, 0)
-                      : note.completedTaskCount,
-                  }
-                : note
-            )
-          : state.notes,
-      };
-    }
-
-    case "TOGGLE_NOTE_TASK": {
-      const task = state.noteTasks.find((t) => t.id === action.payload);
-      return {
-        ...state,
-        noteTasks: state.noteTasks.map((t) =>
-          t.id === action.payload ? { ...t, completed: !t.completed } : t
-        ),
-        notes: task
-          ? state.notes.map((note) =>
-              note.id === task.noteId
-                ? {
-                    ...note,
-                    completedTaskCount: task.completed
-                      ? Math.max((note.completedTaskCount || 0) - 1, 0)
-                      : (note.completedTaskCount || 0) + 1,
-                  }
-                : note
-            )
-          : state.notes,
-      };
-    }
-
-    case "SET_NOTE_TASKS_FOR_NOTE":
-      return {
-        ...state,
-        noteTasks: [
-          ...state.noteTasks.filter((t) => t.noteId !== action.payload.noteId),
-          ...action.payload.tasks,
-        ],
-      };
-
     default:
       return state;
   }
@@ -685,21 +587,6 @@ export const useComments = () => {
     loading: state.loadingStates.comments,
     getCommentsByNoteId: (noteId: number) =>
       state.comments.filter((comment) => comment.noteId === noteId),
-  };
-};
-
-export const useNoteTasks = () => {
-  const { state } = useApp();
-  return {
-    noteTasks: state.noteTasks,
-    loading: state.loadingStates.noteTasks,
-    getTasksByNoteId: (noteId: number) =>
-      state.noteTasks.filter(
-        (task) => task.noteId === noteId && !task.parentId
-      ),
-    getPendingTasks: () => state.noteTasks.filter((task) => !task.completed),
-    getTasksByParentId: (parentId: number) =>
-      state.noteTasks.filter((task) => task.parentId === parentId),
   };
 };
 

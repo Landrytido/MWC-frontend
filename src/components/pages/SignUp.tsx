@@ -1,4 +1,3 @@
-// src/components/pages/SignUp.tsx (Version mise à jour)
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -16,14 +15,12 @@ const SignUp: React.FC = () => {
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
 
-  // Rediriger si déjà connecté
   useEffect(() => {
     if (state.isAuthenticated) {
       navigate("/dashboard", { replace: true });
     }
   }, [state.isAuthenticated, navigate]);
 
-  // Effacer les erreurs au changement de champs
   useEffect(() => {
     if (state.error) {
       clearError();
@@ -49,9 +46,7 @@ const SignUp: React.FC = () => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
-      // La redirection sera gérée par l'useEffect ci-dessus
     } catch (error) {
-      // L'erreur est déjà gérée par le contexte
       console.error("Registration error:", error);
     }
   };

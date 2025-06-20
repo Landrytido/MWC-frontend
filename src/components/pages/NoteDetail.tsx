@@ -5,7 +5,6 @@ import Layout from "../layout/Layout";
 import CommentsSection from "../dashboard/CommentsSection";
 import { useApiService } from "../services/apiService";
 import { Note } from "../types";
-import NoteTasksSection from "../dashboard/NoteTasksSection";
 import { useConfirmation } from "../dashboard/useConfirmation";
 
 const NoteDetail: React.FC = () => {
@@ -226,24 +225,6 @@ const NoteDetail: React.FC = () => {
                     {note.commentCount}
                   </span>
                 )}
-                {(note.taskCount ?? 0) > 0 && (
-                  <span className="flex items-center">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                      />
-                    </svg>
-                    {note.completedTaskCount ?? 0}/{note.taskCount}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -277,11 +258,6 @@ const NoteDetail: React.FC = () => {
 
           {/* Section des commentaires */}
           <div className="space-y-6">
-            {/* Section des tâches */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <NoteTasksSection noteId={note.id} />
-            </div>
-
             {/* Section des commentaires */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <CommentsSection noteId={note.id} />

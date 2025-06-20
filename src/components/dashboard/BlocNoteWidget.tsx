@@ -23,10 +23,10 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       loadedRef.current = true;
       api.blocNote.get().catch((error) => {
         console.error("❌ Error loading bloc note:", error);
-        loadedRef.current = false; // ✅ Retry on error
+        loadedRef.current = false;
       });
     }
-  }, [blocNote, loading.isLoading]); // ✅ Removed api.blocNote dependency
+  }, [loading.isLoading]);
 
   useEffect(() => {
     if (blocNote) {
@@ -46,7 +46,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [content]); // ✅ Removed api.blocNote dependency
+  }, [content]);
 
   const handleCancel = useCallback(() => {
     setContent(blocNote?.content || "");
@@ -84,7 +84,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       <div
         className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
       >
-        {" "}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800">
             ✏️ Bloc-notes rapide
@@ -97,11 +96,11 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       </div>
     );
   }
+
   return (
     <div
       className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
     >
-      {" "}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-800">
           ✏️ Bloc-notes rapide
@@ -198,11 +197,13 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
           )}
         </div>
       </div>
+
       {error && (
         <div className="mb-3 p-2 bg-red-50 text-red-700 text-sm rounded-md">
           {error}
         </div>
       )}
+
       <div className="relative">
         {isEditing ? (
           <textarea
@@ -215,18 +216,21 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
         ) : (
           <div
             onClick={() => setIsEditing(true)}
-            className="min-h-[10rem] p-3 text-sm text-gray-700 bg-gray-50 rounded-md cursor-text hover:bg-gray-100 transition-colors"
+            className="min-h-[10rem] p-3 text-sm text-gray-700 bg-gray-50 rounded-md cursor-text hover:bg-gray-100 transition-colors overflow-hidden"
           >
             {isEmpty ? (
               <p className="text-gray-400 italic">
                 Cliquez ici pour commencer à prendre des notes rapides...
               </p>
             ) : (
-              <pre className="whitespace-pre-wrap font-sans">{content}</pre>
+              <div className="whitespace-pre-wrap font-sans break-words overflow-wrap-anywhere">
+                {content}
+              </div>
             )}
           </div>
         )}
       </div>
+
       {blocNote?.updatedAt && !isEditing && (
         <div className="mt-3 text-xs text-gray-400">
           Dernière modification :{" "}
