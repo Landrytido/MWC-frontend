@@ -1,4 +1,3 @@
-// 🔄 MISE À JOUR: components/dashboard/NoteCard.tsx
 import React, { useState } from "react";
 import { Note } from "../types";
 import { LabelList } from "../common/LabelBadge";
@@ -89,11 +88,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
     }
   };
 
-  const handleLabelClick = (labelId: string) => {
-    // TODO: Implémenter la navigation vers le filtre par label
-    console.log("Filtrer par label:", labelId);
-  };
-
   const renderCompactCard = () => (
     <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow group">
       <div className="flex items-start justify-between">
@@ -121,8 +115,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
             <div className="mt-2">
               <LabelList
                 labels={note.labels}
-                clickable
-                onClick={handleLabelClick}
+                removable={true}
+                onRemove={handleLabelRemove}
                 size="sm"
                 maxDisplay={3}
                 spacing="tight"
@@ -281,7 +275,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
           </div>
         )}
 
-        {/* Labels */}
         <div className="mb-3">
           {isEditingLabels ? (
             <div className="space-y-2">
@@ -309,8 +302,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   labels={note.labels}
                   removable
                   onRemove={handleLabelRemove}
-                  clickable
-                  onClick={handleLabelClick}
                   size="sm"
                   maxDisplay={4}
                 />

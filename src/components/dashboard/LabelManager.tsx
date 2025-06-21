@@ -18,7 +18,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     name: string;
   } | null>(null);
   const [error, setError] = useState("");
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const labelsLoadedRef = useRef(false);
 
@@ -32,12 +32,11 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
 
       api.labels.getAll().catch((error) => {
         console.error("❌ Error loading labels:", error);
-        labelsLoadedRef.current = false; // ✅ Permettre un retry en cas d'erreur
+        labelsLoadedRef.current = false;
       });
     }
-  }, []); // ✅ Dépendances vides - exécution une seule fois
+  }, []);
 
-  // ✅ Marquer comme chargé quand on reçoit des données
   useEffect(() => {
     if (labels.length > 0) {
       labelsLoadedRef.current = true;
@@ -77,27 +76,26 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     }
   };
 
-  const handleDeleteLabel = async (id: string, forceDelete = false) => {
+  const handleDeleteLabel = async (id: string) => {
     const label = labels.find((l) => l.id === id);
     if (!label) return;
 
     const hasNotes = (label.noteCount || 0) > 0;
 
-    if (hasNotes && !forceDelete) {
-      const confirmed = await confirm({
-        title: "Supprimer le label",
-        message: `Ce label est utilisé par ${label.noteCount} note(s). Voulez-vous vraiment le supprimer ? Cela le retirera de toutes les notes.`,
-        confirmText: "Supprimer le label",
-        cancelText: "Annuler",
-        variant: "warning", // ← warning car c'est une action importante mais pas destructrice
-      });
+    const confirmed = await confirm({
+      title: "Supprimer le label",
+      message: hasNotes
+        ? `Ce label est utilisé par ${label.noteCount} note(s). Voulez-vous vraiment le supprimer ? Cela le retirera de toutes les notes.`
+        : "Êtes-vous sûr de vouloir supprimer ce label ?",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: hasNotes ? "warning" : "danger",
+    });
 
-      if (!confirmed) return;
-    }
+    if (!confirmed) return;
 
     try {
-      await api.labels.delete(id, hasNotes);
-      // Remove from selected labels if it was selected
+      await api.labels.delete(id, true);
       const updatedSelectedLabels = state.ui.selectedLabels.filter(
         (labelId) => labelId !== id
       );
@@ -355,6 +353,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
           </p>
         </div>
       )}
+      <ConfirmationComponent />
     </div>
   );
 };

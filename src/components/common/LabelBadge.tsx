@@ -5,32 +5,32 @@ interface LabelBadgeProps {
   label: Label;
   removable?: boolean;
   onRemove?: (labelId: string) => void;
-  clickable?: boolean;
-  onClick?: (labelId: string) => void;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "outlined" | "minimal";
   color?: "teal" | "blue" | "green" | "yellow" | "red" | "purple" | "gray";
   animated?: boolean;
 }
 
+interface LabelListProps {
+  labels: Label[];
+  removable?: boolean;
+  onRemove?: (labelId: string) => void;
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "outlined" | "minimal";
+  maxDisplay?: number;
+  animated?: boolean;
+  spacing?: "tight" | "normal" | "loose";
+}
+
 const LabelBadge: React.FC<LabelBadgeProps> = ({
   label,
   removable = false,
   onRemove,
-  clickable = false,
-  onClick,
   size = "md",
   variant = "default",
   color = "teal",
   animated = true,
 }) => {
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (clickable && onClick) {
-      onClick(label.id);
-    }
-  };
-
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onRemove) {
@@ -71,56 +71,42 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
         outlined: "border-teal-300 text-teal-700 bg-white",
         minimal: "text-teal-600",
         dot: "bg-teal-500",
-        hover: "hover:bg-teal-200",
-        focus: "focus:ring-teal-500",
       },
       blue: {
         default: "bg-blue-100 text-blue-800",
         outlined: "border-blue-300 text-blue-700 bg-white",
         minimal: "text-blue-600",
         dot: "bg-blue-500",
-        hover: "hover:bg-blue-200",
-        focus: "focus:ring-blue-500",
       },
       green: {
         default: "bg-green-100 text-green-800",
         outlined: "border-green-300 text-green-700 bg-white",
         minimal: "text-green-600",
         dot: "bg-green-500",
-        hover: "hover:bg-green-200",
-        focus: "focus:ring-green-500",
       },
       yellow: {
         default: "bg-yellow-100 text-yellow-800",
         outlined: "border-yellow-300 text-yellow-700 bg-white",
         minimal: "text-yellow-600",
         dot: "bg-yellow-500",
-        hover: "hover:bg-yellow-200",
-        focus: "focus:ring-yellow-500",
       },
       red: {
         default: "bg-red-100 text-red-800",
         outlined: "border-red-300 text-red-700 bg-white",
         minimal: "text-red-600",
         dot: "bg-red-500",
-        hover: "hover:bg-red-200",
-        focus: "focus:ring-red-500",
       },
       purple: {
         default: "bg-purple-100 text-purple-800",
         outlined: "border-purple-300 text-purple-700 bg-white",
         minimal: "text-purple-600",
         dot: "bg-purple-500",
-        hover: "hover:bg-purple-200",
-        focus: "focus:ring-purple-500",
       },
       gray: {
         default: "bg-gray-100 text-gray-800",
         outlined: "border-gray-300 text-gray-700 bg-white",
         minimal: "text-gray-600",
         dot: "bg-gray-500",
-        hover: "hover:bg-gray-200",
-        focus: "focus:ring-gray-500",
       },
     };
 
@@ -142,55 +128,44 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
   };
 
   const baseClasses = `
-    inline-flex items-center rounded-full font-medium
+    inline-flex items-center rounded-full font-medium relative
     ${sizeClasses.badge}
     ${getVariantClasses()}
     ${animated ? "transition-all duration-200" : ""}
-    ${
-      clickable
-        ? `cursor-pointer ${colorClasses.hover} ${colorClasses.focus} focus:outline-none focus:ring-2 focus:ring-offset-1`
-        : ""
-    }
   `.trim();
 
-  const Element = clickable ? "button" : "span";
-
   return (
-    <Element
-      className={baseClasses}
-      onClick={clickable ? handleClick : undefined}
-      type={clickable ? "button" : undefined}
-      title={`Label: ${label.name}${
-        label.noteCount !== undefined ? ` (${label.noteCount} notes)` : ""
-      }`}
-    >
-      {/* Indicateur visuel (point coloré) */}
-      {variant !== "minimal" && (
-        <span
-          className={`${sizeClasses.dot} ${colorClasses.dot} rounded-full ${sizeClasses.spacing}`}
-        ></span>
-      )}
-
-      {/* Nom du label */}
-      <span className="truncate max-w-32">{label.name}</span>
-
-      {/* Compteur de notes (optionnel) */}
-      {label.noteCount !== undefined &&
-        label.noteCount > 0 &&
-        size !== "sm" && (
-          <span className={`ml-1 text-xs opacity-75`}>({label.noteCount})</span>
+    <div className={baseClasses}>
+      {/* 🎯 Affichage simple du label (non cliquable) */}
+      <div className="flex items-center">
+        {/* Indicateur visuel (point coloré) */}
+        {variant !== "minimal" && (
+          <span
+            className={`${sizeClasses.dot} ${colorClasses.dot} rounded-full ${sizeClasses.spacing}`}
+          ></span>
         )}
+        {/* Nom du label */}
+        <span className="truncate max-w-32">{label.name}</span>
+        {/* Compteur de notes (optionnel) */}
+        {label.noteCount !== undefined &&
+          label.noteCount > 0 &&
+          size !== "sm" && (
+            <span className={`ml-1 text-xs opacity-75`}>
+              ({label.noteCount})
+            </span>
+          )}
+      </div>
 
-      {/* Bouton de suppression */}
+      {/* 🎯 Bouton de suppression uniquement */}
       {removable && (
         <button
           type="button"
           onClick={handleRemove}
           className={`ml-1.5 ${
             sizeClasses.icon
-          } hover:text-current focus:outline-none rounded-full transition-colors ${
+          } hover:text-red-600 focus:outline-none rounded-full transition-colors ${
             animated ? "hover:scale-110" : ""
-          }`}
+          } flex-shrink-0`}
           aria-label={`Retirer le label ${label.name}`}
         >
           <svg
@@ -208,30 +183,14 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
           </svg>
         </button>
       )}
-    </Element>
+    </div>
   );
 };
-
-// 🆕 Composant pour afficher une liste de labels
-interface LabelListProps {
-  labels: Label[];
-  removable?: boolean;
-  onRemove?: (labelId: string) => void;
-  clickable?: boolean;
-  onClick?: (labelId: string) => void;
-  size?: "sm" | "md" | "lg";
-  variant?: "default" | "outlined" | "minimal";
-  maxDisplay?: number;
-  animated?: boolean;
-  spacing?: "tight" | "normal" | "loose";
-}
 
 export const LabelList: React.FC<LabelListProps> = ({
   labels,
   removable = false,
   onRemove,
-  clickable = false,
-  onClick,
   size = "md",
   variant = "default",
   maxDisplay,
@@ -253,7 +212,6 @@ export const LabelList: React.FC<LabelListProps> = ({
     }
   };
 
-  // Assignation automatique des couleurs basée sur l'ID du label
   const getColorForLabel = (labelId: string): LabelBadgeProps["color"] => {
     const colors: LabelBadgeProps["color"][] = [
       "teal",
@@ -279,8 +237,6 @@ export const LabelList: React.FC<LabelListProps> = ({
           label={label}
           removable={removable}
           onRemove={onRemove}
-          clickable={clickable}
-          onClick={onClick}
           size={size}
           variant={variant}
           color={getColorForLabel(label.id)}

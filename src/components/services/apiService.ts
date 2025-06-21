@@ -61,7 +61,8 @@ export const useApiService = () => {
           );
         }
 
-        return response.status !== 204 ? await response.json() : null;
+        const text = await response.text();
+        return text && text.trim() !== "" ? JSON.parse(text) : null;
       } catch (error) {
         if (
           error instanceof Error &&
@@ -129,7 +130,6 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // 🆕 NOTES API - Améliorée avec gestion des relations
   const notesApi = useMemo(
     () => ({
       getAll: async (): Promise<Note[]> => {
@@ -157,12 +157,10 @@ export const useApiService = () => {
         return await fetchWithAuth(`/notes/notebooks/${notebookId}/notes`);
       },
 
-      // 🆕 Création avec notebook optionnel
       create: async (note: CreateNoteForm): Promise<Note> => {
-        // Nettoyer les données avant envoi
         const cleanedNote = {
           ...note,
-          notebookId: note.notebookId || undefined, // Convertir null en undefined pour l'API
+          notebookId: note.notebookId || undefined,
         };
 
         const created = await fetchWithAuth("/notes", {
@@ -172,7 +170,6 @@ export const useApiService = () => {
         dispatch({ type: "ADD_NOTE", payload: created });
         return created;
       },
-      // 🆕 Création directe dans un notebook
       createInNotebook: async (
         notebookId: number,
         note: Omit<CreateNoteForm, "notebookId">
@@ -195,7 +192,6 @@ export const useApiService = () => {
         return updated;
       },
 
-      // 🆕 Déplacer une note vers un notebook
       moveToNotebook: async (
         id: number,
         notebookId: number | null
@@ -213,7 +209,6 @@ export const useApiService = () => {
         dispatch({ type: "DELETE_NOTE", payload: id });
       },
 
-      // 🆕 GESTION DES LABELS SUR LES NOTES
       addLabel: async (noteId: number, labelId: string): Promise<Note> => {
         const updated = await fetchWithAuth(
           `/notes/${noteId}/labels/${labelId}`,
@@ -287,7 +282,6 @@ export const useApiService = () => {
         return updated;
       },
 
-      // 🆕 Méthodes batch pour optimiser les performances
       batchAddLabels: async (
         noteId: number,
         labelIds: string[]
