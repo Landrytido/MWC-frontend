@@ -3,6 +3,8 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
+import personImage3 from "../../assets/person-3.png";
+import personImage4 from "../../assets/person-4.png";
 
 const SignIn: React.FC = () => {
   const { state, login, clearError } = useAuth();
@@ -67,7 +69,15 @@ const SignIn: React.FC = () => {
 
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto">
+          <div className="relative max-w-2xl mx-auto">
+            <div className="hidden md:block absolute left-0 top-1/4 -translate-x-full transform">
+              <img src={personImage4} alt="" className="w-64 h-auto" />
+            </div>
+
+            <div className="hidden md:block absolute right-0 top-1/4 translate-x-full transform">
+              <img src={personImage3} alt="" className="w-64 h-auto" />
+            </div>
+
             <div className="bg-white shadow-lg rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-center text-gray-800 mb-8">
                 Connexion

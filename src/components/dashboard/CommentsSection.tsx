@@ -1,4 +1,3 @@
-// src/components/dashboard/CommentsSection.tsx (Version mise à jour)
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useComments } from "../contexts/AppContext";
