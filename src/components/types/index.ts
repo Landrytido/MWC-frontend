@@ -1,4 +1,3 @@
-// ✅ TASK TYPES - Inchangés
 export enum TaskPriority {
   LOW = 1,
   MEDIUM = 2,
@@ -11,6 +10,92 @@ export const PRIORITY_LABELS = {
   [TaskPriority.HIGH]: { label: "Haute", icon: "🔴", color: "red" },
 } as const;
 
+export type LabelColorName =
+  | "teal"
+  | "blue"
+  | "green"
+  | "yellow"
+  | "purple"
+  | "red"
+  | "gray";
+
+export interface LabelColorConfig {
+  default: string;
+  outlined: string;
+  minimal: string;
+  dot: string;
+}
+
+export const LABEL_COLORS: Record<LabelColorName, LabelColorConfig> = {
+  teal: {
+    default: "bg-teal-100 text-teal-800",
+    outlined: "border-teal-300 text-teal-700 bg-white",
+    minimal: "text-teal-600",
+    dot: "bg-teal-500",
+  },
+  blue: {
+    default: "bg-blue-100 text-blue-800",
+    outlined: "border-blue-300 text-blue-700 bg-white",
+    minimal: "text-blue-600",
+    dot: "bg-blue-500",
+  },
+  green: {
+    default: "bg-green-100 text-green-800",
+    outlined: "border-green-300 text-green-700 bg-white",
+    minimal: "text-green-600",
+    dot: "bg-green-500",
+  },
+  yellow: {
+    default: "bg-yellow-100 text-yellow-800",
+    outlined: "border-yellow-300 text-yellow-700 bg-white",
+    minimal: "text-yellow-600",
+    dot: "bg-yellow-500",
+  },
+  purple: {
+    default: "bg-purple-100 text-purple-800",
+    outlined: "border-purple-300 text-purple-700 bg-white",
+    minimal: "text-purple-600",
+    dot: "bg-purple-500",
+  },
+  red: {
+    default: "bg-red-100 text-red-800",
+    outlined: "border-red-300 text-red-700 bg-white",
+    minimal: "text-red-600",
+    dot: "bg-red-500",
+  },
+  gray: {
+    default: "bg-gray-100 text-gray-800",
+    outlined: "border-gray-300 text-gray-700 bg-white",
+    minimal: "text-gray-600",
+    dot: "bg-gray-500",
+  },
+};
+
+export const AVAILABLE_LABEL_COLORS: LabelColorName[] = [
+  "teal",
+  "blue",
+  "green",
+  "yellow",
+  "purple",
+  "red",
+];
+
+export const getLabelColor = (labelId: string): LabelColorName => {
+  let hash = 0;
+  for (let i = 0; i < labelId.length; i++) {
+    hash = labelId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  return AVAILABLE_LABEL_COLORS[hash % AVAILABLE_LABEL_COLORS.length];
+};
+
+export const getLabelColorClasses = (
+  colorName: LabelColorName,
+  variant: "default" | "outlined" | "minimal" = "default"
+): LabelColorConfig => {
+  return LABEL_COLORS[colorName];
+};
 export type TaskStatus =
   | "upcoming"
   | "today"
@@ -109,7 +194,6 @@ export interface TaskStats {
   dailyStats: Record<string, { total: number; completed: number }>;
 }
 
-// ✅ TASK UTILITY FUNCTIONS - Inchangées
 export function getTaskPriorityEnum(priority: number): TaskPriority {
   if (priority === 1) return TaskPriority.LOW;
   if (priority === 3) return TaskPriority.HIGH;
@@ -163,7 +247,6 @@ export function getTaskStatusColor(status: TaskStatus): string {
   return colors[status];
 }
 
-// ✅ USER TYPES - Inchangés
 export interface User {
   id: number;
   email: string;

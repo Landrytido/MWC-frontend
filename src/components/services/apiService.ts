@@ -941,7 +941,6 @@ export const useApiService = () => {
     [fetchWithAuth, fetchWithAuthMultipart, getToken]
   );
 
-  // ✅ RETURN FINAL - Toutes les APIs
   return useMemo(
     () => ({
       health: healthApi,

@@ -234,7 +234,7 @@ const Dashboard: React.FC = () => {
                 <div className="mt-2 flex flex-wrap gap-2">
                   {state.ui.currentNotebook && (
                     <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                      📔{" "}
+                      📕{" "}
                       {
                         state.notebooks.find(
                           (n) => n.id === state.ui.currentNotebook

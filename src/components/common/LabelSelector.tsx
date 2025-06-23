@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLabels } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import { Label } from "../types";
+import { Label, getLabelColorClasses, getLabelColor } from "../types";
 
 interface LabelSelectorProps {
   selectedLabelIds: string[];
@@ -35,7 +35,6 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filtrer les labels disponibles
   useEffect(() => {
     const available = labels.filter(
       (label) =>
@@ -45,7 +44,6 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
     setFilteredLabels(available);
   }, [labels, selectedLabelIds, searchTerm]);
 
-  // Fermer le dropdown quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -92,7 +90,10 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
       setIsCreating(false);
     }
   };
-
+  const getLabelDisplayClasses = (labelId: string) => {
+    const color = getLabelColor(labelId);
+    return getLabelColorClasses(color);
+  };
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (
       e.key === "Enter" &&
@@ -138,44 +139,48 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   return (
     <div className={`relative ${sizeClasses.container}`} ref={dropdownRef}>
-      {/* Labels sélectionnés */}
       {selectedLabels.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
-          {selectedLabels.map((label) => (
-            <span
-              key={label.id}
-              className={`inline-flex items-center ${sizeClasses.badge} bg-teal-100 text-teal-800 rounded-full transition-colors hover:bg-teal-200`}
-            >
-              <span className="w-2 h-2 rounded-full bg-teal-500 mr-1.5"></span>
-              {label.name}
-              {!disabled && (
-                <button
-                  type="button"
-                  onClick={() => handleLabelRemove(label.id)}
-                  className="ml-1.5 text-teal-600 hover:text-teal-800 focus:outline-none"
-                  aria-label={`Retirer le label ${label.name}`}
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+          {selectedLabels.map((label) => {
+            const colorClasses = getLabelDisplayClasses(label.id); // 🔄 Couleur dynamique
+
+            return (
+              <span
+                key={label.id}
+                className={`inline-flex items-center ${sizeClasses.badge} ${colorClasses.default} rounded-full transition-colors`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${colorClasses.dot} mr-1.5`}
+                ></span>
+                {label.name}
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleLabelRemove(label.id)}
+                    className="ml-1.5 hover:text-red-600 focus:outline-none transition-colors"
+                    aria-label={`Retirer le label ${label.name}`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-            </span>
-          ))}
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </span>
+            );
+          })}
         </div>
       )}
 
-      {/* Input de recherche */}
       <div className="relative">
         <input
           ref={inputRef}
@@ -196,7 +201,6 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
           className={`w-full ${sizeClasses.input} border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
         />
 
-        {/* Icône de recherche */}
         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
           <svg
             className="w-4 h-4 text-gray-400"
@@ -214,39 +218,42 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
         </div>
       </div>
 
-      {/* Dropdown des labels disponibles */}
       {isOpen && !disabled && (
         <div
           className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto ${sizeClasses.dropdown}`}
         >
-          {/* Labels existants */}
           {filteredLabels.length > 0 && (
             <div>
               <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50">
                 Labels existants
               </div>
-              {filteredLabels.map((label) => (
-                <button
-                  key={label.id}
-                  type="button"
-                  onClick={() => handleLabelSelect(label.id)}
-                  className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 rounded-full bg-teal-500 mr-2"></span>
-                    <span className="flex-1">{label.name}</span>
-                    {showCount && label.noteCount !== undefined && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        {label.noteCount}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
+              {filteredLabels.map((label) => {
+                const colorClasses = getLabelDisplayClasses(label.id);
+
+                return (
+                  <button
+                    key={label.id}
+                    type="button"
+                    onClick={() => handleLabelSelect(label.id)}
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <span
+                        className={`w-3 h-3 rounded-full ${colorClasses.dot} mr-2`}
+                      ></span>
+                      <span className="flex-1">{label.name}</span>
+                      {showCount && label.noteCount !== undefined && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          {label.noteCount}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          {/* Option de création */}
           {searchTerm.trim() &&
             creatable &&
             !labels.some(
@@ -284,7 +291,6 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
               </div>
             )}
 
-          {/* Message si aucun résultat */}
           {filteredLabels.length === 0 &&
             (!searchTerm.trim() ||
               labels.some(
@@ -299,7 +305,6 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
         </div>
       )}
 
-      {/* Indicateur de limite */}
       {showCount && maxSelections < Infinity && (
         <div className="mt-1 text-xs text-gray-500">
           {selectedLabelIds.length} / {maxSelections} labels sélectionnés

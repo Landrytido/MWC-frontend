@@ -1,4 +1,3 @@
-// 🔄 MISE À JOUR: components/dashboard/NotebookSidebar.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useApp, useNotebooks } from "../contexts/AppContext";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +35,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
 
   const notebooksLoadedRef = useRef(false);
 
-  // Charger les notebooks au montage si nécessaire
   useEffect(() => {
     const shouldLoadNotebooks =
       !notebooksLoadedRef.current &&
@@ -60,7 +58,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     }
   }, [notebooks.length]);
 
-  // Filtrer les notebooks selon la recherche
   const filteredNotebooks = notebooks.filter((notebook) =>
     notebook.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -172,7 +169,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         )}
       </div>
 
-      {/* Liste simplifiée */}
       <div className="space-y-1">
         <button
           onClick={() => handleSelectNotebook(null)}
@@ -196,7 +192,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
             }`}
             title={notebook.title}
           >
-            📔 {notebook.title} ({notebook.noteCount || 0})
+            📕 {notebook.title} ({notebook.noteCount || 0})
           </button>
         ))}
 
@@ -215,10 +211,9 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
 
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          📔 Carnets
+          📕 Carnets
           {showStats && (
             <span className="ml-2 text-sm font-normal text-gray-500">
               ({notebooks.length})
@@ -248,7 +243,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         )}
       </div>
 
-      {/* Statistiques globales */}
       {showStats && (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -264,7 +258,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         </div>
       )}
 
-      {/* Barre de recherche (si plus de 3 carnets) */}
       {notebooks.length > 3 && (
         <div className="mb-4">
           <input
@@ -283,7 +276,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         </div>
       )}
 
-      {/* Formulaire de création */}
       {isCreating && (
         <form onSubmit={handleCreateNotebook} className="mb-4">
           <input
@@ -316,9 +308,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         </form>
       )}
 
-      {/* Liste des carnets */}
-      <div className="space-y-1">
-        {/* Option "Toutes les notes" */}
+      <div className="max-h-40 overflow-y-auto space-y-1">
         <div
           className={`group relative rounded-md transition-colors ${
             state.ui.currentNotebook === null
@@ -342,12 +332,10 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
           </button>
         </div>
 
-        {/* Séparateur */}
         {filteredNotebooks.length > 0 && (
           <div className="border-t border-gray-200 my-2"></div>
         )}
 
-        {/* Liste des carnets filtrés */}
         {loading.isLoading ? (
           <div className="p-3 text-sm text-gray-500 text-center">
             Chargement...
@@ -436,7 +424,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex items-center min-w-0">
-                        <span className="mr-2">📔</span>
+                        <span className="mr-2">📕</span>
                         <span className="truncate">{notebook.title}</span>
                       </span>
                       <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
@@ -516,7 +504,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         )}
       </div>
 
-      {/* Résumé du filtre actuel */}
       {state.ui.currentNotebook && (
         <div className="mt-4 p-2 bg-teal-50 rounded-md">
           <p className="text-xs text-teal-700">

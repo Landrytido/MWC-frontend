@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Note } from "../types";
+import { Note, LABEL_COLORS } from "../types";
 import { LabelList } from "../common/LabelBadge";
 import NotebookSelector from "../common/NotebookSelector";
 import LabelSelector from "../common/LabelSelector";
@@ -24,7 +24,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   variant = "default",
 }) => {
   const api = useApiService();
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [isEditingNotebook, setIsEditingNotebook] = useState(false);
   const [isEditingLabels, setIsEditingLabels] = useState(false);
@@ -93,7 +93,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <h3
-            className="font-medium text-gray-900 truncate cursor-pointer hover:text-teal-600 transition-colors"
+            className="font-medium text-gray-900 truncate cursor-pointer hover:text-teal-500 transition-colors"
             onClick={() => onView?.(note)}
             title={note.title}
           >
@@ -103,7 +103,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
           <div className="mt-1 flex items-center space-x-2 text-xs text-gray-500">
             {note.notebookTitle && (
               <span className="flex items-center">
-                <span className="mr-1">📔</span>
+                <span className="mr-1">📕</span>
                 {note.notebookTitle}
               </span>
             )}
@@ -176,15 +176,19 @@ const NoteCard: React.FC<NoteCardProps> = ({
       {/* Indicateur de chargement */}
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
-          <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+          <div
+            className={`w-6 h-6 border-2 ${LABEL_COLORS.teal.dot.replace(
+              "bg-",
+              "border-"
+            )} border-t-transparent rounded-full animate-spin`}
+          ></div>
         </div>
       )}
 
       <div className="p-4">
-        {/* Header avec titre et actions */}
         <div className="flex justify-between items-start mb-3">
           <h3
-            className="font-semibold text-gray-800 cursor-pointer hover:text-teal-600 transition-colors flex-1 pr-2"
+            className="font-semibold text-gray-800 cursor-pointer hover:text-teal-500 transition-colors flex-1 pr-2"
             onClick={() => onView?.(note)}
           >
             {note.title}
@@ -234,7 +238,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        {/* Carnet */}
         {(note.notebookTitle || isEditingNotebook) && (
           <div className="mb-3">
             {isEditingNotebook ? (
@@ -247,8 +250,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
               />
             ) : (
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  <span className="mr-1">📔</span>
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${LABEL_COLORS.blue.default}`}
+                >
+                  <span className="mr-1">📕</span>
                   {note.notebookTitle}
                 </span>
                 <button
@@ -333,12 +338,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        {/* Contenu de la note */}
         <p className="text-gray-600 mb-3 line-clamp-3 text-sm leading-relaxed">
           {note.content || "Aucun contenu..."}
         </p>
 
-        {/* Métadonnées */}
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center space-x-3">
             <span>{formattedDate}</span>
@@ -367,6 +370,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
       </div>
+      <ConfirmationComponent />
     </div>
   );
 

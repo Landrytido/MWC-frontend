@@ -14,7 +14,7 @@ const EditNote: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -166,6 +166,7 @@ const EditNote: React.FC = () => {
           </div>
         </div>
       </div>
+      <ConfirmationComponent />
     </Layout>
   );
 };

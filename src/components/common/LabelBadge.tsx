@@ -1,5 +1,10 @@
 import React from "react";
-import { Label } from "../types";
+import {
+  Label,
+  getLabelColor,
+  getLabelColorClasses,
+  LabelColorName,
+} from "../types";
 
 interface LabelBadgeProps {
   label: Label;
@@ -7,7 +12,7 @@ interface LabelBadgeProps {
   onRemove?: (labelId: string) => void;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "outlined" | "minimal";
-  color?: "teal" | "blue" | "green" | "yellow" | "red" | "purple" | "gray";
+  color?: LabelColorName;
   animated?: boolean;
 }
 
@@ -28,7 +33,7 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
   onRemove,
   size = "md",
   variant = "default",
-  color = "teal",
+  color,
   animated = true,
 }) => {
   const handleRemove = (e: React.MouseEvent) => {
@@ -65,52 +70,8 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
   };
 
   const getColorClasses = () => {
-    const colors = {
-      teal: {
-        default: "bg-teal-100 text-teal-800",
-        outlined: "border-teal-300 text-teal-700 bg-white",
-        minimal: "text-teal-600",
-        dot: "bg-teal-500",
-      },
-      blue: {
-        default: "bg-blue-100 text-blue-800",
-        outlined: "border-blue-300 text-blue-700 bg-white",
-        minimal: "text-blue-600",
-        dot: "bg-blue-500",
-      },
-      green: {
-        default: "bg-green-100 text-green-800",
-        outlined: "border-green-300 text-green-700 bg-white",
-        minimal: "text-green-600",
-        dot: "bg-green-500",
-      },
-      yellow: {
-        default: "bg-yellow-100 text-yellow-800",
-        outlined: "border-yellow-300 text-yellow-700 bg-white",
-        minimal: "text-yellow-600",
-        dot: "bg-yellow-500",
-      },
-      red: {
-        default: "bg-red-100 text-red-800",
-        outlined: "border-red-300 text-red-700 bg-white",
-        minimal: "text-red-600",
-        dot: "bg-red-500",
-      },
-      purple: {
-        default: "bg-purple-100 text-purple-800",
-        outlined: "border-purple-300 text-purple-700 bg-white",
-        minimal: "text-purple-600",
-        dot: "bg-purple-500",
-      },
-      gray: {
-        default: "bg-gray-100 text-gray-800",
-        outlined: "border-gray-300 text-gray-700 bg-white",
-        minimal: "text-gray-600",
-        dot: "bg-gray-500",
-      },
-    };
-
-    return colors[color];
+    const colorToUse = color || getLabelColor(label.id);
+    return getLabelColorClasses(colorToUse);
   };
 
   const sizeClasses = getSizeClasses();
@@ -136,17 +97,13 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
 
   return (
     <div className={baseClasses}>
-      {/* 🎯 Affichage simple du label (non cliquable) */}
       <div className="flex items-center">
-        {/* Indicateur visuel (point coloré) */}
         {variant !== "minimal" && (
           <span
             className={`${sizeClasses.dot} ${colorClasses.dot} rounded-full ${sizeClasses.spacing}`}
           ></span>
         )}
-        {/* Nom du label */}
         <span className="truncate max-w-32">{label.name}</span>
-        {/* Compteur de notes (optionnel) */}
         {label.noteCount !== undefined &&
           label.noteCount > 0 &&
           size !== "sm" && (
@@ -156,7 +113,6 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
           )}
       </div>
 
-      {/* 🎯 Bouton de suppression uniquement */}
       {removable && (
         <button
           type="button"
@@ -212,19 +168,6 @@ export const LabelList: React.FC<LabelListProps> = ({
     }
   };
 
-  const getColorForLabel = (labelId: string): LabelBadgeProps["color"] => {
-    const colors: LabelBadgeProps["color"][] = [
-      "teal",
-      "blue",
-      "green",
-      "yellow",
-      "purple",
-      "red",
-    ];
-    const hash = labelId.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
-    return colors[hash % colors.length];
-  };
-
   if (labels.length === 0) {
     return null;
   }
@@ -239,7 +182,7 @@ export const LabelList: React.FC<LabelListProps> = ({
           onRemove={onRemove}
           size={size}
           variant={variant}
-          color={getColorForLabel(label.id)}
+          color={getLabelColor(label.id)}
           animated={animated}
         />
       ))}

@@ -37,12 +37,10 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
 
   const selectedNotebook = notebooks.find((nb) => nb.id === selectedNotebookId);
 
-  // Filtrer les carnets selon la recherche
   const filteredNotebooks = notebooks.filter((notebook) =>
     notebook.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Fermer le dropdown quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -124,7 +122,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
     if (selectedNotebook) {
       return (
         <div className="flex items-center">
-          <span className="mr-2">📔</span>
+          <span className="mr-2">📕</span>
           <span className="flex-1 truncate">{selectedNotebook.title}</span>
           {showCount && selectedNotebook.noteCount !== undefined && (
             <span className="ml-2 text-xs text-gray-500">
@@ -178,7 +176,6 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
           <div
             className={`absolute z-50 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg ${sizeClasses.dropdown}`}
           >
-            {/* Options du dropdown */}
             {renderDropdownContent()}
           </div>
         )}
@@ -227,7 +224,6 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
   function renderDropdownContent() {
     return (
       <>
-        {/* Barre de recherche si plus de 5 carnets ou création autorisée */}
         {(notebooks.length > 5 || allowCreate) && (
           <div className="p-2 border-b border-gray-200">
             <input
@@ -243,7 +239,6 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
         )}
 
         <div className="max-h-48 overflow-y-auto">
-          {/* Option "Aucun carnet" */}
           {includeNone && (
             <button
               type="button"
@@ -274,12 +269,10 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
             </button>
           )}
 
-          {/* Séparateur si option "Aucun carnet" présente */}
           {includeNone && filteredNotebooks.length > 0 && (
             <div className="border-t border-gray-200"></div>
           )}
 
-          {/* Liste des carnets */}
           {filteredNotebooks.map((notebook) => (
             <button
               key={notebook.id}
@@ -292,7 +285,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
               }`}
             >
               <div className="flex items-center">
-                <span className="mr-2">📔</span>
+                <span className="mr-2">📕</span>
                 <span className="flex-1 truncate">{notebook.title}</span>
                 {showCount && notebook.noteCount !== undefined && (
                   <span className="text-xs text-gray-500 ml-2">
@@ -318,7 +311,6 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
             </button>
           ))}
 
-          {/* Option de création */}
           {searchTerm.trim() &&
             allowCreate &&
             !filteredNotebooks.some(
@@ -354,7 +346,6 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
               </>
             )}
 
-          {/* Message si aucun résultat */}
           {filteredNotebooks.length === 0 &&
             (!searchTerm.trim() ||
               filteredNotebooks.some(
