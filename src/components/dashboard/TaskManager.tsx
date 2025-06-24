@@ -21,7 +21,7 @@ type FilterType =
   | "report";
 
 const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
-  const TASKS_PER_PAGE = 3;
+  const TASKS_PER_PAGE = 4;
   const { tasks, pendingTasks, completedTasks, overdueTasks, loading } =
     useTasks();
   const api = useApiService();
@@ -30,19 +30,16 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("pending");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ✅ États pour le modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [error, setError] = useState("");
 
-  // Charger les tâches au montage
   useEffect(() => {
     if (tasks.length === 0 && !loading.isLoading) {
       api.tasks.getAll();
     }
   }, [tasks.length, loading.isLoading, api.tasks]);
 
-  // Calculer les tâches pour aujourd'hui et demain
   const getTodayTasks = () => {
     const today = new Date().toISOString().split("T")[0];
     return tasks.filter(
@@ -85,7 +82,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   const filteredTasks = getFilteredTasks();
 
-  // ✅ Gestion du modal et des tâches
   const handleOpenModal = (task?: Task) => {
     setEditingTask(task || null);
     setIsModalOpen(true);
@@ -105,10 +101,9 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
       } else {
         await api.tasks.create(taskData);
       }
-      handleCloseModal(); // ✅ Fermer le modal après succès
+      handleCloseModal();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
-      // ✅ Ne pas fermer le modal en cas d'erreur
     }
   };
 
@@ -150,13 +145,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   );
 
   const filters = [
-    // {
-    //   key: "pending",
-    //   label: "À faire",
-    //   count: pendingTasks.length,
-    //   icon: "🔹",
-    //   hasCount: true,
-    // },
     {
       key: "overdue",
       label: "En retard",
@@ -198,10 +186,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   return (
     <>
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-800">📋 Mes Tâches</h2>
-          {/* Bouton "Nouvelle tâche" qui ouvre le modal */}
           {activeFilter !== "report" && (
             <button
               onClick={() => handleOpenModal()}
@@ -225,7 +211,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
           )}
         </div>
 
-        {/* Filtres horizontaux */}
         <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
           {filters.map((filter) => (
             <button
@@ -257,14 +242,12 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
           ))}
         </div>
 
-        {/* Contenu conditionnel */}
         {activeFilter === "report" ? (
           <div className="mt-4">
-            <MonthlyTaskReport tasks={tasks} />
+            <MonthlyTaskReport />
           </div>
         ) : (
           <>
-            {/* Liste des tâches - Plus de formulaire inline ! */}
             <div className="space-y-3">
               {loading.isLoading ? (
                 <div className="text-center py-8">
@@ -298,7 +281,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
               )}
             </div>
             <ConfirmationComponent />
-            {/* Pagination */}
             {filteredTasks.length > TASKS_PER_PAGE && (
               <div className="mt-6 flex justify-center">
                 <nav className="flex items-center space-x-2">
@@ -348,7 +330,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
         )}
       </div>
 
-      {/* ✅ Modal de création/édition */}
       <TaskModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -378,8 +359,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
 
   function getEmptyMessage() {
     switch (activeFilter) {
-      // case "pending":
-      //   return "Aucune tâche en attente";
       case "completed":
         return "Aucune tâche terminée";
       case "overdue":

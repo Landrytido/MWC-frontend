@@ -21,7 +21,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  // Fermer avec Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -111,20 +110,17 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <>
-      {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
         onClick={onCancel}
       />
 
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           className="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-6">
-            {/* Icône et titre */}
             <div className="flex items-center space-x-4 mb-4">
               <div
                 className={`flex-shrink-0 w-12 h-12 ${styles.iconBg} rounded-full flex items-center justify-center`}
@@ -136,12 +132,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               </div>
             </div>
 
-            {/* Message */}
             <div className="mb-6">
               <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
             </div>
 
-            {/* Actions */}
             <div className="flex space-x-3 justify-end">
               <button
                 onClick={onCancel}

@@ -24,7 +24,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const { confirm } = useConfirmation();
   const comments = getCommentsByNoteId(noteId);
 
-  // Charger les commentaires au montage
   useEffect(() => {
     api.comments.getByNoteId(noteId);
   }, [noteId]);
@@ -91,25 +90,21 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
 
   return (
     <div className={`${className}`}>
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium text-gray-800">
           💬 Commentaires ({comments.length})
         </h3>
       </div>
 
-      {/* Formulaire d'ajout de commentaire */}
       <div className="mb-6">
         <form onSubmit={handleSubmit}>
           <div className="flex space-x-3">
-            {/* Avatar de l'utilisateur actuel */}
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                 {getInitials(state.user?.firstName, state.user?.lastName)}
               </div>
             </div>
 
-            {/* Zone de saisie */}
             <div className="flex-1">
               <textarea
                 value={newComment}
@@ -121,7 +116,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
 
               {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
 
-              {/* Actions */}
               {newComment.trim() && (
                 <div className="flex justify-end space-x-2 mt-2">
                   <button
@@ -148,7 +142,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
         </form>
       </div>
 
-      {/* Liste des commentaires */}
       <div className="space-y-4">
         {loading.isLoading ? (
           <div className="text-center py-4">

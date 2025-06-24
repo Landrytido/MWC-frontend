@@ -39,11 +39,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const getPriorityBadgeColor = () => {
     switch (task.priority) {
-      case 3: // HIGH
+      case 3:
         return "bg-red-50 text-red-700 border border-red-200";
-      case 2: // MEDIUM
+      case 2:
         return "bg-yellow-50 text-yellow-700 border border-yellow-200";
-      case 1: // LOW
+      case 1:
         return "bg-gray-50 text-gray-700 border border-gray-200";
       default:
         return "bg-gray-50 text-gray-700 border border-gray-200";
@@ -202,7 +202,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   </span>
                 )}
 
-                {/* Date originale si reportée */}
                 {task.carriedOver && task.originalDate && (
                   <span className="text-orange-600">
                     Initialement:{" "}

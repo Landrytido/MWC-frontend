@@ -61,7 +61,7 @@ const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
             </svg>
           </button>
           <button
-            onClick={() => link.id && onDelete(link.id)}
+            onClick={() => link.id && onDelete(link.id.toString())}
             className="text-gray-500 hover:text-red-500"
             aria-label="Supprimer le lien"
           >
