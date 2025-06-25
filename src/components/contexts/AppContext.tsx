@@ -85,15 +85,11 @@ type AppAction =
       payload: { id: string; linkGroup: Partial<LinkGroup> };
     }
   | { type: "DELETE_LINK_GROUP"; payload: string }
-
-  // Tasks actions
   | { type: "SET_TASKS"; payload: Task[] }
   | { type: "ADD_TASK"; payload: Task }
   | { type: "UPDATE_TASK"; payload: { id: number; task: Partial<Task> } }
   | { type: "DELETE_TASK"; payload: number }
   | { type: "TOGGLE_TASK"; payload: number }
-
-  // Daily Tasks actions
   | { type: "SET_DAILY_TASKS"; payload: DailyTask[] }
   | { type: "ADD_DAILY_TASK"; payload: DailyTask }
   | {
@@ -102,25 +98,17 @@ type AppAction =
     }
   | { type: "DELETE_DAILY_TASK"; payload: number }
   | { type: "REORDER_DAILY_TASKS"; payload: DailyTask[] }
-
-  // Bloc Note actions
   | { type: "SET_BLOC_NOTE"; payload: BlocNote | null }
   | { type: "UPDATE_BLOC_NOTE"; payload: { content: string } }
-
-  // Loading actions
   | {
       type: "SET_LOADING";
       payload: { key: keyof AppState["loadingStates"]; loading: LoadingState };
     }
-
-  // UI actions
   | { type: "TOGGLE_SIDEBAR" }
   | { type: "SET_CURRENT_NOTEBOOK"; payload: number | null }
   | { type: "SET_SELECTED_LABELS"; payload: string[] }
   | { type: "SET_SEARCH_TERM"; payload: string }
   | { type: "RESET_FILTERS" }
-
-  // Comments actions
   | { type: "SET_COMMENTS"; payload: Comment[] }
   | { type: "ADD_COMMENT"; payload: Comment }
   | {
@@ -133,7 +121,6 @@ type AppAction =
       payload: { noteId: number; comments: Comment[] };
     };
 
-// Initial state
 const initialState: AppState = {
   user: null,
   notes: [],
@@ -165,14 +152,11 @@ const initialState: AppState = {
   },
 };
 
-// Reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    // User actions
     case "SET_USER":
       return { ...state, user: action.payload };
 
-    // Notes actions
     case "SET_NOTES":
       return { ...state, notes: action.payload };
 
@@ -195,7 +179,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         notes: state.notes.filter((note) => note.id !== action.payload),
       };
 
-    // Notebooks actions
     case "SET_NOTEBOOKS":
       return { ...state, notebooks: action.payload };
 
@@ -220,7 +203,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
-    // Labels actions
     case "SET_LABELS":
       return { ...state, labels: action.payload };
 
@@ -243,7 +225,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         labels: state.labels.filter((label) => label.id !== action.payload),
       };
 
-    // Links actions
     case "SET_LINKS":
       return { ...state, links: action.payload };
 
@@ -266,7 +247,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         links: state.links.filter((link) => link.id !== action.payload),
       };
 
-    // Link Groups actions
     case "SET_LINK_GROUPS":
       return { ...state, linkGroups: action.payload };
 
@@ -291,7 +271,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
-    // Tasks actions
     case "SET_TASKS":
       return { ...state, tasks: action.payload };
 
@@ -314,7 +293,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
 
-    // Daily Tasks actions
     case "SET_DAILY_TASKS":
       return { ...state, dailyTasks: action.payload };
 
@@ -350,7 +328,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case "REORDER_DAILY_TASKS":
       return { ...state, dailyTasks: action.payload };
 
-    // Bloc Note actions
     case "SET_BLOC_NOTE":
       return { ...state, blocNote: action.payload };
 
@@ -362,7 +339,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
           : null,
       };
 
-    // Loading actions
     case "SET_LOADING":
       return {
         ...state,
@@ -372,7 +348,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         },
       };
 
-    // UI actions
     case "TOGGLE_SIDEBAR":
       return {
         ...state,
@@ -408,7 +383,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         },
       };
 
-    // Comments actions
     case "SET_COMMENTS":
       return { ...state, comments: action.payload };
 
@@ -416,7 +390,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         comments: [action.payload, ...state.comments],
-        // Mettre à jour le compteur de commentaires de la note
         notes: state.notes.map((note) =>
           note.id === action.payload.noteId
             ? { ...note, commentCount: (note.commentCount || 0) + 1 }
@@ -443,7 +416,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         comments: state.comments.filter(
           (comment) => comment.id !== action.payload
         ),
-        // Décrémenter le compteur de commentaires de la note
         notes: deletedComment
           ? state.notes.map((note) =>
               note.id === deletedComment.noteId
@@ -471,7 +443,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-// Context creation
 const AppContext = createContext<
   | {
       state: AppState;
@@ -480,7 +451,6 @@ const AppContext = createContext<
   | undefined
 >(undefined);
 
-// Provider component
 interface AppProviderProps {
   children: ReactNode;
 }
@@ -495,7 +465,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   );
 };
 
-// Custom hook to use the context
 export const useApp = () => {
   const context = useContext(AppContext);
   if (context === undefined) {
@@ -504,7 +473,6 @@ export const useApp = () => {
   return context;
 };
 
-// Selector hooks for specific data
 export const useNotes = () => {
   const { state } = useApp();
   return {

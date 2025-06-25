@@ -122,7 +122,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
     if (selectedNotebook) {
       return (
         <div className="flex items-center">
-          <span className="mr-2">📕</span>
+          <span className="mr-2">📓</span>
           <span className="flex-1 truncate">{selectedNotebook.title}</span>
           {showCount && selectedNotebook.noteCount !== undefined && (
             <span className="ml-2 text-xs text-gray-500">
@@ -285,7 +285,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
               }`}
             >
               <div className="flex items-center">
-                <span className="mr-2">📕</span>
+                <span className="mr-2">📓</span>
                 <span className="flex-1 truncate">{notebook.title}</span>
                 {showCount && notebook.noteCount !== undefined && (
                   <span className="text-xs text-gray-500 ml-2">

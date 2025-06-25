@@ -101,7 +101,7 @@ const NoteForm: React.FC<NoteFormProps> = ({
         {formData.notebookId && (
           <div className="mb-4">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-              📕 {notebooks.find((nb) => nb.id === formData.notebookId)?.title}
+              📓 {notebooks.find((nb) => nb.id === formData.notebookId)?.title}
             </span>
           </div>
         )}

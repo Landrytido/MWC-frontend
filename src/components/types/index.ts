@@ -10,14 +10,7 @@ export const PRIORITY_LABELS = {
   [TaskPriority.HIGH]: { label: "Haute", icon: "🔴", color: "red" },
 } as const;
 
-export type LabelColorName =
-  | "teal"
-  | "blue"
-  | "green"
-  | "yellow"
-  | "purple"
-  | "red"
-  | "gray";
+export type LabelColorName = "teal" | "slate" | "blue" | "violet";
 
 export interface LabelColorConfig {
   default: string;
@@ -28,56 +21,36 @@ export interface LabelColorConfig {
 
 export const LABEL_COLORS: Record<LabelColorName, LabelColorConfig> = {
   teal: {
-    default: "bg-teal-100 text-teal-800",
+    default: "bg-teal-50 text-teal-700 border border-teal-200",
     outlined: "border-teal-300 text-teal-700 bg-white",
     minimal: "text-teal-600",
-    dot: "bg-teal-500",
+    dot: "bg-teal-400", // Plus doux que 500
+  },
+  slate: {
+    default: "bg-slate-50 text-slate-700 border border-slate-200",
+    outlined: "border-slate-300 text-slate-700 bg-white",
+    minimal: "text-slate-600",
+    dot: "bg-slate-400",
   },
   blue: {
-    default: "bg-blue-100 text-blue-800",
+    default: "bg-blue-50 text-blue-700 border border-blue-200",
     outlined: "border-blue-300 text-blue-700 bg-white",
     minimal: "text-blue-600",
-    dot: "bg-blue-500",
+    dot: "bg-blue-400",
   },
-  green: {
-    default: "bg-green-100 text-green-800",
-    outlined: "border-green-300 text-green-700 bg-white",
-    minimal: "text-green-600",
-    dot: "bg-green-500",
-  },
-  yellow: {
-    default: "bg-yellow-100 text-yellow-800",
-    outlined: "border-yellow-300 text-yellow-700 bg-white",
-    minimal: "text-yellow-600",
-    dot: "bg-yellow-500",
-  },
-  purple: {
-    default: "bg-purple-100 text-purple-800",
-    outlined: "border-purple-300 text-purple-700 bg-white",
-    minimal: "text-purple-600",
-    dot: "bg-purple-500",
-  },
-  red: {
-    default: "bg-red-100 text-red-800",
-    outlined: "border-red-300 text-red-700 bg-white",
-    minimal: "text-red-600",
-    dot: "bg-red-500",
-  },
-  gray: {
-    default: "bg-gray-100 text-gray-800",
-    outlined: "border-gray-300 text-gray-700 bg-white",
-    minimal: "text-gray-600",
-    dot: "bg-gray-500",
+  violet: {
+    default: "bg-violet-50 text-violet-700 border border-violet-200",
+    outlined: "border-violet-300 text-violet-700 bg-white",
+    minimal: "text-violet-600",
+    dot: "bg-violet-400",
   },
 };
 
 export const AVAILABLE_LABEL_COLORS: LabelColorName[] = [
   "teal",
+  "slate",
   "blue",
-  "green",
-  "yellow",
-  "purple",
-  "red",
+  "violet",
 ];
 
 export const getLabelColor = (labelId: string): LabelColorName => {

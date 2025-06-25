@@ -228,7 +228,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="flex items-center min-w-0 flex-1">
-                  <span className="mr-2 flex-shrink-0">📕</span>
+                  <span className="mr-2 flex-shrink-0">📓</span>
                   <span className="truncate">{notebook.title}</span>
                 </span>
                 <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
@@ -357,7 +357,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
             }`}
             title={notebook.title}
           >
-            📕 {notebook.title} ({notebook.noteCount || 0})
+            📓 {notebook.title} ({notebook.noteCount || 0})
           </button>
         ))}
 
@@ -419,7 +419,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
                       }`}
                       title={notebook.title}
                     >
-                      📕 {notebook.title} ({notebook.noteCount || 0})
+                      📓 {notebook.title} ({notebook.noteCount || 0})
                     </button>
                   ))}
                 </div>
@@ -439,7 +439,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          📕 Carnets
+          📓 Carnets
           {showStats && (
             <span className="ml-2 text-sm font-normal text-gray-500">
               ({notebooks.length})

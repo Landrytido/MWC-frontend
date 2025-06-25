@@ -103,7 +103,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
           <div className="mt-1 flex items-center space-x-2 text-xs text-gray-500">
             {note.notebookTitle && (
               <span className="flex items-center">
-                <span className="mr-1">📕</span>
+                <span className="mr-1">📓</span>
                 {note.notebookTitle}
               </span>
             )}
@@ -253,7 +253,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 <span
                   className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${LABEL_COLORS.blue.default}`}
                 >
-                  <span className="mr-1">📕</span>
+                  <span className="mr-1">📓</span>
                   {note.notebookTitle}
                 </span>
                 <button

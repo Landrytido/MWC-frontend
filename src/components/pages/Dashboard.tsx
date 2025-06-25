@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Layout from "../layout/Layout";
 import NoteCard from "../dashboard/NoteCard";
-import LinkCard from "../dashboard/LinkCard";
+import LinkManager from "../dashboard/LinkManager";
 import NotebookSidebar from "../dashboard/NotebookSidebar";
 import LabelManager from "../dashboard/LabelManager";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp, useNotes, useLinks, useUI } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import { Note, SavedLink } from "../types";
+import { Note } from "../types";
 import TaskManager from "../dashboard/TaskManager";
 import { useConfirmation } from "../dashboard/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
@@ -19,7 +19,7 @@ const Dashboard: React.FC = () => {
   const { state: authState } = useAuth();
   const { state, dispatch } = useApp();
   const { notes, filteredNotes, loading: notesLoading } = useNotes();
-  const { links, loading: linksLoading } = useLinks();
+  const { links } = useLinks();
   const api = useApiService();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -29,6 +29,7 @@ const Dashboard: React.FC = () => {
 
   const initializationRef = useRef(false);
   const { searchTerm } = useUI();
+
   useEffect(() => {
     if (!initializationRef.current && authState.user) {
       console.log("🚀 Initializing dashboard data...");
@@ -100,34 +101,6 @@ const Dashboard: React.FC = () => {
     [confirm, api.notes]
   );
 
-  const handleEditLink = useCallback(
-    (link: SavedLink) => {
-      navigate(`/dashboard/links/${link.id}`);
-    },
-    [navigate]
-  );
-
-  const handleDeleteLink = useCallback(
-    async (id: number) => {
-      const confirmed = await confirm({
-        title: "Supprimer le lien",
-        message:
-          "Êtes-vous sûr de vouloir supprimer ce lien ? Cette action est irréversible.",
-        confirmText: "Supprimer",
-        cancelText: "Annuler",
-        variant: "danger",
-      });
-
-      if (!confirmed) return;
-
-      try {
-        await api.links.delete(id);
-      } catch (error) {
-        console.error("Error deleting link:", error);
-      }
-    },
-    [confirm, api.links]
-  );
   const handleClearFilters = useCallback(() => {
     dispatch({ type: "RESET_FILTERS" });
   }, [dispatch]);
@@ -234,7 +207,7 @@ const Dashboard: React.FC = () => {
                 <div className="mt-2 flex flex-wrap gap-2">
                   {state.ui.currentNotebook && (
                     <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                      📕{" "}
+                      📓{" "}
                       {
                         state.notebooks.find(
                           (n) => n.id === state.ui.currentNotebook
@@ -413,56 +386,8 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            {activeTab === "links" && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Mes Liens Sauvegardés
-                  </h2>
-                  <button
-                    onClick={() => navigate("/dashboard/links/new")}
-                    className="flex items-center text-sm font-medium text-teal-500 hover:text-teal-600"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Nouveau lien
-                  </button>
-                </div>
+            {activeTab === "links" && <LinkManager />}
 
-                {linksLoading.isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="text-gray-500">Chargement des liens...</div>
-                  </div>
-                ) : links.length > 0 ? (
-                  <div className="space-y-4">
-                    {links.map((link) => (
-                      <LinkCard
-                        key={link.id}
-                        link={link}
-                        onEdit={handleEditLink}
-                        onDelete={() => handleDeleteLink(link.id)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Vous n'avez pas encore de liens sauvegardés. Commencez par
-                    en ajouter un !
-                  </div>
-                )}
-              </div>
-            )}
             {activeTab === "tasks" && <TaskManager />}
             {activeTab === "tools" && <ToolsManager />}
           </div>
