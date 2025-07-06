@@ -25,6 +25,11 @@ import {
   FileStatistics,
   User,
 } from "../types";
+import {
+  CalendarViewDto,
+  EventDto,
+  CreateEventRequest,
+} from "../types/calendar";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080/api";
@@ -889,7 +894,104 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
+  const calendarApi = useMemo(
+    () => ({
+      // Vue calendrier mensuelle
+      getMonthView: async (
+        year: number,
+        month: number
+      ): Promise<CalendarViewDto[]> => {
+        return await fetchWithAuth(`/calendar/month/${year}/${month}`);
+      },
 
+      // Vue calendrier d'une date spécifique
+      getDayView: async (date: string): Promise<CalendarViewDto> => {
+        return await fetchWithAuth(`/calendar/day/${date}`);
+      },
+
+      // Obtenir tous les événements
+      getAllEvents: async (): Promise<EventDto[]> => {
+        return await fetchWithAuth("/calendar/events");
+      },
+
+      // Obtenir un événement par ID
+      getEventById: async (id: number): Promise<EventDto> => {
+        return await fetchWithAuth(`/calendar/events/${id}`);
+      },
+
+      // Créer un événement
+      createEvent: async (event: CreateEventRequest): Promise<EventDto> => {
+        const created = await fetchWithAuth("/calendar/events", {
+          method: "POST",
+          body: JSON.stringify(event),
+        });
+        // Optionnel: dispatch pour mettre à jour le state global si nécessaire
+        return created;
+      },
+
+      // Modifier un événement
+      updateEvent: async (
+        id: number,
+        event: CreateEventRequest
+      ): Promise<EventDto> => {
+        const updated = await fetchWithAuth(`/calendar/events/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(event),
+        });
+        return updated;
+      },
+
+      // Supprimer un événement
+      deleteEvent: async (id: number): Promise<void> => {
+        await fetchWithAuth(`/calendar/events/${id}`, {
+          method: "DELETE",
+        });
+      },
+
+      // Créer une tâche avec événement lié depuis le calendrier
+      createTaskFromCalendar: async (
+        taskData: CreateEventRequest
+      ): Promise<Task> => {
+        const created = await fetchWithAuth("/calendar/create-task", {
+          method: "POST",
+          body: JSON.stringify(taskData),
+        });
+        // Mettre à jour les tâches dans le state global
+        dispatch({ type: "ADD_TASK", payload: created });
+        return created;
+      },
+
+      // Test email (pour debug)
+      testEmail: async (): Promise<string> => {
+        return await fetchWithAuth("/calendar/test-email", {
+          method: "POST",
+        });
+      },
+
+      // Obtenir les événements dans une plage de dates
+      getEventsInRange: async (
+        startDate: string,
+        endDate: string
+      ): Promise<EventDto[]> => {
+        const params = new URLSearchParams({
+          startDate,
+          endDate,
+        });
+        return await fetchWithAuth(
+          `/calendar/events/range?${params.toString()}`
+        );
+      },
+
+      // Rechercher des événements
+      searchEvents: async (query: string): Promise<EventDto[]> => {
+        const params = new URLSearchParams({ query });
+        return await fetchWithAuth(
+          `/calendar/events/search?${params.toString()}`
+        );
+      },
+    }),
+    [fetchWithAuth, dispatch]
+  );
   // ✅ FILES API
   const filesApi = useMemo(
     () => ({
@@ -954,6 +1056,7 @@ export const useApiService = () => {
       tasks: tasksApi,
       comments: commentsApi,
       files: filesApi,
+      calendar: calendarApi,
     }),
     [
       healthApi,
@@ -967,6 +1070,7 @@ export const useApiService = () => {
       tasksApi,
       commentsApi,
       filesApi,
+      calendarApi,
     ]
   );
 };

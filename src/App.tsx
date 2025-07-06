@@ -22,6 +22,7 @@ import EditNote from "./components/pages/EditNote";
 import CreateLink from "./components/pages/CreateLink";
 import EditLink from "./components/pages/EditLink";
 import NoteDetail from "./components/pages/NoteDetail";
+import CalendarPage from "./components/pages/CalendarPage";
 
 const App: React.FC = () => {
   return (
@@ -49,6 +50,7 @@ const App: React.FC = () => {
                     <Route path="/notes/:id/view" element={<NoteDetail />} />
                     <Route path="/links/new" element={<CreateLink />} />
                     <Route path="/links/:id" element={<EditLink />} />
+                    <Route path="/calendar" element={<CalendarPage />} />
                   </Routes>
                 </ProtectedRoute>
               }
