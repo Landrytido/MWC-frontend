@@ -1,5 +1,3 @@
-// src/components/contexts/CalendarContext.tsx
-
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { EventDto, CalendarViewDto } from "../types/calendar";
 import { LoadingState } from "../types";
@@ -151,8 +149,6 @@ export const useCalendar = () => {
   }
   return context;
 };
-
-// Hooks personnalisés pour faciliter l'utilisation
 export const useCalendarEvents = () => {
   const { state } = useCalendar();
   return {

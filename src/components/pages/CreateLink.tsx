@@ -51,19 +51,12 @@ const CreateLink: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // Fonction pour extraire automatiquement le titre depuis une URL
   const fetchTitleFromUrl = async () => {
     if (!url || !validateUrl(url)) return;
 
     try {
-      // Cette approche est simplifiée, en réalité vous auriez besoin d'un service backend
-      // pour récupérer le titre d'une page web
       setTitle("Chargement du titre...");
-
-      // Simuler le chargement pour cet exemple
       setTimeout(() => {
-        // Dans un cas réel, vous feriez un appel à votre API pour récupérer le titre
         setTitle(new URL(url).hostname);
       }, 1000);
     } catch (err) {

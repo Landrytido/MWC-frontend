@@ -126,8 +126,6 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
   const handleClearFilters = () => {
     dispatch({ type: "SET_SELECTED_LABELS", payload: [] });
   };
-
-  // Composant pour afficher un label individuel
   const LabelItem: React.FC<{ label: Label }> = ({ label }) => {
     const colorClasses = getLabelDisplayClasses(label.id);
     const isSelected = state.ui.selectedLabels.includes(label.id);

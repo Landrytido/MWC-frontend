@@ -10,19 +10,13 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
   className = "",
 }) => {
   const api = useApiService();
-
-  // État pour la sélection du mois
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return { month: now.getMonth() + 1, year: now.getFullYear() };
   });
-
-  // États pour les données et le chargement
   const [monthlyData, setMonthlyData] = useState<ApiTaskStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Noms des mois en français
   const monthNames = [
     "Janvier",
     "Février",
@@ -37,8 +31,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     "Novembre",
     "Décembre",
   ];
-
-  // Chargement des données depuis l'API
   const loadMonthlyStats = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -56,13 +48,9 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       setLoading(false);
     }
   }, [selectedMonth, api.tasks]);
-
-  // Effet pour charger les données quand le mois change
   useEffect(() => {
     loadMonthlyStats();
   }, [loadMonthlyStats]);
-
-  // Gestion du changement de mois
   const handleMonthChange = (direction: "prev" | "next") => {
     setSelectedMonth((prev) => {
       if (direction === "prev") {
@@ -76,8 +64,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       }
     });
   };
-
-  // Composant : Diagramme circulaire
   const CircularChart: React.FC<{
     completed: number;
     total: number;
@@ -139,8 +125,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       </div>
     );
   };
-
-  // États de chargement et d'erreur
   if (loading) {
     return (
       <div className={`space-y-6 ${className}`}>

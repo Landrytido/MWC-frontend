@@ -35,8 +35,6 @@ interface AppState {
     blocNote: LoadingState;
     comments: LoadingState;
   };
-
-  // UI state
   ui: {
     sidebarCollapsed: boolean;
     currentNotebook: number | null;
@@ -44,19 +42,12 @@ interface AppState {
     searchTerm: string;
   };
 }
-
-// Action types
 type AppAction =
-  // User actions
   | { type: "SET_USER"; payload: User | null }
-
-  // Notes actions
   | { type: "SET_NOTES"; payload: Note[] }
   | { type: "ADD_NOTE"; payload: Note }
   | { type: "UPDATE_NOTE"; payload: { id: number; note: Partial<Note> } }
   | { type: "DELETE_NOTE"; payload: number }
-
-  // Notebooks actions
   | { type: "SET_NOTEBOOKS"; payload: Notebook[] }
   | { type: "ADD_NOTEBOOK"; payload: Notebook }
   | {
@@ -64,20 +55,14 @@ type AppAction =
       payload: { id: number; notebook: Partial<Notebook> };
     }
   | { type: "DELETE_NOTEBOOK"; payload: number }
-
-  // Labels actions
   | { type: "SET_LABELS"; payload: Label[] }
   | { type: "ADD_LABEL"; payload: Label }
   | { type: "UPDATE_LABEL"; payload: { id: string; label: Partial<Label> } }
   | { type: "DELETE_LABEL"; payload: string }
-
-  // Links actions
   | { type: "SET_LINKS"; payload: SavedLink[] }
   | { type: "ADD_LINK"; payload: SavedLink }
   | { type: "UPDATE_LINK"; payload: { id: number; link: Partial<SavedLink> } }
   | { type: "DELETE_LINK"; payload: number }
-
-  // Link Groups actions
   | { type: "SET_LINK_GROUPS"; payload: LinkGroup[] }
   | { type: "ADD_LINK_GROUP"; payload: LinkGroup }
   | {

@@ -42,8 +42,6 @@ const NoteForm: React.FC<NoteFormProps> = ({
 
   const [previewMode, setPreviewMode] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-
-  // Marquer le formulaire comme modifié
   useEffect(() => {
     if (note) {
       const hasChanges =

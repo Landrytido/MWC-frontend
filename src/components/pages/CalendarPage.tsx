@@ -1,5 +1,3 @@
-// src/components/pages/CalendarPage.tsx
-
 import React from "react";
 import Layout from "../layout/Layout";
 import Calendar from "../calendar/Calendar";

@@ -1,5 +1,3 @@
-// src/components/calendar/EventsList.tsx
-
 import React, { useState, useMemo } from "react";
 import { EventDto, formatEventTime, getEventColor } from "../types/calendar";
 
@@ -17,8 +15,6 @@ const EventsList: React.FC<EventsListProps> = ({
   const [filter, setFilter] = useState<"all" | "upcoming" | "today" | "week">(
     "upcoming"
   );
-
-  // Filtrer et trier les événements
   const filteredEvents = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -49,8 +45,6 @@ const EventsList: React.FC<EventsListProps> = ({
       default:
         filtered = events;
     }
-
-    // Trier par date
     return filtered.sort(
       (a, b) =>
         new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
@@ -61,8 +55,6 @@ const EventsList: React.FC<EventsListProps> = ({
     const date = new Date(dateString);
     const today = new Date();
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-
-    // Normaliser les dates pour la comparaison
     const dateOnly = new Date(
       date.getFullYear(),
       date.getMonth(),

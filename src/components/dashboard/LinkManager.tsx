@@ -48,13 +48,9 @@ const LinkManager: React.FC<LinkManagerProps> = ({ className = "" }) => {
     },
     [confirm, api.links]
   );
-
-  // Calcul des liens à afficher pour la page actuelle
   const startIndex = (currentPage - 1) * LINKS_PER_PAGE;
   const endIndex = startIndex + LINKS_PER_PAGE;
   const currentLinks = links.slice(startIndex, endIndex);
-
-  // Reset de la page quand le nombre de liens change
   React.useEffect(() => {
     const maxPages = Math.ceil(links.length / LINKS_PER_PAGE);
     if (currentPage > maxPages && maxPages > 0) {

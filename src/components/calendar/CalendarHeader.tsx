@@ -1,5 +1,3 @@
-// src/components/calendar/CalendarHeader.tsx
-
 import React from "react";
 import {
   useCalendar,

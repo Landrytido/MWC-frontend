@@ -1,5 +1,3 @@
-// src/components/types/calendar.ts
-
 import { TaskPriority } from "./index";
 
 export type EventMode = "PRESENTIEL" | "DISTANCIEL";
@@ -55,13 +53,10 @@ export interface CreateEventRequest {
   type?: EventType;
   relatedTaskId?: number;
   reminders?: CreateReminderRequest[];
-  // Propriétés spécifiques aux tâches
   dueDate?: string; // Date d'échéance pour les tâches
   scheduledDate?: string; // Date de planification pour les tâches
   priority?: TaskPriority; // TaskPriority enum
 }
-
-// Constantes pour les options de rappels
 export const REMINDER_OPTIONS = [
   { label: "15 minutes avant", minutes: 15 },
   { label: "1 heure avant", minutes: 60 },
@@ -77,11 +72,7 @@ export const EVENT_TYPE_LABELS = {
   EVENT: "Événement",
   TASK_BASED: "Basé sur une tâche",
 } as const;
-
-// Import du type Task existant (on l'assume déjà défini dans types/index.ts)
 import { Task as TaskDto } from "./index";
-
-// Helper functions
 export function formatEventDateTime(
   startDateTime: string,
   endDateTime?: string
@@ -98,12 +89,9 @@ export function formatEventDateTime(
   }
 
   const end = new Date(endDateTime);
-
-  // Vérifier si c'est le même jour
   const isSameDay = start.toDateString() === end.toDateString();
 
   if (isSameDay) {
-    // Même jour - afficher: "12 jan 14:30 - 16:00"
     const dateStr = start.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "short",
@@ -119,7 +107,6 @@ export function formatEventDateTime(
 
     return `${dateStr} ${startTimeStr} - ${endTimeStr}`;
   } else {
-    // Jours différents - utiliser des noms de variables différents
     const startTime = start.toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
@@ -128,8 +115,6 @@ export function formatEventDateTime(
       hour: "2-digit",
       minute: "2-digit",
     });
-
-    // Si jours différents
     const dateFormat = { day: "numeric", month: "short" } as const;
     const startDateStr = start.toLocaleDateString("fr-FR", dateFormat); // Renommé
     const endDateStr = end.toLocaleDateString("fr-FR", dateFormat); // Renommé

@@ -1,4 +1,3 @@
-// src/components/layout/Header.tsx (Version mise à jour)
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -15,7 +14,6 @@ const Header: React.FC = () => {
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
-      // Rediriger quand même en cas d'erreur
       navigate("/");
     }
   };

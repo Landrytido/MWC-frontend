@@ -319,8 +319,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // 🆕 LABELS API - Améliorée
   const labelsApi = useMemo(
     () => ({
       getAll: async (): Promise<Label[]> => {
@@ -343,8 +341,6 @@ export const useApiService = () => {
       getById: async (id: string): Promise<Label> => {
         return await fetchWithAuth(`/labels/${id}`);
       },
-
-      // 🆕 Obtenir les notes d'un label
       getNotes: async (labelId: string): Promise<Note[]> => {
         return await fetchWithAuth(`/labels/${labelId}/notes`);
       },
@@ -381,8 +377,6 @@ export const useApiService = () => {
         });
         dispatch({ type: "DELETE_LABEL", payload: id });
       },
-
-      // 🆕 Statistiques d'utilisation
       getUsageStats: async (): Promise<{
         totalLabels: number;
         mostUsedLabels: Array<{ label: Label; noteCount: number }>;
@@ -393,8 +387,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // 🆕 NOTEBOOKS API - Améliorée
   const notebooksApi = useMemo(
     () => ({
       getAll: async (): Promise<Notebook[]> => {
@@ -417,8 +409,6 @@ export const useApiService = () => {
       getById: async (id: number): Promise<Notebook> => {
         return await fetchWithAuth(`/notebooks/${id}`);
       },
-
-      // 🆕 Obtenir les notes d'un notebook avec pagination
       getNotes: async (
         notebookId: number,
         params?: { limit?: number; offset?: number }
@@ -465,8 +455,6 @@ export const useApiService = () => {
         await fetchWithAuth(`/notebooks/${id}`, { method: "DELETE" });
         dispatch({ type: "DELETE_NOTEBOOK", payload: id });
       },
-
-      // 🆕 Statistiques d'utilisation
       getUsageStats: async (): Promise<{
         totalNotebooks: number;
         notebooksWithMostNotes: Array<{
@@ -480,8 +468,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // ✅ HEALTH API
   const healthApi = useMemo(
     () => ({
       check: async (): Promise<{ status: string }> => {
@@ -490,8 +476,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth]
   );
-
-  // ✅ USER API
   const userApi = useMemo(
     () => ({
       getProfile: async () => {
@@ -516,8 +500,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth]
   );
-
-  // ✅ TASKS API
   const tasksApi = useMemo(
     () => ({
       getAll: async (): Promise<Task[]> => {
@@ -654,8 +636,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // ✅ COMMENTS API
   const commentsApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {
@@ -707,8 +687,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // ✅ LINKS API
   const linksApi = useMemo(
     () => ({
       getAll: async (): Promise<SavedLink[]> => {
@@ -760,8 +738,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, setLoading, dispatch]
   );
-
-  // ✅ LINK GROUPS API
   const linkGroupsApi = useMemo(
     () => ({
       getAll: async (): Promise<LinkGroup[]> => {
@@ -855,8 +831,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth]
   );
-
-  // ✅ BLOC NOTE API
   const blocNoteApi = useMemo(
     () => ({
       get: async (): Promise<BlocNote> => {
@@ -896,40 +870,28 @@ export const useApiService = () => {
   );
   const calendarApi = useMemo(
     () => ({
-      // Vue calendrier mensuelle
       getMonthView: async (
         year: number,
         month: number
       ): Promise<CalendarViewDto[]> => {
         return await fetchWithAuth(`/calendar/month/${year}/${month}`);
       },
-
-      // Vue calendrier d'une date spécifique
       getDayView: async (date: string): Promise<CalendarViewDto> => {
         return await fetchWithAuth(`/calendar/day/${date}`);
       },
-
-      // Obtenir tous les événements
       getAllEvents: async (): Promise<EventDto[]> => {
         return await fetchWithAuth("/calendar/events");
       },
-
-      // Obtenir un événement par ID
       getEventById: async (id: number): Promise<EventDto> => {
         return await fetchWithAuth(`/calendar/events/${id}`);
       },
-
-      // Créer un événement
       createEvent: async (event: CreateEventRequest): Promise<EventDto> => {
         const created = await fetchWithAuth("/calendar/events", {
           method: "POST",
           body: JSON.stringify(event),
         });
-        // Optionnel: dispatch pour mettre à jour le state global si nécessaire
         return created;
       },
-
-      // Modifier un événement
       updateEvent: async (
         id: number,
         event: CreateEventRequest
@@ -940,8 +902,6 @@ export const useApiService = () => {
         });
         return updated;
       },
-
-      // Supprimer un événement
       deleteEvent: async (id: number): Promise<void> => {
         await fetchWithAuth(`/calendar/events/${id}`, {
           method: "DELETE",
@@ -962,15 +922,11 @@ export const useApiService = () => {
         dispatch({ type: "ADD_TASK", payload: created });
         return created;
       },
-
-      // Test email (pour debug)
       testEmail: async (): Promise<string> => {
         return await fetchWithAuth("/calendar/test-email", {
           method: "POST",
         });
       },
-
-      // Obtenir les événements dans une plage de dates
       getEventsInRange: async (
         startDate: string,
         endDate: string
@@ -983,8 +939,6 @@ export const useApiService = () => {
           `/calendar/events/range?${params.toString()}`
         );
       },
-
-      // Rechercher des événements
       searchEvents: async (query: string): Promise<EventDto[]> => {
         const params = new URLSearchParams({ query });
         return await fetchWithAuth(
@@ -994,7 +948,6 @@ export const useApiService = () => {
     }),
     [fetchWithAuth, dispatch]
   );
-  // ✅ FILES API
   const filesApi = useMemo(
     () => ({
       getAll: async (): Promise<FileInfo[]> => {

@@ -1,10 +1,5 @@
 import React, { useState } from "react";
 
-// Import des composants d'outils (à créer plus tard)
-// import Calculator from "./Calculator";
-// import Weather from "./Weather";
-// import Stopwatch from "./Stopwatch";
-
 interface ToolsManagerProps {
   className?: string;
 }
@@ -13,8 +8,6 @@ type ToolType = "calculator" | "weather" | "stopwatch" | "timer" | "converter";
 
 const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
   const [activeTool, setActiveTool] = useState<ToolType | null>(null);
-
-  // Configuration des outils disponibles
   const tools = [
     {
       key: "calculator",
@@ -60,8 +53,6 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
 
   const renderActiveTool = () => {
     if (!activeTool) return null;
-
-    // Placeholder pour les composants à créer
     const ToolPlaceholder: React.FC<{ toolName: string }> = ({ toolName }) => (
       <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
         <div className="text-4xl mb-4">🚧</div>

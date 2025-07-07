@@ -1,5 +1,3 @@
-// src/components/calendar/Calendar.tsx
-
 import React, { useState, useEffect } from "react";
 import { useApiService } from "../services/apiService";
 import {
@@ -25,20 +23,14 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const { currentMonth, currentYear } = useCalendarNavigation();
   const { currentMonthData, getMonthKey } = useMonthViewData();
   const { confirm, ConfirmationComponent } = useConfirmation();
-
-  // États pour les modals
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalType, setModalType] = useState<"event" | "task">("event");
-
-  // Charger les données du mois courant
   useEffect(() => {
     const loadMonthData = async () => {
       const monthKey = getMonthKey(currentMonth, currentYear);
-
-      // Éviter de recharger si on a déjà les données
       if (currentMonthData.length > 0) return;
 
       dispatch({
@@ -81,8 +73,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     currentMonthData.length,
     getMonthKey,
   ]);
-
-  // Gestionnaires d'événements
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
@@ -116,8 +106,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     try {
       await api.calendar.deleteEvent(eventId);
       dispatch({ type: "DELETE_EVENT", payload: eventId });
-
-      // Recharger les données du mois pour mettre à jour l'affichage
       const monthKey = getMonthKey(currentMonth, currentYear);
       const monthData = await api.calendar.getMonthView(
         currentYear,
@@ -140,7 +128,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const handleEventSubmit = async (eventData: CreateEventRequest) => {
     try {
       if (editingEvent) {
-        // Modification
         const updated = await api.calendar.updateEvent(
           editingEvent.id,
           eventData
@@ -150,7 +137,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
           payload: { id: editingEvent.id, event: updated },
         });
       } else {
-        // Création
         if (modalType === "task") {
           await api.calendar.createTaskFromCalendar(eventData);
         } else {
@@ -158,8 +144,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
           dispatch({ type: "ADD_EVENT", payload: created });
         }
       }
-
-      // Recharger les données du mois
       const monthKey = getMonthKey(currentMonth, currentYear);
       const monthData = await api.calendar.getMonthView(
         currentYear,

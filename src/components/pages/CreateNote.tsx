@@ -1,4 +1,3 @@
-// 🔄 MISE À JOUR: components/pages/CreateNote.tsx
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../layout/Layout";
@@ -13,8 +12,6 @@ const CreateNote: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Récupérer les paramètres par défaut depuis l'URL
   const defaultNotebookId = searchParams.get("notebookId");
   const defaultLabelIds =
     searchParams.get("labelIds")?.split(",").filter(Boolean) || [];

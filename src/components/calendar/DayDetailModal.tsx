@@ -1,5 +1,3 @@
-// src/components/calendar/DayDetailModal.tsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useApiService } from "../services/apiService";
 import {
@@ -48,15 +46,11 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       setIsLoading(false);
     }
   }, [api.calendar, date]);
-
-  // Charger les données du jour
   useEffect(() => {
     if (isOpen && date) {
       loadDayData();
     }
   }, [isOpen, date, loadDayData]);
-
-  // Gérer la fermeture avec Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {

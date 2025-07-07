@@ -1,5 +1,3 @@
-// src/components/dashboard/TaskCreationForm.tsx - VERSION CORRIGÉE
-
 import React, { useState } from "react";
 import {
   CreateTaskForm,
@@ -75,8 +73,6 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     await onSubmit(taskData);
   };
-
-  // ✅ CORRECTION: Définition des priorités avec valeurs numériques
   const priorityOptions = [
     { value: 1, config: getPriorityConfig(1) }, // LOW
     { value: 2, config: getPriorityConfig(2) }, // MEDIUM

@@ -1,5 +1,3 @@
-// src/components/calendar/CalendarGrid.tsx
-
 import React from "react";
 import {
   CalendarViewDto,
@@ -21,28 +19,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onEventClick,
 }) => {
   const { state } = useCalendar();
-
-  // Créer la grille du calendrier (6 semaines x 7 jours)
   const createCalendarGrid = () => {
     if (monthData.length === 0) return [];
-
-    // Obtenir le premier jour du mois
     const firstDate = new Date(monthData[0].date);
     const year = firstDate.getFullYear();
     const month = firstDate.getMonth();
-
-    // Premier jour du mois et dernier jour du mois
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
-
-    // Jour de la semaine du premier jour (0 = dimanche, 1 = lundi, etc.)
     const startDayOfWeek = firstDayOfMonth.getDay();
     const adjustedStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1; // Lundi = 0
-
-    // Créer le tableau des jours
     const days = [];
-
-    // Jours du mois précédent
     for (let i = adjustedStartDay - 1; i >= 0; i--) {
       const date = new Date(year, month, -i);
       days.push({
@@ -51,8 +37,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         dayNumber: date.getDate(),
       });
     }
-
-    // Jours du mois courant
     for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
       const date = new Date(year, month, day);
       days.push({
@@ -61,8 +45,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         dayNumber: day,
       });
     }
-
-    // Jours du mois suivant pour compléter la grille
     const totalCells = 42; // 6 semaines × 7 jours
     const remainingCells = totalCells - days.length;
     for (let day = 1; day <= remainingCells; day++) {
@@ -78,18 +60,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   const calendarDays = createCalendarGrid();
-
-  // Obtenir les données d'un jour spécifique
   const getDayData = (date: string): CalendarViewDto | null => {
     return monthData.find((day) => day.date === date) || null;
   };
-
-  // Vérifier si c'est aujourd'hui
   const isToday = (date: string): boolean => {
     return date === new Date().toISOString().split("T")[0];
   };
-
-  // Filtrer les éléments selon le filtre actuel
   const getFilteredItems = (dayData: CalendarViewDto) => {
     const items = [];
 
@@ -98,7 +74,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     }
 
     if (state.filterType === "all" || state.filterType === "tasks") {
-      // Convertir les tâches en format similaire aux événements pour l'affichage
       items.push(
         ...dayData.tasks.map((task) => ({
           id: task.id,
@@ -186,8 +161,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       if ("relatedTaskId" in item && item.relatedTaskId) {
-                        // C'est une tâche, on pourrait ouvrir un modal différent
-                        // Pour l'instant, on traite comme un événement
                         onEventClick(item as EventDto);
                       } else {
                         onEventClick(item as EventDto);

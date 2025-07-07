@@ -1,5 +1,3 @@
-// src/components/calendar/EventModal.tsx - VERSION CONDITIONNELLE
-
 import React, { useState, useEffect } from "react";
 import {
   EventDto,
@@ -52,8 +50,6 @@ const EventModal: React.FC<EventModalProps> = ({
     type: modalType === "event" ? "EVENT" : "TASK_BASED",
     reminders: [],
   });
-
-  // États spécifiques aux tâches
   const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [dueDate, setDueDate] = useState<string>("");
   const [scheduleType, setScheduleType] = useState<
@@ -72,18 +68,12 @@ const EventModal: React.FC<EventModalProps> = ({
 
   const formatDateTimeForBackend = (dateString: string): string => {
     if (!dateString) return "";
-
-    // Si c'est déjà au format complet, on le garde
     if (dateString.includes("T")) {
-      // S'assurer qu'on a les secondes
       if (dateString.length === 16) {
-        // "2025-01-15T14:30"
         return dateString + ":00"; // "2025-01-15T14:30:00"
       }
       return dateString;
     }
-
-    // Si c'est juste une date, ajouter l'heure par défaut
     return `${dateString}T09:00:00`; // "2025-01-15" → "2025-01-15T09:00:00"
   };
 
@@ -94,11 +84,9 @@ const EventModal: React.FC<EventModalProps> = ({
     }
     return `${dateString}T09:00`; // "2025-01-15" → "2025-01-15T09:00"
   };
-  // Initialiser le formulaire
   useEffect(() => {
     if (isOpen) {
       if (editingEvent) {
-        // Mode édition
         const event = editingEvent;
         setFormData({
           title: event.title,
@@ -115,15 +103,11 @@ const EventModal: React.FC<EventModalProps> = ({
           })),
         });
         setSelectedReminders(event.reminders.map((r) => r.minutesBefore));
-
-        // Si c'est une tâche basée sur un événement
         if (event.type === "TASK_BASED" && event.relatedTaskId) {
-          // Initialiser les données de tâche si disponibles
           setDueDate(event.endDate);
           setPriority(TaskPriority.MEDIUM); // À adapter selon vos données
         }
       } else {
-        // Mode création - TOUJOURS réinitialiser d'abord TOUS les états
         setPriority(TaskPriority.MEDIUM);
         setDueDate("");
         setScheduleType("none");
@@ -155,27 +139,19 @@ const EventModal: React.FC<EventModalProps> = ({
           type: modalType === "event" ? "EVENT" : "TASK_BASED",
           reminders: [],
         });
-
-        // Si selectedDate fournie, configurer pour une tâche planifiée
         if (selectedDate && modalType === "task") {
           setDueDate(selectedDate);
-          // Ne pas changer scheduleType, il reste à "none"
         }
       }
       setError("");
     }
   }, [isOpen, editingEvent, modalType, selectedDate]);
-
-  // Gérer la planification des tâches
   useEffect(() => {
     if (modalType === "task" && isOpen) {
-      // Si une date est sélectionnée depuis le calendrier, l'utiliser directement
       if (selectedDate) {
         setFormData((prev) => ({ ...prev, scheduledDate: selectedDate }));
         return;
       }
-
-      // Sinon, utiliser la logique des boutons de planification
       const today = new Date().toISOString().split("T")[0];
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
         .toISOString()
@@ -191,8 +167,6 @@ const EventModal: React.FC<EventModalProps> = ({
       setFormData((prev) => ({ ...prev, scheduledDate }));
     }
   }, [scheduleType, modalType, selectedDate, isOpen]);
-
-  // Gérer la fermeture et le nettoyage
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -204,7 +178,6 @@ const EventModal: React.FC<EventModalProps> = ({
       document.addEventListener("keydown", handleEscape);
       document.body.style.overflow = "hidden";
     } else {
-      // Nettoyage complet quand le modal se ferme
       setFormData({
         title: "",
         description: "",
@@ -236,8 +209,6 @@ const EventModal: React.FC<EventModalProps> = ({
       setError("Le titre est requis");
       return;
     }
-
-    // Validation spécifique selon le type
     if (modalType === "event") {
       if (!formData.startDate || !formData.endDate) {
         setError("Les dates de début et fin sont requises pour un événement");
@@ -262,8 +233,6 @@ const EventModal: React.FC<EventModalProps> = ({
 
     try {
       if (modalType === "task") {
-        // ===== GESTION DES TÂCHES =====
-        // Format spécial pour l'API createTaskFromCalendar
         const taskData: CreateTaskFromCalendarData = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
@@ -277,18 +246,12 @@ const EventModal: React.FC<EventModalProps> = ({
         };
 
         console.log("Données tâche envoyées:", taskData); // Debug
-
-        // Appel direct à l'API tâche
         if (editingEvent && editingEvent.relatedTaskId) {
-          // Mode édition de tâche - utiliser l'API tasks normale
           await api.tasks.update(editingEvent.relatedTaskId, taskData);
         } else {
-          // Mode création de tâche depuis calendrier
           await api.calendar.createTaskFromCalendar(taskData);
         }
       } else {
-        // ===== GESTION DES ÉVÉNEMENTS =====
-        // Préparer les rappels
         const reminders = selectedReminders.map((minutes) => ({
           type: "EMAIL" as const,
           minutesBefore: minutes,
@@ -307,12 +270,8 @@ const EventModal: React.FC<EventModalProps> = ({
         };
 
         console.log("Données événement envoyées:", eventData); // Debug
-
-        // Utiliser onSubmit pour les événements (gère création/édition)
         await onSubmit(eventData);
       }
-
-      // Fermer le modal en cas de succès
       onClose();
     } catch (err) {
       console.error("Erreur dans handleSubmit:", err); // Debug
@@ -507,7 +466,6 @@ const EventModal: React.FC<EventModalProps> = ({
 
                 {/* Planification */}
                 {selectedDate ? (
-                  // Si une date est sélectionnée depuis le calendrier
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Planification
@@ -540,7 +498,6 @@ const EventModal: React.FC<EventModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  // Si pas de date sélectionnée, afficher les options
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Planification

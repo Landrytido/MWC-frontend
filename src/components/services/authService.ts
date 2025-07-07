@@ -38,7 +38,6 @@ class AuthService {
   private user: any = null;
 
   constructor() {
-    // Récupérer les tokens du localStorage au démarrage
     this.token = localStorage.getItem("token");
     this.refreshToken = localStorage.getItem("refreshToken");
     const savedUser = localStorage.getItem("user");
@@ -183,7 +182,6 @@ class AuthService {
         Authorization: `Bearer ${this.token}`,
       },
     });
-    // Si le token a expiré, essayer de le rafraîchir
     if (response.status === 401 && this.refreshToken) {
       try {
         await this.refreshAccessToken();
