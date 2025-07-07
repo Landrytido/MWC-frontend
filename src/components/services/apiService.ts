@@ -948,15 +948,17 @@ export const useApiService = () => {
         });
       },
 
-      // Créer une tâche avec événement lié depuis le calendrier
-      createTaskFromCalendar: async (
-        taskData: CreateEventRequest
-      ): Promise<Task> => {
+      createTaskFromCalendar: async (taskData: {
+        title: string;
+        description?: string;
+        scheduledDate?: string;
+        dueDate?: string;
+        priority?: number;
+      }) => {
         const created = await fetchWithAuth("/calendar/create-task", {
           method: "POST",
           body: JSON.stringify(taskData),
         });
-        // Mettre à jour les tâches dans le state global
         dispatch({ type: "ADD_TASK", payload: created });
         return created;
       },

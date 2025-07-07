@@ -9,6 +9,7 @@ import {
   EVENT_MODE_LABELS,
 } from "../types/calendar";
 import { TaskPriority, PRIORITY_LABELS } from "../types";
+import { useApiService } from "../services/apiService";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -18,7 +19,20 @@ interface EventModalProps {
   modalType: "event" | "task";
   selectedDate?: string;
 }
-
+interface CreateTaskFromCalendarData {
+  title: string;
+  description?: string;
+  scheduledDate?: string;
+  dueDate?: string;
+  priority?: number;
+}
+interface UpdateTaskData {
+  title?: string;
+  description?: string;
+  scheduledDate?: string;
+  dueDate?: string;
+  priority?: number;
+}
 const EventModal: React.FC<EventModalProps> = ({
   isOpen,
   onClose,
@@ -49,7 +63,37 @@ const EventModal: React.FC<EventModalProps> = ({
   const [selectedReminders, setSelectedReminders] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const api = useApiService();
 
+  const formatDateForBackend = (dateString: string): string => {
+    if (!dateString) return "";
+    return dateString.split("T")[0]; // "2025-01-15T14:30" → "2025-01-15"
+  };
+
+  const formatDateTimeForBackend = (dateString: string): string => {
+    if (!dateString) return "";
+
+    // Si c'est déjà au format complet, on le garde
+    if (dateString.includes("T")) {
+      // S'assurer qu'on a les secondes
+      if (dateString.length === 16) {
+        // "2025-01-15T14:30"
+        return dateString + ":00"; // "2025-01-15T14:30:00"
+      }
+      return dateString;
+    }
+
+    // Si c'est juste une date, ajouter l'heure par défaut
+    return `${dateString}T09:00:00`; // "2025-01-15" → "2025-01-15T09:00:00"
+  };
+
+  const formatDateTimeForInput = (dateString: string): string => {
+    if (!dateString) return "";
+    if (dateString.includes("T")) {
+      return dateString.slice(0, 16); // "2025-01-15T14:30"
+    }
+    return `${dateString}T09:00`; // "2025-01-15" → "2025-01-15T09:00"
+  };
   // Initialiser le formulaire
   useEffect(() => {
     if (isOpen) {
@@ -217,46 +261,40 @@ const EventModal: React.FC<EventModalProps> = ({
     setError("");
 
     try {
-      // Préparer les rappels
-      const reminders = selectedReminders.map((minutes) => ({
-        type: "EMAIL" as const,
-        minutesBefore: minutes,
-      }));
-
-      let eventData: CreateEventRequest;
-
       if (modalType === "task") {
-        // Données pour tâche
-        let taskStartDate: string;
-
-        if (selectedDate) {
-          // Si la tâche est créée depuis le calendrier, utiliser cette date
-          taskStartDate = selectedDate;
-        } else if (formData.scheduledDate) {
-          // Si une planification est définie (aujourd'hui/demain)
-          taskStartDate = formData.scheduledDate;
-        } else if (dueDate) {
-          // Si seule une date d'échéance est définie
-          taskStartDate = dueDate;
-        } else {
-          // Par défaut, utiliser la date actuelle
-          taskStartDate = new Date().toISOString().split("T")[0];
-        }
-
-        eventData = {
+        // ===== GESTION DES TÂCHES =====
+        // Format spécial pour l'API createTaskFromCalendar
+        const taskData: CreateTaskFromCalendarData = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
-          startDate: taskStartDate,
-          endDate: taskStartDate, // Même date pour début et fin
-          type: "TASK_BASED",
-          dueDate: dueDate || undefined,
-          scheduledDate: selectedDate || formData.scheduledDate || undefined,
+          scheduledDate:
+            selectedDate ||
+            (formData.scheduledDate
+              ? formatDateForBackend(formData.scheduledDate)
+              : undefined),
+          dueDate: dueDate ? formatDateTimeForBackend(dueDate) : undefined, // CORRECTION ICI
           priority: priority,
-          reminders,
         };
+
+        console.log("Données tâche envoyées:", taskData); // Debug
+
+        // Appel direct à l'API tâche
+        if (editingEvent && editingEvent.relatedTaskId) {
+          // Mode édition de tâche - utiliser l'API tasks normale
+          await api.tasks.update(editingEvent.relatedTaskId, taskData);
+        } else {
+          // Mode création de tâche depuis calendrier
+          await api.calendar.createTaskFromCalendar(taskData);
+        }
       } else {
-        // Données pour événement
-        eventData = {
+        // ===== GESTION DES ÉVÉNEMENTS =====
+        // Préparer les rappels
+        const reminders = selectedReminders.map((minutes) => ({
+          type: "EMAIL" as const,
+          minutesBefore: minutes,
+        }));
+
+        const eventData: CreateEventRequest = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
           startDate: formData.startDate,
@@ -267,11 +305,17 @@ const EventModal: React.FC<EventModalProps> = ({
           type: "EVENT",
           reminders,
         };
+
+        console.log("Données événement envoyées:", eventData); // Debug
+
+        // Utiliser onSubmit pour les événements (gère création/édition)
+        await onSubmit(eventData);
       }
 
-      await onSubmit(eventData);
+      // Fermer le modal en cas de succès
       onClose();
     } catch (err) {
+      console.error("Erreur dans handleSubmit:", err); // Debug
       setError(
         err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
       );
@@ -539,7 +583,7 @@ const EventModal: React.FC<EventModalProps> = ({
                         <input
                           id="dueDate"
                           type="datetime-local"
-                          value={dueDate}
+                          value={formatDateTimeForInput(dueDate)}
                           onChange={(e) => setDueDate(e.target.value)}
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           disabled={isSubmitting}

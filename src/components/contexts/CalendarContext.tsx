@@ -10,7 +10,6 @@ interface CalendarState {
   selectedDate: string | null;
   currentMonth: number;
   currentYear: number;
-  viewMode: "month" | "week" | "day";
   filterType: "all" | "events" | "tasks";
 
   loadingStates: {
@@ -49,7 +48,6 @@ const initialState: CalendarState = {
   selectedDate: null,
   currentMonth: new Date().getMonth() + 1, // JavaScript: 0-11, API: 1-12
   currentYear: new Date().getFullYear(),
-  viewMode: "month",
   filterType: "all",
 
   loadingStates: {
@@ -101,9 +99,6 @@ function calendarReducer(
 
     case "SET_CURRENT_YEAR":
       return { ...state, currentYear: action.payload };
-
-    case "SET_VIEW_MODE":
-      return { ...state, viewMode: action.payload };
 
     case "SET_FILTER_TYPE":
       return { ...state, filterType: action.payload };
@@ -203,13 +198,10 @@ export const useCalendarNavigation = () => {
   return {
     currentMonth: state.currentMonth,
     currentYear: state.currentYear,
-    viewMode: state.viewMode,
     navigateToMonth,
     navigateToPreviousMonth,
     navigateToNextMonth,
     navigateToToday,
-    setViewMode: (mode: "month" | "week" | "day") =>
-      dispatch({ type: "SET_VIEW_MODE", payload: mode }),
   };
 };
 

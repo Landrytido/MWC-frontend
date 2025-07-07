@@ -11,11 +11,9 @@ const CalendarHeader: React.FC = () => {
   const {
     currentMonth,
     currentYear,
-    viewMode,
     navigateToPreviousMonth,
     navigateToNextMonth,
     navigateToToday,
-    setViewMode,
   } = useCalendarNavigation();
 
   const monthNames = [
@@ -123,30 +121,6 @@ const CalendarHeader: React.FC = () => {
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Modes de vue */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            {[
-              { mode: "month" as const, label: "Mois", icon: "📅" },
-              { mode: "week" as const, label: "Semaine", icon: "📊" },
-              { mode: "day" as const, label: "Jour", icon: "📋" },
-            ].map(({ mode, label, icon }) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === mode
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <span className="hidden sm:inline">
-                  {icon} {label}
-                </span>
-                <span className="sm:hidden">{icon}</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
