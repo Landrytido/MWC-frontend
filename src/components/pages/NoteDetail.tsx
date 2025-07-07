@@ -38,7 +38,7 @@ const NoteDetail: React.FC = () => {
 
   const handleEdit = () => {
     if (note) {
-      navigate(`/dashboard/notes/${note.id}/edit`);
+      navigate(`/dashboard/notes/${note.id}`);
     }
   };
 
