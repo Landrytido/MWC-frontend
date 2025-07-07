@@ -24,13 +24,7 @@ interface CreateTaskFromCalendarData {
   dueDate?: string;
   priority?: number;
 }
-interface UpdateTaskData {
-  title?: string;
-  description?: string;
-  scheduledDate?: string;
-  dueDate?: string;
-  priority?: number;
-}
+
 const EventModal: React.FC<EventModalProps> = ({
   isOpen,
   onClose,
@@ -74,7 +68,7 @@ const EventModal: React.FC<EventModalProps> = ({
       }
       return dateString;
     }
-    return `${dateString}T09:00:00`; // "2025-01-15" → "2025-01-15T09:00:00"
+    return `${dateString}T12:00:00`;
   };
 
   const formatDateTimeForInput = (dateString: string): string => {
@@ -104,8 +98,21 @@ const EventModal: React.FC<EventModalProps> = ({
         });
         setSelectedReminders(event.reminders.map((r) => r.minutesBefore));
         if (event.type === "TASK_BASED" && event.relatedTaskId) {
-          setDueDate(event.endDate);
-          setPriority(TaskPriority.MEDIUM); // À adapter selon vos données
+          // Cast temporaire pour accéder aux propriétés étendues
+          const taskEvent = event as any;
+
+          // Récupération de la priorité
+          setPriority(taskEvent.priority || TaskPriority.MEDIUM);
+
+          // Récupération de la date d'échéance
+          if (taskEvent.dueDate) {
+            setDueDate(formatDateTimeForInput(taskEvent.dueDate));
+          } else {
+            setDueDate("");
+          }
+
+          // Pas de type de planification si on édite une tâche existante
+          setScheduleType("none");
         }
       } else {
         setPriority(TaskPriority.MEDIUM);
@@ -296,11 +303,11 @@ const EventModal: React.FC<EventModalProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 z-[60] transition-opacity"
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div
           className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}

@@ -17,7 +17,7 @@ export interface EventDto {
   id: number;
   title: string;
   description?: string;
-  startDate: string; // ISO string: "2025-01-15T14:00:00"
+  startDate: string;
   endDate: string;
   location?: string;
   mode?: EventMode;
@@ -28,6 +28,11 @@ export interface EventDto {
   reminders: EventReminderDto[];
   createdAt: string;
   updatedAt: string;
+
+  priority?: number;
+  completed?: boolean;
+  dueDate?: string;
+  scheduledDate?: string;
 }
 
 export interface CalendarViewDto {

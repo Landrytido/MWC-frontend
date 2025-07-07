@@ -13,44 +13,74 @@ interface CalendarGridProps {
   onEventClick: (event: EventDto) => void;
 }
 
+// Interface pour les éléments mappés (tâches converties)
+interface MappedTaskItem extends EventDto {
+  priority?: number;
+  relatedTaskId: number;
+}
+
 const CalendarGrid: React.FC<CalendarGridProps> = ({
   monthData,
   onDayClick,
   onEventClick,
 }) => {
   const { state } = useCalendar();
+
+  // Fonction utilitaire pour créer une date sans décalage timezone
+  const createLocalDate = (
+    year: number,
+    month: number,
+    day: number
+  ): string => {
+    // Force midi pour éviter les décalages timezone
+    const date = new Date(year, month, day, 12, 0, 0);
+    return date.toISOString().split("T")[0];
+  };
+
   const createCalendarGrid = () => {
     if (monthData.length === 0) return [];
-    const firstDate = new Date(monthData[0].date);
+
+    // Force l'heure à midi pour éviter les problèmes de timezone
+    const firstDate = new Date(monthData[0].date + "T12:00:00");
     const year = firstDate.getFullYear();
     const month = firstDate.getMonth();
+
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const startDayOfWeek = firstDayOfMonth.getDay();
-    const adjustedStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1; // Lundi = 0
+    const adjustedStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
     const days = [];
+
+    // Jours du mois précédent
     for (let i = adjustedStartDay - 1; i >= 0; i--) {
       const date = new Date(year, month, -i);
+      const dateString = date.toISOString().split("T")[0];
       days.push({
-        date: date.toISOString().split("T")[0],
+        date: dateString,
         isCurrentMonth: false,
         dayNumber: date.getDate(),
       });
     }
+
+    // Jours du mois actuel - utilise createLocalDate pour éviter les décalages
     for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
-      const date = new Date(year, month, day);
+      const dateString = createLocalDate(year, month, day);
       days.push({
-        date: date.toISOString().split("T")[0],
+        date: dateString,
         isCurrentMonth: true,
         dayNumber: day,
       });
     }
-    const totalCells = 42; // 6 semaines × 7 jours
+
+    // Jours du mois suivant
+    const totalCells = 42;
     const remainingCells = totalCells - days.length;
     for (let day = 1; day <= remainingCells; day++) {
       const date = new Date(year, month + 1, day);
+      const dateString = date.toISOString().split("T")[0];
       days.push({
-        date: date.toISOString().split("T")[0],
+        date: dateString,
         isCurrentMonth: false,
         dayNumber: day,
       });
@@ -59,128 +89,217 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     return days;
   };
 
-  const calendarDays = createCalendarGrid();
   const getDayData = (date: string): CalendarViewDto | null => {
     return monthData.find((day) => day.date === date) || null;
   };
+
   const isToday = (date: string): boolean => {
-    return date === new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+    return date === todayString;
   };
-  const getFilteredItems = (dayData: CalendarViewDto) => {
-    const items = [];
+
+  const getFilteredItems = (
+    dayData: CalendarViewDto
+  ): (EventDto | MappedTaskItem)[] => {
+    const items: (EventDto | MappedTaskItem)[] = [];
 
     if (state.filterType === "all" || state.filterType === "events") {
       items.push(...dayData.events);
     }
 
     if (state.filterType === "all" || state.filterType === "tasks") {
-      items.push(
-        ...dayData.tasks.map((task) => ({
-          id: task.id,
-          title: task.title,
-          startDate: task.scheduledDate || task.dueDate || dayData.date,
-          endDate: task.scheduledDate || task.dueDate || dayData.date,
-          type: "TASK_BASED" as const,
-          relatedTaskId: task.id,
-          reminders: [],
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-        }))
-      );
+      const taskItems: MappedTaskItem[] = dayData.tasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        startDate: task.scheduledDate || task.dueDate || dayData.date,
+        endDate: task.scheduledDate || task.dueDate || dayData.date,
+        type: "TASK_BASED" as const,
+        relatedTaskId: task.id,
+        reminders: [],
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        description: task.description,
+        priority: task.priority,
+        location: undefined,
+        mode: undefined,
+        meetingLink: undefined,
+      }));
+
+      items.push(...taskItems);
     }
 
     return items;
   };
 
+  const handleDayClick = (date: string) => {
+    onDayClick(date);
+  };
+
+  const handleItemClick = (
+    e: React.MouseEvent,
+    item: EventDto | MappedTaskItem
+  ) => {
+    e.stopPropagation();
+    onEventClick(item as EventDto);
+  };
+
+  const isMappedTask = (
+    item: EventDto | MappedTaskItem
+  ): item is MappedTaskItem => {
+    return "relatedTaskId" in item && item.type === "TASK_BASED";
+  };
+
+  const calendarDays = createCalendarGrid();
   const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* En-têtes des jours */}
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+      {/* En-têtes des jours de la semaine */}
       <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
         {dayNames.map((day) => (
           <div
             key={day}
-            className="p-3 text-center text-sm font-medium text-gray-700"
+            className="p-3 text-center text-sm font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
           >
             {day}
           </div>
         ))}
       </div>
 
-      {/* Grille des jours */}
+      {/* Grille des jours du calendrier */}
       <div className="grid grid-cols-7 gap-0">
         {calendarDays.map((day, index) => {
           const dayData = getDayData(day.date);
           const filteredItems = dayData ? getFilteredItems(dayData) : [];
           const isCurrentDay = isToday(day.date);
+          const hasItems = filteredItems.length > 0;
 
           return (
             <div
               key={`${day.date}-${index}`}
               className={`
-                min-h-[120px] border-r border-b border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors
-                ${!day.isCurrentMonth ? "bg-gray-50 text-gray-400" : "bg-white"}
-                ${isCurrentDay ? "bg-blue-50 border-blue-200" : ""}
+                min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 
+                cursor-pointer transition-all duration-200 
+                hover:bg-gray-50 hover:shadow-inner
+                ${
+                  !day.isCurrentMonth
+                    ? "bg-gray-50/50 text-gray-400"
+                    : "bg-white text-gray-900"
+                }
+                ${
+                  isCurrentDay
+                    ? "bg-blue-50 border-blue-200 ring-1 ring-blue-200"
+                    : ""
+                }
+                ${hasItems && day.isCurrentMonth ? "hover:bg-teal-50" : ""}
               `}
-              onClick={() => onDayClick(day.date)}
+              onClick={() => handleDayClick(day.date)}
             >
-              {/* Numéro du jour */}
+              {/* En-tête de la cellule jour */}
               <div className="flex items-center justify-between mb-2">
                 <span
                   className={`
-                  text-sm font-medium
-                  ${
-                    isCurrentDay
-                      ? "bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"
-                      : ""
-                  }
-                  ${!day.isCurrentMonth ? "text-gray-400" : "text-gray-900"}
-                `}
+                    text-sm font-medium transition-colors
+                    ${
+                      isCurrentDay
+                        ? "bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm"
+                        : ""
+                    }
+                    ${
+                      !day.isCurrentMonth
+                        ? "text-gray-400"
+                        : isCurrentDay
+                        ? ""
+                        : "text-gray-900"
+                    }
+                  `}
                 >
                   {day.dayNumber}
                 </span>
 
-                {/* Indicateur de nombre d'éléments */}
-                {filteredItems.length > 0 && (
-                  <span className="text-xs bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded-full">
+                {/* Badge du nombre d'éléments */}
+                {hasItems && (
+                  <span
+                    className={`
+                      text-xs px-1.5 py-0.5 rounded-full font-medium
+                      ${
+                        filteredItems.length > 5
+                          ? "bg-red-100 text-red-800"
+                          : filteredItems.length > 2
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-teal-100 text-teal-800"
+                      }
+                    `}
+                  >
                     {filteredItems.length}
                   </span>
                 )}
               </div>
 
-              {/* Liste des événements/tâches */}
-              <div className="space-y-1">
-                {filteredItems.slice(0, 3).map((item, itemIndex) => (
-                  <div
-                    key={itemIndex}
-                    className={`
-                      text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity
-                      ${getEventColor(item)}
-                    `}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if ("relatedTaskId" in item && item.relatedTaskId) {
-                        onEventClick(item as EventDto);
-                      } else {
-                        onEventClick(item as EventDto);
-                      }
-                    }}
-                    title={item.title}
-                  >
-                    <div className="truncate font-medium">{item.title}</div>
-                    {item.startDate && (
-                      <div className="truncate opacity-75">
-                        {formatEventTime(item.startDate, item.endDate)}
+              {/* Liste des événements et tâches */}
+              <div className="space-y-1 overflow-hidden">
+                {filteredItems.slice(0, 3).map((item, itemIndex) => {
+                  const isTask = isMappedTask(item);
+
+                  return (
+                    <div
+                      key={`${item.id}-${itemIndex}`}
+                      className={`
+                        text-xs p-1.5 rounded-md cursor-pointer 
+                        transition-all duration-150
+                        hover:opacity-80 hover:scale-[1.02] hover:shadow-sm
+                        ${getEventColor(item)}
+                        ${!day.isCurrentMonth ? "opacity-60" : ""}
+                      `}
+                      onClick={(e) => handleItemClick(e, item)}
+                      title={`${item.title}${
+                        item.description ? ` - ${item.description}` : ""
+                      }`}
+                    >
+                      {/* Titre de l'élément */}
+                      <div className="truncate font-medium flex items-center">
+                        {isTask && (
+                          <span className="mr-1 text-[10px]">
+                            {item.priority === 1
+                              ? "🔹"
+                              : item.priority === 2
+                              ? "🔸"
+                              : "🔴"}
+                          </span>
+                        )}
+                        {item.title}
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Heure ou date */}
+                      {item.startDate && (
+                        <div className="truncate opacity-75 mt-0.5">
+                          {formatEventTime(item.startDate, item.endDate)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
                 {/* Indicateur d'éléments supplémentaires */}
                 {filteredItems.length > 3 && (
-                  <div className="text-xs text-gray-500 text-center p-1">
-                    +{filteredItems.length - 3} autres
+                  <div className="text-xs text-gray-500 text-center p-1 bg-gray-100 rounded-md">
+                    <span className="font-medium">
+                      +{filteredItems.length - 3} autre
+                      {filteredItems.length - 3 > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+
+                {/* Message si aucun élément et jour sélectionnable */}
+                {filteredItems.length === 0 && day.isCurrentMonth && (
+                  <div className="text-center py-4 opacity-0 hover:opacity-100 transition-opacity">
+                    <div className="text-xs text-gray-400">
+                      <div className="w-8 h-8 mx-auto mb-1 rounded-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-lg">+</span>
+                      </div>
+                      Ajouter
+                    </div>
                   </div>
                 )}
               </div>

@@ -46,11 +46,13 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       setIsLoading(false);
     }
   }, [api.calendar, date]);
+
   useEffect(() => {
     if (isOpen && date) {
       loadDayData();
     }
   }, [isOpen, date, loadDayData]);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -117,6 +119,11 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
     updatedAt: task.updatedAt,
     completed: task.completed,
     priority: task.priority,
+    dueDate: task.dueDate,
+    scheduledDate: task.scheduledDate,
+    location: undefined,
+    mode: undefined,
+    meetingLink: undefined,
   });
 
   if (!isOpen) return null;
@@ -130,11 +137,10 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+          className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <div>
               <h2 className="text-xl font-semibold text-gray-800">
                 {formatDate(date)}
@@ -164,8 +170,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
             </button>
           </div>
 
-          {/* Contenu */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {isLoading ? (
               <div className="p-8 text-center">
                 <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mb-4"></div>
@@ -184,7 +189,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
               </div>
             ) : dayData ? (
               <div className="p-6">
-                {/* Boutons de création */}
                 <div className="flex space-x-3 mb-6">
                   <button
                     onClick={onCreateEvent}
@@ -226,7 +230,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                   </button>
                 </div>
 
-                {/* Événements */}
                 {dayData.events.length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
@@ -368,7 +371,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Tâches */}
                 {dayData.tasks.length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
@@ -488,7 +490,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Aucun élément */}
                 {dayData.totalItems === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <div className="text-4xl mb-2">📅</div>
