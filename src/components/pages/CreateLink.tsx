@@ -40,10 +40,10 @@ const CreateLink: React.FC = () => {
     try {
       await api.links.create({
         url,
-        title: title || new URL(url).hostname, // Utiliser le hostname si pas de titre
+        title: title || new URL(url).hostname,
         description,
       });
-      navigate("/dashboard");
+      navigate("/dashboard?tab=links");
     } catch (err) {
       console.error("Erreur lors de la création du lien:", err);
       setError("Une erreur est survenue lors de la création du lien");
@@ -141,7 +141,7 @@ const CreateLink: React.FC = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/dashboard?tab=links")}
                   className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
                 >
                   Annuler

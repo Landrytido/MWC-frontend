@@ -271,8 +271,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                         {item.title}
                       </div>
 
-                      {/* Heure ou date */}
-                      {item.startDate && (
+                      {item.startDate && !isMappedTask(item) && (
                         <div className="truncate opacity-75 mt-0.5">
                           {formatEventTime(item.startDate, item.endDate)}
                         </div>

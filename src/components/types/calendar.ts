@@ -36,7 +36,7 @@ export interface EventDto {
 }
 
 export interface CalendarViewDto {
-  date: string; // Format: "2025-01-15"
+  date: string;
   events: EventDto[];
   tasks: TaskDto[];
   totalItems: number;

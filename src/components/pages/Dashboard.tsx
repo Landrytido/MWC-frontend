@@ -13,6 +13,7 @@ import { Note } from "../types";
 import TaskManager from "../dashboard/TaskManager";
 import { useConfirmation } from "../dashboard/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
+import { useSearchParams } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -23,9 +24,17 @@ const Dashboard: React.FC = () => {
   const api = useApiService();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<
     "notes" | "links" | "tasks" | "tools" | "calendar"
   >("notes");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "links" || tab === "tasks" || tab === "tools") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const initializationRef = useRef(false);
   const { searchTerm } = useUI();

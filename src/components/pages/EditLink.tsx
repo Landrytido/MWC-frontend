@@ -70,7 +70,7 @@ const EditLink: React.FC = () => {
         title: title || new URL(url).hostname,
         description,
       });
-      navigate("/dashboard");
+      navigate("/dashboard?tab=links");
     } catch (err) {
       console.error("Erreur lors de la mise à jour du lien:", err);
       setError("Une erreur est survenue lors de la mise à jour du lien");
@@ -159,7 +159,7 @@ const EditLink: React.FC = () => {
               <div className="flex justify-between">
                 <button
                   type="button"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/dashboard?tab=links")}
                   className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
                 >
                   Annuler
@@ -181,7 +181,7 @@ const EditLink: React.FC = () => {
 
                       try {
                         await api.links.delete(parseInt(id || "0"));
-                        navigate("/dashboard");
+                        navigate("/dashboard?tab=links");
                       } catch (error) {
                         console.error("Erreur lors de la suppression:", error);
                       }

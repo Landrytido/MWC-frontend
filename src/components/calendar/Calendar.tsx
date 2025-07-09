@@ -11,6 +11,7 @@ import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
 import { CreateEventRequest, EventDto } from "../types/calendar";
+import { CreateTaskForm } from "../types";
 import { useConfirmation } from "../dashboard/useConfirmation";
 
 interface CalendarProps {
@@ -28,6 +29,7 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalType, setModalType] = useState<"event" | "task">("event");
+
   useEffect(() => {
     const loadMonthData = async () => {
       const monthKey = getMonthKey(currentMonth, currentYear);
@@ -73,6 +75,21 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     currentMonthData.length,
     getMonthKey,
   ]);
+
+  useEffect(() => {
+    const loadAllEvents = async () => {
+      try {
+        const allEvents = await api.calendar.getAllEvents();
+        dispatch({ type: "SET_EVENTS", payload: allEvents });
+      } catch (error) {
+        console.error("Erreur chargement événements:", error);
+      }
+    };
+
+    if (state.events.length === 0) {
+      loadAllEvents();
+    }
+  }, [api.calendar, dispatch, state.events.length]);
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
@@ -88,6 +105,7 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const handleEditEvent = (event: EventDto) => {
     setEditingEvent(event);
     setModalType(event.type === "TASK_BASED" ? "task" : "event");
+    setSelectedDate("");
     setIsEventModalOpen(true);
   };
 
@@ -125,25 +143,37 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     setIsDayDetailModalOpen(true);
   };
 
-  const handleEventSubmit = async (eventData: CreateEventRequest) => {
+  const handleEventSubmit = async (
+    data: CreateEventRequest | CreateTaskForm
+  ) => {
     try {
       if (editingEvent) {
-        const updated = await api.calendar.updateEvent(
-          editingEvent.id,
-          eventData
-        );
-        dispatch({
-          type: "UPDATE_EVENT",
-          payload: { id: editingEvent.id, event: updated },
-        });
+        if (modalType === "task" && editingEvent.relatedTaskId) {
+          await api.tasks.update(
+            editingEvent.relatedTaskId,
+            data as CreateTaskForm
+          );
+        } else {
+          const updated = await api.calendar.updateEvent(
+            editingEvent.id,
+            data as CreateEventRequest
+          );
+          dispatch({
+            type: "UPDATE_EVENT",
+            payload: { id: editingEvent.id, event: updated },
+          });
+        }
       } else {
         if (modalType === "task") {
-          await api.calendar.createTaskFromCalendar(eventData);
+          await api.calendar.createTaskFromCalendar(data as CreateTaskForm);
         } else {
-          const created = await api.calendar.createEvent(eventData);
+          const created = await api.calendar.createEvent(
+            data as CreateEventRequest
+          );
           dispatch({ type: "ADD_EVENT", payload: created });
         }
       }
+
       const monthKey = getMonthKey(currentMonth, currentYear);
       const monthData = await api.calendar.getMonthView(
         currentYear,
@@ -158,18 +188,16 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
       setEditingEvent(null);
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
-      throw error; // Laisser le modal gérer l'erreur
+      throw error;
     }
   };
 
   return (
     <div className={`bg-white rounded-lg shadow-md ${className}`}>
-      {/* Header avec navigation et actions */}
       <CalendarHeader />
 
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendrier principal */}
           <div className="lg:col-span-3">
             <CalendarGrid
               monthData={currentMonthData}
@@ -178,7 +206,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
             />
           </div>
 
-          {/* Sidebar avec liste des événements */}
           <div className="lg:col-span-1">
             <EventsList
               events={state.events}
@@ -189,7 +216,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
         </div>
       </div>
 
-      {/* Modals */}
       <EventModal
         isOpen={isEventModalOpen}
         onClose={() => {

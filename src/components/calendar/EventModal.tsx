@@ -7,22 +7,15 @@ import {
   EVENT_MODE_LABELS,
 } from "../types/calendar";
 import { TaskPriority, PRIORITY_LABELS } from "../types";
-import { useApiService } from "../services/apiService";
+import { CreateTaskForm } from "../types";
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (eventData: CreateEventRequest) => Promise<void>;
+  onSubmit: (eventData: CreateEventRequest | CreateTaskForm) => Promise<void>;
   editingEvent?: EventDto | null;
   modalType: "event" | "task";
   selectedDate?: string;
-}
-interface CreateTaskFromCalendarData {
-  title: string;
-  description?: string;
-  scheduledDate?: string;
-  dueDate?: string;
-  priority?: number;
 }
 
 const EventModal: React.FC<EventModalProps> = ({
@@ -53,18 +46,17 @@ const EventModal: React.FC<EventModalProps> = ({
   const [selectedReminders, setSelectedReminders] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const api = useApiService();
 
   const formatDateForBackend = (dateString: string): string => {
     if (!dateString) return "";
-    return dateString.split("T")[0]; // "2025-01-15T14:30" → "2025-01-15"
+    return dateString.split("T")[0];
   };
 
   const formatDateTimeForBackend = (dateString: string): string => {
     if (!dateString) return "";
     if (dateString.includes("T")) {
       if (dateString.length === 16) {
-        return dateString + ":00"; // "2025-01-15T14:30:00"
+        return dateString + ":00";
       }
       return dateString;
     }
@@ -74,9 +66,9 @@ const EventModal: React.FC<EventModalProps> = ({
   const formatDateTimeForInput = (dateString: string): string => {
     if (!dateString) return "";
     if (dateString.includes("T")) {
-      return dateString.slice(0, 16); // "2025-01-15T14:30"
+      return dateString.slice(0, 16);
     }
-    return `${dateString}T09:00`; // "2025-01-15" → "2025-01-15T09:00"
+    return `${dateString}T09:00`;
   };
   useEffect(() => {
     if (isOpen) {
@@ -98,20 +90,21 @@ const EventModal: React.FC<EventModalProps> = ({
         });
         setSelectedReminders(event.reminders.map((r) => r.minutesBefore));
         if (event.type === "TASK_BASED" && event.relatedTaskId) {
-          // Cast temporaire pour accéder aux propriétés étendues
-          const taskEvent = event as any;
+          if (
+            "taskPriority" in event &&
+            typeof event.taskPriority === "number"
+          ) {
+            setPriority(event.taskPriority);
+          } else {
+            setPriority(TaskPriority.MEDIUM);
+          }
 
-          // Récupération de la priorité
-          setPriority(taskEvent.priority || TaskPriority.MEDIUM);
-
-          // Récupération de la date d'échéance
-          if (taskEvent.dueDate) {
-            setDueDate(formatDateTimeForInput(taskEvent.dueDate));
+          if (event.endDate) {
+            setDueDate(formatDateTimeForInput(event.endDate));
           } else {
             setDueDate("");
           }
 
-          // Pas de type de planification si on édite une tâche existante
           setScheduleType("none");
         }
       } else {
@@ -240,7 +233,7 @@ const EventModal: React.FC<EventModalProps> = ({
 
     try {
       if (modalType === "task") {
-        const taskData: CreateTaskFromCalendarData = {
+        const taskData: CreateTaskForm = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
           scheduledDate:
@@ -248,16 +241,11 @@ const EventModal: React.FC<EventModalProps> = ({
             (formData.scheduledDate
               ? formatDateForBackend(formData.scheduledDate)
               : undefined),
-          dueDate: dueDate ? formatDateTimeForBackend(dueDate) : undefined, // CORRECTION ICI
+          dueDate: dueDate ? formatDateTimeForBackend(dueDate) : undefined,
           priority: priority,
         };
 
-        console.log("Données tâche envoyées:", taskData); // Debug
-        if (editingEvent && editingEvent.relatedTaskId) {
-          await api.tasks.update(editingEvent.relatedTaskId, taskData);
-        } else {
-          await api.calendar.createTaskFromCalendar(taskData);
-        }
+        await onSubmit(taskData as CreateEventRequest);
       } else {
         const reminders = selectedReminders.map((minutes) => ({
           type: "EMAIL" as const,
@@ -276,12 +264,10 @@ const EventModal: React.FC<EventModalProps> = ({
           reminders,
         };
 
-        console.log("Données événement envoyées:", eventData); // Debug
         await onSubmit(eventData);
       }
       onClose();
     } catch (err) {
-      console.error("Erreur dans handleSubmit:", err); // Debug
       setError(
         err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
       );
@@ -312,7 +298,6 @@ const EventModal: React.FC<EventModalProps> = ({
           className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800">
               {editingEvent
@@ -344,7 +329,6 @@ const EventModal: React.FC<EventModalProps> = ({
             </button>
           </div>
 
-          {/* Formulaire */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
@@ -352,7 +336,6 @@ const EventModal: React.FC<EventModalProps> = ({
               </div>
             )}
 
-            {/* Titre - COMMUN */}
             <div>
               <label
                 htmlFor="title"
@@ -429,9 +412,7 @@ const EventModal: React.FC<EventModalProps> = ({
                 </div>
               </div>
             ) : (
-              /* TÂCHE : Échéance + Planification + Priorité */
               <div className="space-y-6">
-                {/* Priorité */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Priorité *
@@ -471,7 +452,6 @@ const EventModal: React.FC<EventModalProps> = ({
                   </div>
                 </div>
 
-                {/* Planification */}
                 {selectedDate ? (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -535,7 +515,6 @@ const EventModal: React.FC<EventModalProps> = ({
                       ))}
                     </div>
 
-                    {/* Date d'échéance (seulement si pas de planification quotidienne) */}
                     {scheduleType === "none" && (
                       <div className="mt-4">
                         <label
@@ -563,7 +542,6 @@ const EventModal: React.FC<EventModalProps> = ({
               </div>
             )}
 
-            {/* Mode - SEULEMENT pour événements */}
             {modalType === "event" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -593,7 +571,6 @@ const EventModal: React.FC<EventModalProps> = ({
               </div>
             )}
 
-            {/* Lieu - SEULEMENT pour événements */}
             {modalType === "event" && (
               <div>
                 <label
@@ -669,31 +646,30 @@ const EventModal: React.FC<EventModalProps> = ({
                 disabled={isSubmitting}
               />
             </div>
-
-            {/* Rappels - COMMUN */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rappels par email
-              </label>
-              <div className="space-y-2">
-                {REMINDER_OPTIONS.map(({ label, minutes }) => (
-                  <label key={minutes} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedReminders.includes(minutes)}
-                      onChange={(e) =>
-                        handleReminderChange(minutes, e.target.checked)
-                      }
-                      className="mr-2 text-teal-500 focus:ring-teal-500 rounded"
-                      disabled={isSubmitting}
-                    />
-                    <span className="text-sm text-gray-700">{label}</span>
-                  </label>
-                ))}
+            {modalType === "event" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rappels par email
+                </label>
+                <div className="space-y-2">
+                  {REMINDER_OPTIONS.map(({ label, minutes }) => (
+                    <label key={minutes} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedReminders.includes(minutes)}
+                        onChange={(e) =>
+                          handleReminderChange(minutes, e.target.checked)
+                        }
+                        className="mr-2 text-teal-500 focus:ring-teal-500 rounded"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-sm text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
