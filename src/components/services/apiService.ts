@@ -451,8 +451,13 @@ export const useApiService = () => {
         return updated;
       },
 
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/notebooks/${id}`, { method: "DELETE" });
+      delete: async (
+        id: number,
+        forceDelete: boolean = true
+      ): Promise<void> => {
+        await fetchWithAuth(`/notebooks/${id}?forceDelete=${forceDelete}`, {
+          method: "DELETE",
+        });
         dispatch({ type: "DELETE_NOTEBOOK", payload: id });
       },
       getUsageStats: async (): Promise<{

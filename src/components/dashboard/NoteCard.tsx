@@ -173,7 +173,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   const renderDefaultCard = () => (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow group relative">
-      {/* Indicateur de chargement */}
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
           <div
@@ -238,47 +237,55 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        {(note.notebookTitle || isEditingNotebook) && (
-          <div className="mb-3">
-            {isEditingNotebook ? (
-              <NotebookSelector
-                selectedNotebookId={note.notebookId}
-                onNotebookChange={handleNotebookChange}
-                includeNone
-                size="sm"
-                placeholder="Choisir un carnet..."
-              />
-            ) : (
-              <div className="flex items-center justify-between">
+        <div className="mb-3">
+          {isEditingNotebook ? (
+            <NotebookSelector
+              selectedNotebookId={note.notebookId}
+              onNotebookChange={handleNotebookChange}
+              includeNone
+              size="sm"
+              placeholder="Choisir un carnet..."
+            />
+          ) : (
+            <div className="flex items-center justify-between">
+              {note.notebookTitle ? (
                 <span
                   className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${LABEL_COLORS.blue.default}`}
                 >
                   <span className="mr-1">📓</span>
                   {note.notebookTitle}
                 </span>
-                <button
-                  onClick={() => setIsEditingNotebook(true)}
-                  className="p-1 text-gray-400 hover:text-blue-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Changer de carnet"
+              ) : (
+                <span className="text-sm text-gray-400 italic">
+                  Aucun carnet
+                </span>
+              )}
+              <button
+                onClick={() => setIsEditingNotebook(true)}
+                className="p-1 text-gray-400 hover:text-blue-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                title={
+                  note.notebookTitle
+                    ? "Changer de carnet"
+                    : "Ajouter à un carnet"
+                }
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mb-3">
           {isEditingLabels ? (
@@ -373,7 +380,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
       <ConfirmationComponent />
     </div>
   );
-
   if (variant === "compact") {
     return renderCompactCard();
   }

@@ -123,7 +123,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     if (!confirmed) return;
 
     try {
-      await api.notebooks.delete(notebookId);
+      await api.notebooks.delete(notebookId, true);
       if (state.ui.currentNotebook === notebookId) {
         dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: null });
       }
