@@ -7,9 +7,9 @@ import LinkManager from "../dashboard/LinkManager";
 import NotebookSidebar from "../dashboard/NotebookSidebar";
 import LabelManager from "../dashboard/LabelManager";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
-import { useApp, useNotes, useLinks, useUI } from "../contexts/AppContext";
+import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import { Note } from "../types";
+import { Note, Task, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
 import { useConfirmation } from "../dashboard/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
@@ -29,6 +29,10 @@ const Dashboard: React.FC = () => {
     "notes" | "links" | "tasks" | "tools" | "calendar"
   >("notes");
 
+  const [searchedTasks, setSearchedTasks] = useState<Task[]>([]);
+  const [searchedLinks, setSearchedLinks] = useState<SavedLink[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "links" || tab === "tasks" || tab === "tools") {
@@ -37,7 +41,6 @@ const Dashboard: React.FC = () => {
   }, [searchParams]);
 
   const initializationRef = useRef(false);
-  const { searchTerm } = useUI();
 
   useEffect(() => {
     if (!initializationRef.current && authState.user) {
@@ -73,6 +76,90 @@ const Dashboard: React.FC = () => {
     api.labels,
     api.blocNote,
   ]);
+
+  // NOUVELLE FONCTION: Configuration de la recherche
+  const getSearchConfig = (activeTab: string) => {
+    switch (activeTab) {
+      case "notes":
+        return {
+          show: true,
+          placeholder: "Rechercher dans les notes...",
+          value: state.ui.searchTerm,
+          onChange: (term: string) =>
+            dispatch({ type: "SET_SEARCH_TERM", payload: term }),
+        };
+      case "tasks":
+        return {
+          show: true,
+          placeholder: "Rechercher dans les tâches...",
+          value: state.ui.taskSearchTerm,
+          onChange: (term: string) => {
+            dispatch({ type: "SET_TASK_SEARCH_TERM", payload: term });
+            handleTaskSearch(term);
+          },
+        };
+      case "links":
+        return {
+          show: true,
+          placeholder: "Rechercher dans les liens...",
+          value: state.ui.linkSearchTerm,
+          onChange: (term: string) => {
+            dispatch({ type: "SET_LINK_SEARCH_TERM", payload: term });
+            handleLinkSearch(term);
+          },
+        };
+      case "tools":
+      case "calendar":
+        return { show: false };
+      default:
+        return { show: true, placeholder: "Rechercher..." };
+    }
+  };
+
+  // NOUVELLE FONCTION: Recherche de tâches
+  const handleTaskSearch = async (term: string) => {
+    if (!term.trim()) {
+      setSearchedTasks([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await api.tasks.search(term);
+      setSearchedTasks(results);
+    } catch (error) {
+      console.error("Erreur lors de la recherche de tâches:", error);
+      setSearchedTasks([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleLinkSearch = async (term: string) => {
+    if (!term.trim()) {
+      setSearchedLinks([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await api.links.search(term);
+      setSearchedLinks(results);
+    } catch (error) {
+      console.error("Erreur lors de la recherche de liens:", error);
+      setSearchedLinks([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleTabChange = (
+    tab: "notes" | "links" | "tasks" | "tools" | "calendar"
+  ) => {
+    setActiveTab(tab);
+    setSearchedTasks([]);
+    setSearchedLinks([]);
+  };
 
   const handleEditNote = useCallback(
     (note: Note) => {
@@ -110,8 +197,11 @@ const Dashboard: React.FC = () => {
     [confirm, api.notes]
   );
 
+  // FONCTION MODIFIÉE: Nettoyage des filtres
   const handleClearFilters = useCallback(() => {
-    dispatch({ type: "RESET_FILTERS" });
+    dispatch({ type: "CLEAR_ALL_SEARCH_TERMS" });
+    setSearchedTasks([]);
+    setSearchedLinks([]);
   }, [dispatch]);
 
   if (!initializationRef.current) {
@@ -133,6 +223,8 @@ const Dashboard: React.FC = () => {
       </Layout>
     );
   }
+
+  const searchConfig = getSearchConfig(activeTab);
 
   return (
     <Layout>
@@ -157,116 +249,88 @@ const Dashboard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "SET_SEARCH_TERM",
-                      payload: e.target.value,
-                    })
-                  }
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-                <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            {/* Search Bar - MODIFIÉ */}
+            {searchConfig.show && (
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={searchConfig.placeholder}
+                    value={searchConfig.value}
+                    onChange={(e) => searchConfig.onChange?.(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
-                </svg>
-                {(searchTerm ||
-                  state.ui.currentNotebook ||
-                  state.ui.selectedLabels.length > 0) && (
-                  <button
-                    onClick={handleClearFilters}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    title="Effacer tous les filtres"
+                  <svg
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  {(state.ui.searchTerm ||
+                    state.ui.taskSearchTerm ||
+                    state.ui.linkSearchTerm ||
+                    state.ui.currentNotebook ||
+                    state.ui.selectedLabels.length > 0) && (
+                    <button
+                      onClick={handleClearFilters}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      title="Effacer tous les filtres"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-
-              {/* Active Filters Display */}
-              {(state.ui.currentNotebook ||
-                state.ui.selectedLabels.length > 0) && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {state.ui.currentNotebook && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                      📓{" "}
-                      {
-                        state.notebooks.find(
-                          (n) => n.id === state.ui.currentNotebook
-                        )?.title
-                      }
-                      <button
-                        onClick={() =>
-                          dispatch({
-                            type: "SET_CURRENT_NOTEBOOK",
-                            payload: null,
-                          })
-                        }
-                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </span>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
                   )}
-                  {state.ui.selectedLabels.map((labelId) => {
-                    const label = state.labels.find((l) => l.id === labelId);
-                    return label ? (
-                      <span
-                        key={labelId}
-                        className="inline-flex items-center px-2 py-1 text-xs bg-teal-100 text-teal-800 rounded-full"
-                      >
-                        🏷️ {label.name}
+                </div>
+
+                {/* Indicateur de recherche en cours */}
+                {isSearching && (
+                  <div className="mt-2 text-sm text-gray-500 flex items-center">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
+                    Recherche en cours...
+                  </div>
+                )}
+
+                {/* Active Filters Display - MODIFIÉ */}
+                {(state.ui.currentNotebook ||
+                  state.ui.selectedLabels.length > 0 ||
+                  (activeTab === "tasks" && state.ui.taskSearchTerm) ||
+                  (activeTab === "links" && state.ui.linkSearchTerm)) && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {/* Filtres existants pour les notes */}
+                    {state.ui.currentNotebook && (
+                      <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        📓{" "}
+                        {
+                          state.notebooks.find(
+                            (n) => n.id === state.ui.currentNotebook
+                          )?.title
+                        }
                         <button
-                          onClick={() => {
-                            const updatedLabels =
-                              state.ui.selectedLabels.filter(
-                                (id) => id !== labelId
-                              );
+                          onClick={() =>
                             dispatch({
-                              type: "SET_SELECTED_LABELS",
-                              payload: updatedLabels,
-                            });
-                          }}
-                          className="ml-1 text-teal-600 hover:text-teal-800"
+                              type: "SET_CURRENT_NOTEBOOK",
+                              payload: null,
+                            })
+                          }
+                          className="ml-1 text-blue-600 hover:text-blue-800"
                         >
                           <svg
                             className="w-3 h-3"
@@ -283,13 +347,115 @@ const Dashboard: React.FC = () => {
                           </svg>
                         </button>
                       </span>
-                    ) : null;
-                  })}
-                </div>
-              )}
-            </div>
+                    )}
 
-            {/* Tabs */}
+                    {/* Labels */}
+                    {state.ui.selectedLabels.map((labelId) => {
+                      const label = state.labels.find((l) => l.id === labelId);
+                      return label ? (
+                        <span
+                          key={labelId}
+                          className="inline-flex items-center px-2 py-1 text-xs bg-teal-100 text-teal-800 rounded-full"
+                        >
+                          🏷️ {label.name}
+                          <button
+                            onClick={() => {
+                              const updatedLabels =
+                                state.ui.selectedLabels.filter(
+                                  (id) => id !== labelId
+                                );
+                              dispatch({
+                                type: "SET_SELECTED_LABELS",
+                                payload: updatedLabels,
+                              });
+                            }}
+                            className="ml-1 text-teal-600 hover:text-teal-800"
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+
+                    {/* Recherche tâches */}
+                    {activeTab === "tasks" && state.ui.taskSearchTerm && (
+                      <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                        🔍 "{state.ui.taskSearchTerm}"
+                        <button
+                          onClick={() => {
+                            dispatch({
+                              type: "SET_TASK_SEARCH_TERM",
+                              payload: "",
+                            });
+                            setSearchedTasks([]);
+                          }}
+                          className="ml-1 text-purple-600 hover:text-purple-800"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    )}
+
+                    {/* Recherche liens */}
+                    {activeTab === "links" && state.ui.linkSearchTerm && (
+                      <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full">
+                        🔍 "{state.ui.linkSearchTerm}"
+                        <button
+                          onClick={() => {
+                            dispatch({
+                              type: "SET_LINK_SEARCH_TERM",
+                              payload: "",
+                            });
+                            setSearchedLinks([]);
+                          }}
+                          className="ml-1 text-indigo-600 hover:text-indigo-800"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tabs - MODIFIÉ pour utiliser handleTabChange */}
             <div className="flex border-b border-gray-200 mb-6">
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -297,7 +463,7 @@ const Dashboard: React.FC = () => {
                     ? "text-teal-500 border-b-2 border-teal-500"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                onClick={() => setActiveTab("notes")}
+                onClick={() => handleTabChange("notes")}
               >
                 Notes ({filteredNotes.length})
               </button>
@@ -307,9 +473,10 @@ const Dashboard: React.FC = () => {
                     ? "text-teal-500 border-b-2 border-teal-500"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                onClick={() => setActiveTab("links")}
+                onClick={() => handleTabChange("links")}
               >
-                Liens Sauvegardés ({links.length})
+                Liens Sauvegardés (
+                {state.ui.linkSearchTerm ? searchedLinks.length : links.length})
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -317,9 +484,9 @@ const Dashboard: React.FC = () => {
                     ? "text-teal-500 border-b-2 border-teal-500"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                onClick={() => setActiveTab("tasks")}
+                onClick={() => handleTabChange("tasks")}
               >
-                Tâches
+                Tâches {state.ui.taskSearchTerm && `(${searchedTasks.length})`}
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -337,13 +504,13 @@ const Dashboard: React.FC = () => {
                     ? "text-teal-500 border-b-2 border-teal-500"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                onClick={() => setActiveTab("tools")}
+                onClick={() => handleTabChange("tools")}
               >
                 🛠️ Outils
               </button>
             </div>
 
-            {/* Content */}
+            {/* Content - MODIFIÉ pour passer les données de recherche */}
             {activeTab === "notes" && (
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -405,9 +572,24 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            {activeTab === "links" && <LinkManager />}
+            {activeTab === "links" && (
+              <LinkManager
+                searchResults={
+                  state.ui.linkSearchTerm ? searchedLinks : undefined
+                }
+                isSearching={isSearching}
+              />
+            )}
 
-            {activeTab === "tasks" && <TaskManager />}
+            {activeTab === "tasks" && (
+              <TaskManager
+                searchResults={
+                  state.ui.taskSearchTerm ? searchedTasks : undefined
+                }
+                isSearching={isSearching}
+              />
+            )}
+
             {activeTab === "tools" && <ToolsManager />}
           </div>
         </div>

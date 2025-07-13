@@ -9,6 +9,8 @@ import { useConfirmation } from "./useConfirmation";
 
 interface TaskManagerProps {
   className?: string;
+  searchResults?: Task[];
+  isSearching?: boolean;
 }
 
 type FilterType =
@@ -20,7 +22,11 @@ type FilterType =
   | "completed"
   | "report";
 
-const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
+const TaskManager: React.FC<TaskManagerProps> = ({
+  className = "",
+  searchResults,
+  isSearching = false,
+}) => {
   const TASKS_PER_PAGE = 4;
   const { tasks, pendingTasks, completedTasks, overdueTasks, loading } =
     useTasks();
@@ -60,6 +66,39 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
   const tomorrowTasks = getTomorrowTasks();
 
   const getFilteredTasks = () => {
+    if (searchResults) {
+      switch (activeFilter) {
+        case "pending":
+          return searchResults.filter((task) => !task.completed);
+        case "completed":
+          return searchResults.filter((task) => task.completed);
+        case "overdue":
+          return searchResults.filter((task) => {
+            if (task.completed) return false;
+            if (!task.dueDate) return false;
+            return new Date(task.dueDate) < new Date();
+          });
+        case "today": {
+          const today = new Date().toISOString().split("T")[0];
+          return searchResults.filter(
+            (task) => !task.completed && task.scheduledDate === today
+          );
+        }
+        case "tomorrow": {
+          const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0];
+          return searchResults.filter(
+            (task) => !task.completed && task.scheduledDate === tomorrow
+          );
+        }
+        case "all":
+          return searchResults;
+        default:
+          return searchResults;
+      }
+    }
+
     switch (activeFilter) {
       case "pending":
         return pendingTasks;
@@ -183,12 +222,79 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
     { key: "report", label: "Rapport", count: 0, icon: "📊", hasCount: false },
   ];
 
+  // NOUVELLE: Fonction pour obtenir l'icône vide
+  const getEmptyIcon = () => {
+    if (searchResults) return "🔍";
+    switch (activeFilter) {
+      case "pending":
+        return "🎯";
+      case "completed":
+        return "🎉";
+      case "overdue":
+        return "⏰";
+      case "today":
+        return "📅";
+      case "tomorrow":
+        return "🗓️";
+      default:
+        return "📋";
+    }
+  };
+
+  // NOUVELLE: Fonction pour obtenir le message vide
+  const getEmptyMessage = () => {
+    if (searchResults) return "Aucun résultat trouvé";
+    switch (activeFilter) {
+      case "completed":
+        return "Aucune tâche terminée";
+      case "overdue":
+        return "Aucune tâche en retard";
+      case "today":
+        return "Aucune tâche pour aujourd'hui";
+      case "tomorrow":
+        return "Aucune tâche pour demain";
+      case "all":
+        return "Aucune tâche créée";
+      default:
+        return "Aucune tâche trouvée";
+    }
+  };
+
+  // NOUVELLE: Fonction pour obtenir le sous-message vide
+  const getEmptySubMessage = () => {
+    if (searchResults) return "Essayez de modifier vos termes de recherche";
+    switch (activeFilter) {
+      case "pending":
+        return "Bravo ! Toutes vos tâches sont terminées.";
+      case "completed":
+        return "Commencez à accomplir vos tâches pour voir vos succès ici.";
+      case "overdue":
+        return "Excellent ! Vous êtes à jour sur toutes vos tâches.";
+      case "today":
+        return "Profitez de cette journée libre !";
+      case "tomorrow":
+        return "Rien de prévu pour demain pour l'instant.";
+      case "all":
+        return "Cliquez sur 'Nouvelle tâche' pour commencer.";
+      default:
+        return "";
+    }
+  };
+
   return (
     <>
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">📋 Mes Tâches</h2>
-          {activeFilter !== "report" && (
+          <h2 className="text-xl font-semibold text-gray-800">
+            📋 Mes Tâches
+            {searchResults && (
+              <span className="text-sm text-gray-600 ml-2">
+                ({searchResults.length} résultat
+                {searchResults.length > 1 ? "s" : ""})
+              </span>
+            )}
+          </h2>
+          {activeFilter !== "report" && !searchResults && (
             <button
               onClick={() => handleOpenModal()}
               className="flex items-center text-sm font-medium text-teal-500 hover:text-teal-600 transition-colors"
@@ -211,45 +317,56 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
-          {filters.map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => {
-                setActiveFilter(filter.key as FilterType);
-                setCurrentPage(1);
-              }}
-              className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                activeFilter === filter.key
-                  ? "bg-teal-500 text-white shadow-md"
-                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <span className="mr-2">{filter.icon}</span>
-              {filter.label}
-              {filter.hasCount && (
-                <span
-                  className={`ml-2 px-2 py-1 rounded-full text-xs font-bold ${
-                    activeFilter === filter.key
-                      ? "bg-white bg-opacity-20 text-white"
-                      : "bg-white text-gray-700"
-                  }`}
-                >
-                  {filter.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* MODIFIÉ: Masquer les filtres en mode recherche */}
+        {!searchResults && (
+          <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+            {filters.map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => {
+                  setActiveFilter(filter.key as FilterType);
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  activeFilter === filter.key
+                    ? "bg-teal-500 text-white shadow-md"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <span className="mr-2">{filter.icon}</span>
+                {filter.label}
+                {filter.hasCount && (
+                  <span
+                    className={`ml-2 px-2 py-1 rounded-full text-xs font-bold ${
+                      activeFilter === filter.key
+                        ? "bg-white bg-opacity-20 text-white"
+                        : "bg-white text-gray-700"
+                    }`}
+                  >
+                    {filter.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {activeFilter === "report" ? (
+        {activeFilter === "report" && !searchResults ? (
           <div className="mt-4">
             <MonthlyTaskReport />
           </div>
         ) : (
           <>
+            {/* NOUVEAU: Indicateur de recherche */}
+            {isSearching && (
+              <div className="text-center py-4">
+                <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
+                Recherche en cours...
+              </div>
+            )}
+
             <div className="space-y-3">
-              {loading.isLoading ? (
+              {loading.isLoading && !searchResults ? (
                 <div className="text-center py-8">
                   <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
                   <p className="mt-2 text-gray-500">Chargement des tâches...</p>
@@ -267,7 +384,9 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onToggle={handleToggle}
-                      showScheduleInfo={activeFilter === "all"}
+                      showScheduleInfo={
+                        activeFilter === "all" || !!searchResults
+                      }
                     />
                   ))
               ) : (
@@ -280,7 +399,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
                 </div>
               )}
             </div>
-            <ConfirmationComponent />
+
+            {/* Pagination */}
             {filteredTasks.length > TASKS_PER_PAGE && (
               <div className="mt-6 flex justify-center">
                 <nav className="flex items-center space-x-2">
@@ -330,6 +450,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
         )}
       </div>
 
+      <ConfirmationComponent />
+
       <TaskModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -339,59 +461,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className = "" }) => {
       />
     </>
   );
-
-  function getEmptyIcon() {
-    switch (activeFilter) {
-      case "pending":
-        return "🎯";
-      case "completed":
-        return "🎉";
-      case "overdue":
-        return "⏰";
-      case "today":
-        return "📅";
-      case "tomorrow":
-        return "🗓️";
-      default:
-        return "📋";
-    }
-  }
-
-  function getEmptyMessage() {
-    switch (activeFilter) {
-      case "completed":
-        return "Aucune tâche terminée";
-      case "overdue":
-        return "Aucune tâche en retard";
-      case "today":
-        return "Aucune tâche pour aujourd'hui";
-      case "tomorrow":
-        return "Aucune tâche pour demain";
-      case "all":
-        return "Aucune tâche créée";
-      default:
-        return "Aucune tâche trouvée";
-    }
-  }
-
-  function getEmptySubMessage() {
-    switch (activeFilter) {
-      case "pending":
-        return "Bravo ! Toutes vos tâches sont terminées.";
-      case "completed":
-        return "Commencez à accomplir vos tâches pour voir vos succès ici.";
-      case "overdue":
-        return "Excellent ! Vous êtes à jour sur toutes vos tâches.";
-      case "today":
-        return "Profitez de cette journée libre !";
-      case "tomorrow":
-        return "Rien de prévu pour demain pour l'instant.";
-      case "all":
-        return "Cliquez sur 'Nouvelle tâche' pour commencer.";
-      default:
-        return "";
-    }
-  }
 };
 
 export default TaskManager;

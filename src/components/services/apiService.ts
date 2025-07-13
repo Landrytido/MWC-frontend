@@ -523,7 +523,14 @@ export const useApiService = () => {
           throw error;
         }
       },
-
+      search: async (keyword: string): Promise<Task[]> => {
+        if (!keyword.trim()) {
+          return await fetchWithAuth("/tasks");
+        }
+        return await fetchWithAuth(
+          `/tasks/search?keyword=${encodeURIComponent(keyword)}`
+        );
+      },
       getById: async (id: number): Promise<Task> => {
         return await fetchWithAuth(`/tasks/${id}`);
       },
@@ -710,7 +717,14 @@ export const useApiService = () => {
           throw error;
         }
       },
-
+      search: async (keyword: string): Promise<SavedLink[]> => {
+        if (!keyword.trim()) {
+          return await fetchWithAuth("/links");
+        }
+        return await fetchWithAuth(
+          `/links/search?keyword=${encodeURIComponent(keyword)}`
+        );
+      },
       getById: async (id: number): Promise<SavedLink> => {
         return await fetchWithAuth(`/links/${id}`);
       },

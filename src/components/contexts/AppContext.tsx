@@ -40,6 +40,8 @@ interface AppState {
     currentNotebook: number | null;
     selectedLabels: string[];
     searchTerm: string;
+    taskSearchTerm: string;
+    linkSearchTerm: string;
   };
 }
 type AppAction =
@@ -81,6 +83,9 @@ type AppAction =
       type: "UPDATE_DAILY_TASK";
       payload: { id: number; task: Partial<DailyTask> };
     }
+  | { type: "SET_TASK_SEARCH_TERM"; payload: string }
+  | { type: "SET_LINK_SEARCH_TERM"; payload: string }
+  | { type: "CLEAR_ALL_SEARCH_TERMS" }
   | { type: "DELETE_DAILY_TASK"; payload: number }
   | { type: "REORDER_DAILY_TASKS"; payload: DailyTask[] }
   | { type: "SET_BLOC_NOTE"; payload: BlocNote | null }
@@ -134,6 +139,8 @@ const initialState: AppState = {
     currentNotebook: null,
     selectedLabels: [],
     searchTerm: "",
+    taskSearchTerm: "",
+    linkSearchTerm: "",
   },
 };
 
@@ -365,6 +372,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
           currentNotebook: null,
           selectedLabels: [],
           searchTerm: "",
+          taskSearchTerm: "",
+          linkSearchTerm: "",
         },
       };
 
@@ -413,6 +422,28 @@ function appReducer(state: AppState, action: AppAction): AppState {
           : state.notes,
       };
     }
+    case "SET_TASK_SEARCH_TERM":
+      return {
+        ...state,
+        ui: { ...state.ui, taskSearchTerm: action.payload },
+      };
+
+    case "SET_LINK_SEARCH_TERM":
+      return {
+        ...state,
+        ui: { ...state.ui, linkSearchTerm: action.payload },
+      };
+
+    case "CLEAR_ALL_SEARCH_TERMS":
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          searchTerm: "",
+          taskSearchTerm: "",
+          linkSearchTerm: "",
+        },
+      };
 
     case "SET_NOTE_COMMENTS":
       return {
