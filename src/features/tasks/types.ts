@@ -1,3 +1,4 @@
+// Enums et types de base
 export enum TaskPriority {
   LOW = 1,
   MEDIUM = 2,
@@ -82,7 +83,7 @@ export interface ApiTaskStats {
   completedTasks: number;
   notCompletedTasks: number;
   completionPercentage: number;
-  tasksByPriority: Record
+  tasksByPriority: Record<
     number,
     {
       total: number;
@@ -90,7 +91,7 @@ export interface ApiTaskStats {
       completionRate: number;
     }
   >;
-  dailyStats: Record
+  dailyStats: Record<
     string,
     {
       date: string;
@@ -101,7 +102,6 @@ export interface ApiTaskStats {
   >;
 }
 
-// Utilitaires
 export function getTaskPriorityEnum(priority: number): TaskPriority {
   if (priority === 1) return TaskPriority.LOW;
   if (priority === 3) return TaskPriority.HIGH;

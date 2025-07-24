@@ -3,17 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Layout from "../layout/Layout";
 import NoteCard from "../dashboard/NoteCard";
-import LinkManager from "../dashboard/LinkManager";
+import LinkManager from "../../features/links/components/LinkManager";
 import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, Task, SavedLink } from "../types";
-import TaskManager from "../dashboard/TaskManager";
+import { TaskManager } from "../../features/tasks";
 import { useConfirmation } from "../../shared/hooks/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
 import { useSearchParams } from "react-router-dom";
+import { tasksApi } from "../../features/tasks";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ const Dashboard: React.FC = () => {
 
     setIsSearching(true);
     try {
-      const results = await api.tasks.search(term);
+      const results = await tasksApi.search(term);
       setSearchedTasks(results);
     } catch (error) {
       console.error("Erreur lors de la recherche de tâches:", error);

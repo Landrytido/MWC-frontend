@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useTasks } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
+import React, { useState, useCallback } from "react";
+import { useTasks } from "../hooks/useTasks";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
 import MonthlyTaskReport from "./MonthlyTaskReport";
 import { Task, CreateTaskForm } from "../types";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface TaskManagerProps {
   className?: string;
@@ -28,42 +27,29 @@ const TaskManager: React.FC<TaskManagerProps> = ({
   isSearching = false,
 }) => {
   const TASKS_PER_PAGE = 4;
-  const { tasks, pendingTasks, completedTasks, overdueTasks, loading } =
-    useTasks();
-  const api = useApiService();
+
+  // Utilisation du nouveau hook
+  const {
+    tasks,
+    pendingTasks,
+    completedTasks,
+    overdueTasks,
+    todayTasks,
+    tomorrowTasks,
+    loading,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTask,
+  } = useTasks();
+
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("pending");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (tasks.length === 0 && !loading.isLoading) {
-      api.tasks.getAll();
-    }
-  }, [tasks.length, loading.isLoading, api.tasks]);
-
-  const getTodayTasks = () => {
-    const today = new Date().toISOString().split("T")[0];
-    return tasks.filter(
-      (task) => !task.completed && task.scheduledDate === today
-    );
-  };
-
-  const getTomorrowTasks = () => {
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
-    return tasks.filter(
-      (task) => !task.completed && task.scheduledDate === tomorrow
-    );
-  };
-
-  const todayTasks = getTodayTasks();
-  const tomorrowTasks = getTomorrowTasks();
 
   const getFilteredTasks = () => {
     if (searchResults) {
@@ -136,9 +122,9 @@ const TaskManager: React.FC<TaskManagerProps> = ({
   const handleSubmit = async (taskData: CreateTaskForm) => {
     try {
       if (editingTask) {
-        await api.tasks.update(editingTask.id, taskData);
+        await updateTask(editingTask.id, taskData);
       } else {
-        await api.tasks.create(taskData);
+        await createTask(taskData);
       }
       handleCloseModal();
     } catch (err) {
@@ -164,23 +150,23 @@ const TaskManager: React.FC<TaskManagerProps> = ({
       if (!confirmed) return;
 
       try {
-        await api.tasks.delete(id);
+        await deleteTask(id);
       } catch (error) {
         console.error("Error deleting task:", error);
       }
     },
-    [confirm, api.tasks]
+    [confirm, deleteTask]
   );
 
   const handleToggle = useCallback(
     async (id: number) => {
       try {
-        await api.tasks.toggle(id);
+        await toggleTask(id);
       } catch (error) {
         console.error("Error toggling task:", error);
       }
     },
-    [api.tasks]
+    [toggleTask]
   );
 
   const filters = [
@@ -222,7 +208,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     { key: "report", label: "Rapport", count: 0, icon: "📊", hasCount: false },
   ];
 
-  // NOUVELLE: Fonction pour obtenir l'icône vide
   const getEmptyIcon = () => {
     if (searchResults) return "🔍";
     switch (activeFilter) {
@@ -241,7 +226,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     }
   };
 
-  // NOUVELLE: Fonction pour obtenir le message vide
   const getEmptyMessage = () => {
     if (searchResults) return "Aucun résultat trouvé";
     switch (activeFilter) {
@@ -260,7 +244,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     }
   };
 
-  // NOUVELLE: Fonction pour obtenir le sous-message vide
   const getEmptySubMessage = () => {
     if (searchResults) return "Essayez de modifier vos termes de recherche";
     switch (activeFilter) {
@@ -317,7 +300,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
           )}
         </div>
 
-        {/* MODIFIÉ: Masquer les filtres en mode recherche */}
         {!searchResults && (
           <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
             {filters.map((filter) => (
@@ -357,7 +339,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
           </div>
         ) : (
           <>
-            {/* NOUVEAU: Indicateur de recherche */}
             {isSearching && (
               <div className="text-center py-4">
                 <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
@@ -366,7 +347,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
             )}
 
             <div className="space-y-3">
-              {loading.isLoading && !searchResults ? (
+              {loading && !searchResults ? (
                 <div className="text-center py-8">
                   <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
                   <p className="mt-2 text-gray-500">Chargement des tâches...</p>

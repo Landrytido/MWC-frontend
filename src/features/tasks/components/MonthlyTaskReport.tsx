@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ApiTaskStats, TaskPriority, PRIORITY_LABELS } from "../types";
-import { useApiService } from "../services/apiService";
+import { tasksApi } from "../api";
 
 interface MonthlyTaskReportProps {
   className?: string;
@@ -9,7 +9,6 @@ interface MonthlyTaskReportProps {
 const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
   className = "",
 }) => {
-  const api = useApiService();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return { month: now.getMonth() + 1, year: now.getFullYear() };
@@ -31,12 +30,13 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     "Novembre",
     "Décembre",
   ];
+
   const loadMonthlyStats = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const stats = await api.tasks.getMonthlyStats(
+      const stats = await tasksApi.getMonthlyStats(
         selectedMonth.year,
         selectedMonth.month
       );
@@ -47,10 +47,12 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, api.tasks]);
+  }, [selectedMonth]);
+
   useEffect(() => {
     loadMonthlyStats();
   }, [loadMonthlyStats]);
+
   const handleMonthChange = (direction: "prev" | "next") => {
     setSelectedMonth((prev) => {
       if (direction === "prev") {
@@ -64,6 +66,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       }
     });
   };
+
   const CircularChart: React.FC<{
     completed: number;
     total: number;
@@ -89,7 +92,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
     return (
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="transform -rotate-90">
-          {/* Cercle de fond */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -98,7 +100,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
             stroke="#e5e7eb"
             strokeWidth="12"
           />
-          {/* Cercle de progression */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -113,7 +114,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
           />
         </svg>
 
-        {/* Texte central */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-2xl font-bold text-gray-900">
             {percentage.toFixed(0)}%
@@ -125,6 +125,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
       </div>
     );
   };
+
   if (loading) {
     return (
       <div className={`space-y-6 ${className}`}>
@@ -167,7 +168,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Sélecteur de mois */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
@@ -217,7 +217,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       </div>
 
-      {/* Statistiques principales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 transition-transform hover:scale-105">
           <div className="flex items-center justify-between">
@@ -308,7 +307,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       </div>
 
-      {/* Vue d'ensemble avec diagramme circulaire */}
       {monthlyData.totalTasks > 0 && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h4 className="text-lg font-semibold text-gray-800 mb-6">
@@ -316,7 +314,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
           </h4>
 
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0 lg:space-x-8">
-            {/* Diagramme circulaire */}
             <div className="flex flex-col items-center">
               <CircularChart
                 completed={monthlyData.completedTasks}
@@ -331,7 +328,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
               </div>
             </div>
 
-            {/* Barre de progression détaillée */}
             <div className="flex-1 w-full">
               <div className="space-y-4">
                 <div>
@@ -380,7 +376,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       )}
 
-      {/* Statistiques par priorité */}
       {monthlyData.totalTasks > 0 && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h4 className="text-lg font-semibold text-gray-800 mb-6">
@@ -392,7 +387,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
                 const priorityNum = parseInt(priority) as TaskPriority;
                 const config = PRIORITY_LABELS[priorityNum];
 
-                if (!config) return null; // Protection contre les priorités invalides
+                if (!config) return null;
 
                 return (
                   <div
@@ -438,7 +433,6 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         </div>
       )}
 
-      {/* Message si aucune donnée */}
       {monthlyData.totalTasks === 0 && (
         <div className="text-center py-12 text-gray-500 bg-white rounded-xl border">
           <div className="mb-4 text-6xl">📊</div>

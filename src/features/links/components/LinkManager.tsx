@@ -1,11 +1,11 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLinks } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import { useLinks } from "../../../components/contexts/AppContext";
+import { useApiService } from "../../../components/services/apiService";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { SavedLink } from "../types";
 import LinkCard from "./LinkCard";
-import Pagination from "../common/Pagination";
+import Pagination from "../../../components/common/Pagination";
 
 interface LinkManagerProps {
   className?: string;

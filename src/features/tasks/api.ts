@@ -6,10 +6,11 @@ import {
   ApiTaskStats,
 } from "./types";
 
-// Configuration de base (sera dans shared plus tard)
+// Configuration de base (temporaire, sera dans shared plus tard)
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
+// Helper pour les appels authentifiés (temporaire, sera dans shared)
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {

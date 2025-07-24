@@ -1,5 +1,5 @@
 import React from "react";
-import { SavedLink } from "../types/index";
+import { SavedLink } from "../types";
 
 interface LinkCardProps {
   link: SavedLink;
