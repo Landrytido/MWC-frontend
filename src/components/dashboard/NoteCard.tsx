@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Note, LABEL_COLORS } from "../types";
-import { LabelList } from "../common/LabelBadge";
+import { Note } from "../types";
+import { LABEL_COLORS } from "../../features/labels";
+import { LabelList } from "../../features/labels";
 import NotebookSelector from "../../features/notebooks/components/NotebookSelector";
 import LabelSelector from "../../features/labels/components/LabelSelector";
 import { useApiService } from "../services/apiService";

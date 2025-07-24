@@ -11,7 +11,7 @@ import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
 import { CreateEventRequest, EventDto } from "../types/calendar";
-import { CreateTaskForm } from "../types";
+import { CreateTaskForm } from "../../features/tasks";
 import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface CalendarProps {

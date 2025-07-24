@@ -4,27 +4,29 @@ import { useCallback, useMemo } from "react";
 import { authService } from "./authService";
 import {
   Note,
-  SavedLink,
-  Notebook,
-  Label,
   BlocNote,
   CreateNoteForm,
-  CreateLinkForm,
-  CreateNotebookForm,
-  CreateLabelForm,
-  Task,
-  CreateTaskForm,
-  UpdateTaskForm,
   Comment,
   FileInfo,
-  LinkGroup,
-  SavedLinkGroup,
-  ApiTaskSummary,
-  ApiTaskStats,
   FileUploadResponse,
   FileStatistics,
   User,
 } from "../types";
+import { Notebook, CreateNotebookForm } from "../../features/notebooks";
+import { Label, CreateLabelForm } from "../../features/labels";
+import {
+  SavedLink,
+  CreateLinkForm,
+  LinkGroup,
+  SavedLinkGroup,
+} from "../../features/links";
+import {
+  Task,
+  CreateTaskForm,
+  UpdateTaskForm,
+  ApiTaskSummary,
+  ApiTaskStats,
+} from "../../features/tasks";
 import {
   CalendarViewDto,
   EventDto,

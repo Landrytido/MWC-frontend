@@ -1,225 +1,3 @@
-export enum TaskPriority {
-  LOW = 1,
-  MEDIUM = 2,
-  HIGH = 3,
-}
-
-export const PRIORITY_LABELS = {
-  [TaskPriority.LOW]: { label: "Basse", icon: "🔹", color: "gray" },
-  [TaskPriority.MEDIUM]: { label: "Moyenne", icon: "🔸", color: "blue" },
-  [TaskPriority.HIGH]: { label: "Haute", icon: "🔴", color: "red" },
-} as const;
-
-export type LabelColorName = "teal" | "slate" | "blue" | "violet";
-
-export interface LabelColorConfig {
-  default: string;
-  outlined: string;
-  minimal: string;
-  dot: string;
-}
-
-export const LABEL_COLORS: Record<LabelColorName, LabelColorConfig> = {
-  teal: {
-    default: "bg-teal-50 text-teal-700 border border-teal-200",
-    outlined: "border-teal-300 text-teal-700 bg-white",
-    minimal: "text-teal-600",
-    dot: "bg-teal-400", // Plus doux que 500
-  },
-  slate: {
-    default: "bg-slate-50 text-slate-700 border border-slate-200",
-    outlined: "border-slate-300 text-slate-700 bg-white",
-    minimal: "text-slate-600",
-    dot: "bg-slate-400",
-  },
-  blue: {
-    default: "bg-blue-50 text-blue-700 border border-blue-200",
-    outlined: "border-blue-300 text-blue-700 bg-white",
-    minimal: "text-blue-600",
-    dot: "bg-blue-400",
-  },
-  violet: {
-    default: "bg-violet-50 text-violet-700 border border-violet-200",
-    outlined: "border-violet-300 text-violet-700 bg-white",
-    minimal: "text-violet-600",
-    dot: "bg-violet-400",
-  },
-};
-
-export const AVAILABLE_LABEL_COLORS: LabelColorName[] = [
-  "teal",
-  "slate",
-  "blue",
-  "violet",
-];
-
-export const getLabelColor = (labelId: string): LabelColorName => {
-  let hash = 0;
-  for (let i = 0; i < labelId.length; i++) {
-    hash = labelId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  hash = Math.abs(hash);
-
-  return AVAILABLE_LABEL_COLORS[hash % AVAILABLE_LABEL_COLORS.length];
-};
-
-export const getLabelColorClasses = (
-  colorName: LabelColorName,
-  variant: "default" | "outlined" | "minimal" = "default"
-): LabelColorConfig => {
-  return LABEL_COLORS[colorName];
-};
-export type TaskStatus =
-  | "upcoming"
-  | "today"
-  | "tomorrow"
-  | "overdue"
-  | "completed";
-
-export enum ScheduleType {
-  NONE = "none",
-  TODAY = "today",
-  TOMORROW = "tomorrow",
-}
-
-export const SCHEDULE_LABELS = {
-  [ScheduleType.NONE]: "Pas de planification",
-  [ScheduleType.TODAY]: "Pour aujourd'hui",
-  [ScheduleType.TOMORROW]: "Pour demain",
-} as const;
-
-export interface Task {
-  id: number;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  scheduledDate?: string;
-  priority: number;
-  completed: boolean;
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  carriedOver: boolean;
-  originalDate?: string;
-  orderIndex: number;
-  status: TaskStatus;
-  overdue: boolean;
-  scheduledForToday: boolean;
-  scheduledForTomorrow: boolean;
-}
-
-export interface CreateTaskForm {
-  title: string;
-  description?: string;
-  dueDate?: string;
-  scheduledDate?: string;
-  priority?: number;
-  orderIndex?: number;
-}
-
-export interface UpdateTaskForm extends Partial<CreateTaskForm> {
-  completed?: boolean;
-  carriedOver?: boolean;
-  originalDate?: string;
-  orderIndex?: number;
-}
-
-export interface ApiTaskSummary {
-  totalTasks: number;
-  completedTasks: number;
-  overdueTasks: number;
-  todayTasks: number;
-  tomorrowTasks: number;
-}
-
-export interface ApiTaskStats {
-  month: number;
-  year: number;
-  totalTasks: number;
-  completedTasks: number;
-  notCompletedTasks: number;
-  completionPercentage: number;
-  tasksByPriority: Record<
-    number,
-    {
-      total: number;
-      completed: number;
-      completionRate: number;
-    }
-  >;
-  dailyStats: Record<
-    string,
-    {
-      date: string;
-      total: number;
-      completed: number;
-      completionRate: number;
-    }
-  >;
-}
-
-export interface TaskStats {
-  totalTasks: number;
-  completedTasks: number;
-  notCompletedTasks: number;
-  completionPercentage: number;
-  tasksByPriority: Record<number, { total: number; completed: number }>;
-  dailyStats: Record<string, { total: number; completed: number }>;
-}
-
-export function getTaskPriorityEnum(priority: number): TaskPriority {
-  if (priority === 1) return TaskPriority.LOW;
-  if (priority === 3) return TaskPriority.HIGH;
-  return TaskPriority.MEDIUM;
-}
-
-export function getPriorityConfig(priority: number) {
-  const priorityEnum = getTaskPriorityEnum(priority);
-  return PRIORITY_LABELS[priorityEnum];
-}
-
-export function isTaskOverdue(task: Task): boolean {
-  return task.status === "overdue";
-}
-
-export function isTaskToday(task: Task): boolean {
-  return task.status === "today";
-}
-
-export function isTaskTomorrow(task: Task): boolean {
-  return task.status === "tomorrow";
-}
-
-export function isTaskCompleted(task: Task): boolean {
-  return task.status === "completed";
-}
-
-export function isTaskUpcoming(task: Task): boolean {
-  return task.status === "upcoming";
-}
-
-export function getTaskStatusLabel(status: TaskStatus): string {
-  const labels: Record<TaskStatus, string> = {
-    completed: "Terminée",
-    overdue: "En retard",
-    today: "Aujourd'hui",
-    tomorrow: "Demain",
-    upcoming: "À venir",
-  };
-  return labels[status];
-}
-
-export function getTaskStatusColor(status: TaskStatus): string {
-  const colors: Record<TaskStatus, string> = {
-    completed: "green",
-    overdue: "red",
-    today: "blue",
-    tomorrow: "orange",
-    upcoming: "gray",
-  };
-  return colors[status];
-}
-
 export interface User {
   id: number;
   email: string;
@@ -249,24 +27,6 @@ export interface RegisterRequest {
   lastName: string;
 }
 
-export interface Notebook {
-  id: number;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  noteCount?: number;
-}
-
-export interface Label {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  noteCount?: number;
-  color?: string;
-  isSelected?: boolean;
-}
-
 export interface Note {
   id: number;
   title: string;
@@ -280,7 +40,7 @@ export interface Note {
   notebookId?: number;
   notebookTitle?: string;
 
-  labels?: Label[];
+  labels?: import("../../features/labels").Label[];
 
   comments?: Comment[];
 }
@@ -312,15 +72,6 @@ export interface UpdateNoteForm {
   notebookId?: number | null;
 }
 
-export interface CreateNotebookForm {
-  title: string;
-}
-
-export interface CreateLabelForm {
-  name: string;
-  color?: string;
-}
-
 export interface NotesFilter {
   notebookId?: number | null;
   labelIds?: string[];
@@ -335,24 +86,6 @@ export interface NotesSearchParams {
   labelIds?: string[];
   limit?: number;
   offset?: number;
-}
-
-export interface LabelUsageStats {
-  totalLabels: number;
-  mostUsedLabels: Array<{
-    label: Label;
-    noteCount: number;
-  }>;
-  unusedLabels: Label[];
-}
-
-export interface NotebookUsageStats {
-  totalNotebooks: number;
-  notebooksWithMostNotes: Array<{
-    notebook: Notebook;
-    noteCount: number;
-  }>;
-  emptyNotebooks: Notebook[];
 }
 
 export interface DashboardStats {
@@ -371,28 +104,10 @@ export interface DashboardStats {
   averageNotesPerNotebook: number;
 }
 
-export interface LabelBadgeProps {
-  label: Label;
-  removable?: boolean;
-  onRemove?: (labelId: string) => void;
-  clickable?: boolean;
-  onClick?: (labelId: string) => void;
-  size?: "sm" | "md" | "lg";
-}
-
 export interface NotebookSelectorProps {
   selectedNotebookId?: number | null;
   onNotebookChange: (notebookId: number | null) => void;
   includeNone?: boolean;
-  disabled?: boolean;
-  placeholder?: string;
-}
-
-export interface LabelSelectorProps {
-  selectedLabelIds: string[];
-  onLabelsChange: (labelIds: string[]) => void;
-  maxSelections?: number;
-  creatable?: boolean;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -406,29 +121,6 @@ export interface DragDropNote {
 export interface DropTarget {
   type: "notebook" | "label" | "trash";
   id: string | number;
-}
-
-export interface ExportData {
-  notes: Note[];
-  notebooks: Notebook[];
-  labels: Label[];
-  exportedAt: string;
-  version: string;
-}
-
-export interface ImportResult {
-  importedNotes: number;
-  importedNotebooks: number;
-  importedLabels: number;
-  skippedDuplicates: number;
-  errors: string[];
-}
-
-export interface BulkNoteAction {
-  type: "moveToNotebook" | "addLabels" | "removeLabels" | "delete";
-  noteIds: number[];
-  targetNotebookId?: number | null;
-  labelIds?: string[];
 }
 
 export interface BulkActionResult {
@@ -452,40 +144,6 @@ export interface SyncStatus {
   pendingChanges: number;
   syncInProgress: boolean;
   syncErrors: string[];
-}
-
-export interface SavedLink {
-  id: number;
-  url: string;
-  title: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LinkGroup {
-  id: string;
-  title: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-  linkCount?: number;
-  savedLinks?: SavedLinkGroup[];
-}
-
-export interface SavedLinkGroup {
-  savedLinkId: number;
-  linkGroupId: string;
-  linkName: string;
-  url: string;
-  clickCounter: number;
-  savedLinkDetails: SavedLink;
-}
-
-export interface CreateLinkForm {
-  url: string;
-  title: string;
-  description?: string;
 }
 
 export interface FileInfo {
@@ -519,40 +177,10 @@ export interface BlocNote {
   updatedAt: string;
 }
 
-export interface DailyTask {
-  id: number;
-  uniqueTaskId: string;
-  title: string;
-  description?: string;
-  scheduledDate: string;
-  originalDate?: string;
-  carriedOver: boolean;
-  orderIndex: number;
-  priority: number;
-  completed: boolean;
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MonthlyReport {
-  totalTasks: number;
-  completedTasks: number;
-  notCompletedTasks: number;
-  completionPercentage: number;
-}
-
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
   success: boolean;
-}
-
-export interface CreateDailyTaskForm {
-  title: string;
-  description?: string;
-  scheduledDate: string;
-  priority: number;
 }
 
 export interface CreateCommentForm {
@@ -560,32 +188,9 @@ export interface CreateCommentForm {
   noteId: number;
 }
 
-export interface CreateLinkGroupForm {
-  title: string;
-  description?: string;
-}
-
-export interface TasksFilter {
-  status?: TaskStatus;
-  priority?: number;
-  scheduledDate?: string;
-  searchTerm?: string;
-}
-
 export interface LoadingState {
   isLoading: boolean;
   error?: string;
-}
-
-export interface EndDayRequest {
-  date?: string;
-  taskIdsToCarryOver?: number[];
-  markDayAsCompleted?: boolean;
-}
-
-export interface ReorderTasksRequest {
-  taskIds: number[];
-  scheduledDate?: string;
 }
 
 export interface HealthStatus {

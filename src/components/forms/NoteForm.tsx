@@ -3,7 +3,8 @@ import { useNotebooks, useLabels } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { NotebookSelector } from "../../features/notebooks";
 import { LabelSelector } from "../../features/labels";
-import { Note, CreateNoteForm, Notebook } from "../types";
+import { Note, CreateNoteForm } from "../types";
+import { Notebook } from "../../features/notebooks";
 
 interface NoteFormProps {
   note?: Note; // Pour l'édition

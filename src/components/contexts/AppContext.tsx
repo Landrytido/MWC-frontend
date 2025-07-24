@@ -1,17 +1,9 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
-import {
-  Note,
-  Notebook,
-  Label,
-  SavedLink,
-  LinkGroup,
-  Task,
-  DailyTask,
-  BlocNote,
-  User,
-  LoadingState,
-  Comment,
-} from "../types";
+import { Note, BlocNote, User, LoadingState, Comment } from "../types";
+import { Notebook } from "../../features/notebooks";
+import { Label } from "../../features/labels";
+import { SavedLink, LinkGroup } from "../../features/links";
+import { Task } from "../../features/tasks";
 
 interface AppState {
   user: User | null;
@@ -21,7 +13,6 @@ interface AppState {
   links: SavedLink[];
   linkGroups: LinkGroup[];
   tasks: Task[];
-  dailyTasks: DailyTask[];
   blocNote: BlocNote | null;
   comments: Comment[];
 
@@ -77,17 +68,10 @@ type AppAction =
   | { type: "UPDATE_TASK"; payload: { id: number; task: Partial<Task> } }
   | { type: "DELETE_TASK"; payload: number }
   | { type: "TOGGLE_TASK"; payload: number }
-  | { type: "SET_DAILY_TASKS"; payload: DailyTask[] }
-  | { type: "ADD_DAILY_TASK"; payload: DailyTask }
-  | {
-      type: "UPDATE_DAILY_TASK";
-      payload: { id: number; task: Partial<DailyTask> };
-    }
   | { type: "SET_TASK_SEARCH_TERM"; payload: string }
   | { type: "SET_LINK_SEARCH_TERM"; payload: string }
   | { type: "CLEAR_ALL_SEARCH_TERMS" }
   | { type: "DELETE_DAILY_TASK"; payload: number }
-  | { type: "REORDER_DAILY_TASKS"; payload: DailyTask[] }
   | { type: "SET_BLOC_NOTE"; payload: BlocNote | null }
   | { type: "UPDATE_BLOC_NOTE"; payload: { content: string } }
   | {
@@ -119,7 +103,6 @@ const initialState: AppState = {
   links: [],
   linkGroups: [],
   tasks: [],
-  dailyTasks: [],
   blocNote: null,
   comments: [],
 
@@ -285,29 +268,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
 
-    case "SET_DAILY_TASKS":
-      return { ...state, dailyTasks: action.payload };
-
-    case "ADD_DAILY_TASK":
-      return { ...state, dailyTasks: [action.payload, ...state.dailyTasks] };
-
-    case "UPDATE_DAILY_TASK":
-      return {
-        ...state,
-        dailyTasks: state.dailyTasks.map((task) =>
-          task.id === action.payload.id
-            ? { ...task, ...action.payload.task }
-            : task
-        ),
-      };
-
-    case "DELETE_DAILY_TASK":
-      return {
-        ...state,
-        dailyTasks: state.dailyTasks.filter(
-          (task) => task.id !== action.payload
-        ),
-      };
     case "TOGGLE_TASK":
       return {
         ...state,
@@ -317,8 +277,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
             : task
         ),
       };
-    case "REORDER_DAILY_TASKS":
-      return { ...state, dailyTasks: action.payload };
 
     case "SET_BLOC_NOTE":
       return { ...state, blocNote: action.payload };
