@@ -12,7 +12,7 @@ import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
 import { CreateEventRequest, EventDto } from "../types/calendar";
 import { CreateTaskForm } from "../types";
-import { useConfirmation } from "../dashboard/useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface CalendarProps {
   className?: string;

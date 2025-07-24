@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "../../components/dashboard/ConfirmationModal";
 
 interface ConfirmationConfig {
   title: string;

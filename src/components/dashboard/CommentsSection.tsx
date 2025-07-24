@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useComments } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import CommentCard from "./CommentCard";
-import { useConfirmation } from "./useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface CommentsSectionProps {
   noteId: number;

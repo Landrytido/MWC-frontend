@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import { useConfirmation } from "./useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 import { SavedLink } from "../types";
 import LinkCard from "./LinkCard";
 import Pagination from "../common/Pagination";

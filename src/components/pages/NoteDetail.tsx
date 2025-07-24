@@ -4,7 +4,7 @@ import Layout from "../layout/Layout";
 import CommentsSection from "../dashboard/CommentsSection";
 import { useApiService } from "../services/apiService";
 import { Note } from "../types";
-import { useConfirmation } from "../dashboard/useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

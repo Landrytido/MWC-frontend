@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNotebooks } from "../contexts/AppContext";
+import { useNotebooks } from "../hooks/useNotebooks";
 import { Notebook } from "../types";
 
 interface NotebookSelectorProps {
@@ -27,7 +27,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
   allowCreate = false,
   onCreateNotebook,
 }) => {
-  const { notebooks } = useNotebooks();
+  const { notebooks, createNotebook } = useNotebooks();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +67,7 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
 
     setIsCreating(true);
     try {
-      const newNotebook = await onCreateNotebook(searchTerm.trim());
+      const newNotebook = await createNotebook(searchTerm.trim());
       onNotebookChange(newNotebook.id);
       setIsOpen(false);
       setSearchTerm("");

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useLabels } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
+import { useLabels } from "../hooks/useLabels";
 import { Label, getLabelColorClasses, getLabelColor } from "../types";
 
 interface LabelSelectorProps {
@@ -24,8 +23,7 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
   size = "md",
   showCount = true,
 }) => {
-  const { labels } = useLabels();
-  const api = useApiService();
+  const { labels, createLabel } = useLabels();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -80,7 +78,7 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
 
     setIsCreating(true);
     try {
-      const newLabel = await api.labels.create({ name: searchTerm.trim() });
+      const newLabel = await createLabel(searchTerm.trim());
       onLabelsChange([...selectedLabelIds, newLabel.id]);
       setSearchTerm("");
       setIsOpen(false);

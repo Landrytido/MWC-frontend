@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useApp, useNotebooks } from "../contexts/AppContext";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApiService } from "../services/apiService";
-import { CreateNotebookForm, Notebook } from "../types";
-import { useConfirmation } from "../dashboard/useConfirmation";
+import { useNotebooks } from "../hooks/useNotebooks";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
+import { Notebook } from "../types";
 
 interface NotebookSidebarProps {
   className?: string;
   variant?: "default" | "compact";
   showCreateButton?: boolean;
   showStats?: boolean;
+  selectedNotebookId?: number | null;
+  onNotebookSelect?: (notebookId: number | null) => void;
+  totalNotes?: number;
 }
 
 const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
@@ -17,10 +19,12 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
   variant = "default",
   showCreateButton = true,
   showStats = true,
+  selectedNotebookId = null,
+  onNotebookSelect,
+  totalNotes = 0,
 }) => {
-  const { state, dispatch } = useApp();
-  const { notebooks, loading } = useNotebooks();
-  const api = useApiService();
+  const { notebooks, loading, createNotebook, updateNotebook, deleteNotebook } =
+    useNotebooks();
   const navigate = useNavigate();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -33,31 +37,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllNotebooks, setShowAllNotebooks] = useState(false);
-
-  const notebooksLoadedRef = useRef(false);
-
-  useEffect(() => {
-    const shouldLoadNotebooks =
-      !notebooksLoadedRef.current &&
-      notebooks.length === 0 &&
-      !loading.isLoading;
-
-    if (shouldLoadNotebooks) {
-      console.log("🚀 Loading notebooks...");
-      notebooksLoadedRef.current = true;
-
-      api.notebooks.getAll().catch((error) => {
-        console.error("❌ Error loading notebooks:", error);
-        notebooksLoadedRef.current = false;
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (notebooks.length > 0) {
-      notebooksLoadedRef.current = true;
-    }
-  }, [notebooks.length]);
 
   const filteredNotebooks = notebooks.filter((notebook) =>
     notebook.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -72,11 +51,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     }
 
     try {
-      const notebookData: CreateNotebookForm = {
-        title: newNotebookTitle.trim(),
-      };
-
-      await api.notebooks.create(notebookData);
+      await createNotebook(newNotebookTitle.trim());
       setNewNotebookTitle("");
       setIsCreating(false);
       setError("");
@@ -92,7 +67,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     }
 
     try {
-      await api.notebooks.update(id, { title: title.trim() });
+      await updateNotebook(id, title.trim());
       setEditingNotebook(null);
       setError("");
     } catch (err) {
@@ -101,7 +76,9 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
   };
 
   const handleSelectNotebook = (notebookId: number | null) => {
-    dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: notebookId });
+    if (onNotebookSelect) {
+      onNotebookSelect(notebookId);
+    }
   };
 
   const handleDeleteNotebook = async (notebookId: number) => {
@@ -123,9 +100,9 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     if (!confirmed) return;
 
     try {
-      await api.notebooks.delete(notebookId, true);
-      if (state.ui.currentNotebook === notebookId) {
-        dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: null });
+      await deleteNotebook(notebookId, true);
+      if (selectedNotebookId === notebookId) {
+        handleSelectNotebook(null);
       }
     } catch (err) {
       setError(
@@ -138,7 +115,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     navigate(`/dashboard/notes/new?notebookId=${notebookId}`);
   };
 
-  const totalNotes = notebooks.reduce(
+  const totalNotesCalculated = notebooks.reduce(
     (sum, nb) => sum + (nb.noteCount || 0),
     0
   );
@@ -147,7 +124,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     return (
       <div
         className={`group relative rounded-md transition-colors ${
-          state.ui.currentNotebook === notebook.id
+          selectedNotebookId === notebook.id
             ? "bg-teal-50 text-teal-700 border border-teal-200"
             : "text-gray-700 hover:bg-gray-50"
         }`}
@@ -307,132 +284,129 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
     );
   };
 
-  const renderCompactView = () => (
-    <div className={`bg-white rounded-lg shadow-sm border p-3 ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-800">Carnets</h3>
-        {showCreateButton && (
-          <button
-            onClick={() => setIsCreating(!isCreating)}
-            className="p-1 text-gray-500 hover:text-teal-500 rounded"
-            title="Créer un carnet"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+  if (variant === "compact") {
+    return (
+      <div className={`bg-white rounded-lg shadow-sm border p-3 ${className}`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-gray-800">Carnets</h3>
+          {showCreateButton && (
+            <button
+              onClick={() => setIsCreating(!isCreating)}
+              className="p-1 text-gray-500 hover:text-teal-500 rounded"
+              title="Créer un carnet"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
-        )}
-      </div>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
 
-      <div className="space-y-1">
-        <button
-          onClick={() => handleSelectNotebook(null)}
-          className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
-            state.ui.currentNotebook === null
-              ? "bg-teal-50 text-teal-700"
-              : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          📝 Toutes ({state.notes.length})
-        </button>
-
-        {filteredNotebooks.slice(0, 3).map((notebook) => (
+        <div className="space-y-1">
           <button
-            key={notebook.id}
-            onClick={() => handleSelectNotebook(notebook.id)}
-            className={`w-full text-left px-2 py-1 text-xs rounded transition-colors truncate ${
-              state.ui.currentNotebook === notebook.id
+            onClick={() => handleSelectNotebook(null)}
+            className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
+              selectedNotebookId === null
                 ? "bg-teal-50 text-teal-700"
                 : "text-gray-600 hover:bg-gray-50"
             }`}
-            title={notebook.title}
           >
-            📓 {notebook.title} ({notebook.noteCount || 0})
+            📝 Toutes ({totalNotes})
           </button>
-        ))}
 
-        {filteredNotebooks.length > 3 && (
-          <div className="relative">
+          {filteredNotebooks.slice(0, 3).map((notebook) => (
             <button
-              onClick={() => setShowAllNotebooks(!showAllNotebooks)}
-              className="w-full p-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors text-center border border-dashed border-gray-300"
+              key={notebook.id}
+              onClick={() => handleSelectNotebook(notebook.id)}
+              className={`w-full text-left px-2 py-1 text-xs rounded transition-colors truncate ${
+                selectedNotebookId === notebook.id
+                  ? "bg-teal-50 text-teal-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+              title={notebook.title}
             >
-              {showAllNotebooks ? (
-                <>
-                  <svg
-                    className="w-3 h-3 inline mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
-                  Masquer les autres
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-3 h-3 inline mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                  +{filteredNotebooks.length - 3} autres carnets
-                </>
-              )}
+              📓 {notebook.title} ({notebook.noteCount || 0})
             </button>
+          ))}
 
-            {/* Overlay avec tous les autres carnets */}
-            {showAllNotebooks && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                <div className="p-1 space-y-1">
-                  {filteredNotebooks.slice(3).map((notebook) => (
-                    <button
-                      key={notebook.id}
-                      onClick={() => handleSelectNotebook(notebook.id)}
-                      className={`w-full text-left px-2 py-1 text-xs rounded transition-colors truncate ${
-                        state.ui.currentNotebook === notebook.id
-                          ? "bg-teal-50 text-teal-700"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                      title={notebook.title}
+          {filteredNotebooks.length > 3 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowAllNotebooks(!showAllNotebooks)}
+                className="w-full p-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors text-center border border-dashed border-gray-300"
+              >
+                {showAllNotebooks ? (
+                  <>
+                    <svg
+                      className="w-3 h-3 inline mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      📓 {notebook.title} ({notebook.noteCount || 0})
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                    Masquer les autres
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-3 h-3 inline mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                    +{filteredNotebooks.length - 3} autres carnets
+                  </>
+                )}
+              </button>
 
-  if (variant === "compact") {
-    return renderCompactView();
+              {showAllNotebooks && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                  <div className="p-1 space-y-1">
+                    {filteredNotebooks.slice(3).map((notebook) => (
+                      <button
+                        key={notebook.id}
+                        onClick={() => handleSelectNotebook(notebook.id)}
+                        className={`w-full text-left px-2 py-1 text-xs rounded transition-colors truncate ${
+                          selectedNotebookId === notebook.id
+                            ? "bg-teal-50 text-teal-700"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                        title={notebook.title}
+                      >
+                        📓 {notebook.title} ({notebook.noteCount || 0})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -474,7 +448,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
               <span className="text-gray-600">Total notes:</span>
-              <span className="ml-1 font-medium">{totalNotes}</span>
+              <span className="ml-1 font-medium">{totalNotesCalculated}</span>
             </div>
             <div>
               <span className="text-gray-600">Carnets:</span>
@@ -535,10 +509,9 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
       )}
 
       <div className="relative space-y-1">
-        {/* Bouton "Toutes les notes" */}
         <div
           className={`group relative rounded-md transition-colors ${
-            state.ui.currentNotebook === null
+            selectedNotebookId === null
               ? "bg-teal-50 text-teal-700 border border-teal-200"
               : "text-gray-700 hover:bg-gray-50"
           }`}
@@ -552,9 +525,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
                 <span className="mr-2">📝</span>
                 Toutes les notes
               </span>
-              <span className="text-xs text-gray-500">
-                {state.notes.length}
-              </span>
+              <span className="text-xs text-gray-500">{totalNotes}</span>
             </div>
           </button>
         </div>
@@ -563,7 +534,7 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
           <div className="border-t border-gray-200 my-2"></div>
         )}
 
-        {loading.isLoading ? (
+        {loading ? (
           <div className="p-3 text-sm text-gray-500 text-center">
             Chargement...
           </div>
@@ -573,14 +544,12 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
           </div>
         ) : (
           <>
-            {/* Affichage des 3 premiers carnets */}
             <div className="space-y-1">
               {filteredNotebooks.slice(0, 3).map((notebook) => (
                 <NotebookItem key={notebook.id} notebook={notebook} />
               ))}
             </div>
 
-            {/* Bouton pour afficher les autres carnets */}
             {filteredNotebooks.length > 3 && (
               <div className="relative">
                 <button
@@ -624,7 +593,6 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
                   )}
                 </button>
 
-                {/* Overlay avec tous les autres carnets */}
                 {showAllNotebooks && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
                     <div className="p-1 space-y-1">
@@ -640,11 +608,11 @@ const NotebookSidebar: React.FC<NotebookSidebarProps> = ({
         )}
       </div>
 
-      {state.ui.currentNotebook && (
+      {selectedNotebookId && (
         <div className="mt-4 p-2 bg-teal-50 rounded-md">
           <p className="text-xs text-teal-700">
             Affichage:{" "}
-            {notebooks.find((n) => n.id === state.ui.currentNotebook)?.title}
+            {notebooks.find((n) => n.id === selectedNotebookId)?.title}
           </p>
         </div>
       )}

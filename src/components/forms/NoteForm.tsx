@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNotebooks, useLabels } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import NotebookSelector from "../common/NotebookSelector";
-import LabelSelector from "../common/LabelSelector";
+import { NotebookSelector } from "../../features/notebooks";
+import { LabelSelector } from "../../features/labels";
 import { Note, CreateNoteForm, Notebook } from "../types";
 
 interface NoteFormProps {

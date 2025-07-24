@@ -4,14 +4,14 @@ import { useAuth } from "../contexts/AuthContext";
 import Layout from "../layout/Layout";
 import NoteCard from "../dashboard/NoteCard";
 import LinkManager from "../dashboard/LinkManager";
-import NotebookSidebar from "../dashboard/NotebookSidebar";
-import LabelManager from "../dashboard/LabelManager";
+import { NotebookSidebar } from "../../features/notebooks";
+import { LabelManager } from "../../features/labels";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp, useNotes, useLinks } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note, Task, SavedLink } from "../types";
 import TaskManager from "../dashboard/TaskManager";
-import { useConfirmation } from "../dashboard/useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
 import { useSearchParams } from "react-router-dom";
 
@@ -240,16 +240,18 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <NotebookSidebar />
+            <NotebookSidebar
+              selectedNotebookId={null} // TODO: gérer la sélection
+              onNotebookSelect={(id) => console.log("Selected:", id)} // TODO: gérer la sélection
+              totalNotes={notes.length}
+            />
             <LabelManager />
             <BlocNoteWidget />
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Search Bar - MODIFIÉ */}
             {searchConfig.show && (
               <div className="mb-6">
                 <div className="relative">

@@ -5,7 +5,7 @@ import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
 import MonthlyTaskReport from "./MonthlyTaskReport";
 import { Task, CreateTaskForm } from "../types";
-import { useConfirmation } from "./useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface TaskManagerProps {
   className?: string;

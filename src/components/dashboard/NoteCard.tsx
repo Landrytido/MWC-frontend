@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Note, LABEL_COLORS } from "../types";
 import { LabelList } from "../common/LabelBadge";
-import NotebookSelector from "../common/NotebookSelector";
-import LabelSelector from "../common/LabelSelector";
+import NotebookSelector from "../../features/notebooks/components/NotebookSelector";
+import LabelSelector from "../../features/labels/components/LabelSelector";
 import { useApiService } from "../services/apiService";
-import { useConfirmation } from "./useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface NoteCardProps {
   note: Note;

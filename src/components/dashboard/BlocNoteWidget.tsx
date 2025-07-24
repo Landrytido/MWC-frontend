@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useBlocNote } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
-import { useConfirmation } from "./useConfirmation";
+import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 interface BlocNoteWidgetProps {
   className?: string;

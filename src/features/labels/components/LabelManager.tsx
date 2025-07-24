@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useApp, useLabels } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
-import { useConfirmation } from "./useConfirmation";
+import React, { useState } from "react";
+import { useLabels } from "../hooks/useLabels";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { getLabelColor, getLabelColorClasses, Label } from "../types";
 
 interface LabelManagerProps {
@@ -9,9 +8,8 @@ interface LabelManagerProps {
 }
 
 const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
-  const { state, dispatch } = useApp();
-  const { labels, loading } = useLabels();
-  const api = useApiService();
+  const { labels, loading, createLabel, updateLabel, deleteLabel } =
+    useLabels();
   const [isCreating, setIsCreating] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [editingLabel, setEditingLabel] = useState<{
@@ -22,33 +20,10 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
   const [showAllLabels, setShowAllLabels] = useState(false);
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  const labelsLoadedRef = useRef(false);
-
-  useEffect(() => {
-    const shouldLoadLabels =
-      !labelsLoadedRef.current && labels.length === 0 && !loading.isLoading;
-
-    if (shouldLoadLabels) {
-      console.log("🚀 Loading labels...");
-      labelsLoadedRef.current = true;
-
-      api.labels.getAll().catch((error) => {
-        console.error("❌ Error loading labels:", error);
-        labelsLoadedRef.current = false;
-      });
-    }
-  }, []);
-
   const getLabelDisplayClasses = (labelId: string) => {
     const color = getLabelColor(labelId);
     return getLabelColorClasses(color);
   };
-
-  useEffect(() => {
-    if (labels.length > 0) {
-      labelsLoadedRef.current = true;
-    }
-  }, [labels.length]);
 
   const handleCreateLabel = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +34,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     }
 
     try {
-      await api.labels.create({ name: newLabelName.trim() });
+      await createLabel(newLabelName.trim());
       setNewLabelName("");
       setIsCreating(false);
       setError("");
@@ -75,7 +50,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     }
 
     try {
-      await api.labels.update(id, { name: name.trim() });
+      await updateLabel(id, name.trim());
       setEditingLabel(null);
       setError("");
     } catch (err) {
@@ -102,11 +77,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     if (!confirmed) return;
 
     try {
-      await api.labels.delete(id, true);
-      const updatedSelectedLabels = state.ui.selectedLabels.filter(
-        (labelId) => labelId !== id
-      );
-      dispatch({ type: "SET_SELECTED_LABELS", payload: updatedSelectedLabels });
+      await deleteLabel(id, true);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Erreur lors de la suppression"
@@ -114,21 +85,8 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     }
   };
 
-  const handleToggleLabel = (labelId: string) => {
-    const isSelected = state.ui.selectedLabels.includes(labelId);
-    const updatedLabels = isSelected
-      ? state.ui.selectedLabels.filter((id) => id !== labelId)
-      : [...state.ui.selectedLabels, labelId];
-
-    dispatch({ type: "SET_SELECTED_LABELS", payload: updatedLabels });
-  };
-
-  const handleClearFilters = () => {
-    dispatch({ type: "SET_SELECTED_LABELS", payload: [] });
-  };
   const LabelItem: React.FC<{ label: Label }> = ({ label }) => {
     const colorClasses = getLabelDisplayClasses(label.id);
-    const isSelected = state.ui.selectedLabels.includes(label.id);
 
     return (
       <div className="group relative flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50">
@@ -198,14 +156,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
           </form>
         ) : (
           <>
-            <button
-              onClick={() => handleToggleLabel(label.id)}
-              className={`flex-1 flex items-center justify-between text-left text-sm py-1 px-2 rounded transition-colors min-w-0 ${
-                isSelected
-                  ? colorClasses.default
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
+            <div className="flex-1 flex items-center justify-between text-left text-sm py-1 px-2 rounded transition-colors min-w-0 text-gray-700">
               <span className="flex items-center min-w-0 flex-1">
                 <span
                   className={`w-3 h-3 rounded-full ${colorClasses.dot} mr-2 flex-shrink-0`}
@@ -215,7 +166,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
               <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                 {label.noteCount || 0}
               </span>
-            </button>
+            </div>
 
             <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -271,48 +222,25 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Labels</h3>
-        <div className="flex space-x-2">
-          {state.ui.selectedLabels.length > 0 && (
-            <button
-              onClick={handleClearFilters}
-              className="p-1 text-gray-500 hover:text-red-500 rounded"
-              title="Effacer les filtres"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-          <button
-            onClick={() => setIsCreating(!isCreating)}
-            className="p-1 text-gray-500 hover:text-teal-500 rounded"
-            title="Créer un label"
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="p-1 text-gray-500 hover:text-teal-500 rounded"
+          title="Créer un label"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
       </div>
 
       {error && (
@@ -354,7 +282,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
       )}
 
       <div className="relative space-y-1">
-        {loading.isLoading ? (
+        {loading ? (
           <div className="p-3 text-sm text-gray-500 text-center">
             Chargement...
           </div>
@@ -364,14 +292,12 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
           </div>
         ) : (
           <>
-            {/* Affichage des 3 premiers labels */}
             <div className="space-y-1">
               {labels.slice(0, 3).map((label) => (
                 <LabelItem key={label.id} label={label} />
               ))}
             </div>
 
-            {/* Bouton pour afficher les autres labels */}
             {labels.length > 3 && (
               <div className="relative">
                 <button
@@ -415,7 +341,6 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
                   )}
                 </button>
 
-                {/* Overlay avec tous les autres labels */}
                 {showAllLabels && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
                     <div className="p-1 space-y-1">
@@ -430,14 +355,6 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
           </>
         )}
       </div>
-
-      {state.ui.selectedLabels.length > 0 && (
-        <div className="mt-4 p-2 bg-teal-50 rounded-md">
-          <p className="text-xs text-teal-700">
-            {state.ui.selectedLabels.length} label(s) sélectionné(s)
-          </p>
-        </div>
-      )}
 
       <ConfirmationComponent />
     </div>
