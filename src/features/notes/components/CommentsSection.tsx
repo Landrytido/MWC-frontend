@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useComments } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
+import { useAuth } from "../../../components/contexts/AuthContext";
+import { useComments } from "../../../components/contexts/AppContext";
+import { useApiService } from "../../../components/services/apiService";
 import CommentCard from "./CommentCard";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface CommentsSectionProps {
   noteId: number;

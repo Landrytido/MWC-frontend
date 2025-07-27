@@ -21,7 +21,7 @@ import CreateNote from "./components/pages/CreateNote";
 import EditNote from "./components/pages/EditNote";
 import CreateLink from "./components/pages/CreateLink";
 import EditLink from "./components/pages/EditLink";
-import NoteDetail from "./components/pages/NoteDetail";
+import NoteDetail from "./features/notes/components/NoteDetail";
 import CalendarPage from "./components/pages/CalendarPage";
 
 const App: React.FC = () => {

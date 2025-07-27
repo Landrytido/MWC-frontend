@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../layout/Layout";
-import NoteForm from "../forms/NoteForm";
+import NoteForm from "../../features/notes/components/NoteForm";
 import { useApiService } from "../services/apiService";
 import { CreateNoteForm } from "../types";
 

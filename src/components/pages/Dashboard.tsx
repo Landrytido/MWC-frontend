@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Layout from "../layout/Layout";
-import NoteCard from "../dashboard/NoteCard";
+import NoteCard from "../../features/notes/components/NoteCard";
 import LinkManager from "../../features/links/components/LinkManager";
 import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
-import { useApp, useNotes, useLinks } from "../contexts/AppContext";
+import { useApp } from "../contexts/AppContext";
 import { useApiService } from "../services/apiService";
 import { Note } from "../types";
 import { Task } from "../../features/tasks";
@@ -17,13 +17,29 @@ import { useConfirmation } from "../../shared/hooks/useConfirmation";
 import ToolsManager from "../dashboard/ToolsManager";
 import { useSearchParams } from "react-router-dom";
 import { tasksApi } from "../../features/tasks";
+import { linksApi } from "../../features/links";
+import { useLinks } from "../../features/links";
+import { useNotebooks } from "../../features/notebooks";
+import { useLabels } from "../../features/labels";
+import { useNotes } from "../../features/notes";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { state: authState } = useAuth();
   const { state, dispatch } = useApp();
-  const { notes, filteredNotes, loading: notesLoading } = useNotes();
+  const {
+    notes,
+    filteredNotes,
+    loading,
+    setCurrentNotebook,
+    setSelectedLabels,
+    setSearchTerm,
+  } = useNotes();
+
   const { links } = useLinks();
+  const { notebooks } = useNotebooks();
+  const { labels } = useLabels();
+
   const api = useApiService();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -43,44 +59,6 @@ const Dashboard: React.FC = () => {
     }
   }, [searchParams]);
 
-  const initializationRef = useRef(false);
-
-  useEffect(() => {
-    if (!initializationRef.current && authState.user) {
-      console.log("🚀 Initializing dashboard data...");
-      initializationRef.current = true;
-
-      const initializeData = async () => {
-        try {
-          Promise.allSettled([
-            api.notes.getAll(),
-            api.notebooks.getAll(),
-            api.labels.getAll(),
-            api.links.getAll(),
-            api.blocNote.get(),
-            api.tasks.getAll(),
-          ]).then(() => {
-            console.log("✅ Dashboard data initialized");
-          });
-        } catch (error) {
-          console.error("❌ Error initializing dashboard data:", error);
-        }
-      };
-
-      initializeData();
-    }
-  }, [
-    authState.user?.id,
-    authState.user,
-    api.notes,
-    api.tasks,
-    api.links,
-    api.notebooks,
-    api.labels,
-    api.blocNote,
-  ]);
-
-  // NOUVELLE FONCTION: Configuration de la recherche
   const getSearchConfig = (activeTab: string) => {
     switch (activeTab) {
       case "notes":
@@ -119,7 +97,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // NOUVELLE FONCTION: Recherche de tâches
+  // Recherche de tâches
   const handleTaskSearch = async (term: string) => {
     if (!term.trim()) {
       setSearchedTasks([]);
@@ -138,6 +116,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // 🔧 CORRIGÉ: Recherche de liens avec la nouvelle API
   const handleLinkSearch = async (term: string) => {
     if (!term.trim()) {
       setSearchedLinks([]);
@@ -146,7 +125,7 @@ const Dashboard: React.FC = () => {
 
     setIsSearching(true);
     try {
-      const results = await api.links.search(term);
+      const results = await linksApi.search(term);
       setSearchedLinks(results);
     } catch (error) {
       console.error("Erreur lors de la recherche de liens:", error);
@@ -200,32 +179,12 @@ const Dashboard: React.FC = () => {
     [confirm, api.notes]
   );
 
-  // FONCTION MODIFIÉE: Nettoyage des filtres
+  // Nettoyage des filtres
   const handleClearFilters = useCallback(() => {
     dispatch({ type: "CLEAR_ALL_SEARCH_TERMS" });
     setSearchedTasks([]);
     setSearchedLinks([]);
   }, [dispatch]);
-
-  if (!initializationRef.current) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-teal-500 rounded-full animate-spin mb-4"></div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                Chargement de votre tableau de bord...
-              </h2>
-              <p className="text-gray-500">
-                Nous préparons vos données, veuillez patienter.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   const searchConfig = getSearchConfig(activeTab);
 
@@ -245,8 +204,10 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 space-y-6">
             <NotebookSidebar
-              selectedNotebookId={null} // TODO: gérer la sélection
-              onNotebookSelect={(id) => console.log("Selected:", id)} // TODO: gérer la sélection
+              selectedNotebookId={state.ui.currentNotebook}
+              onNotebookSelect={(id) =>
+                dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: id })
+              }
               totalNotes={notes.length}
             />
             <LabelManager />
@@ -313,18 +274,18 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Active Filters Display - MODIFIÉ */}
+                {/* Active Filters Display */}
                 {(state.ui.currentNotebook ||
                   state.ui.selectedLabels.length > 0 ||
                   (activeTab === "tasks" && state.ui.taskSearchTerm) ||
                   (activeTab === "links" && state.ui.linkSearchTerm)) && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {/* Filtres existants pour les notes */}
+                    {/* 🔧 CORRIGÉ: Filtre carnet */}
                     {state.ui.currentNotebook && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                         📓{" "}
                         {
-                          state.notebooks.find(
+                          notebooks.find(
                             (n) => n.id === state.ui.currentNotebook
                           )?.title
                         }
@@ -354,9 +315,9 @@ const Dashboard: React.FC = () => {
                       </span>
                     )}
 
-                    {/* Labels */}
+                    {/* 🔧 CORRIGÉ: Labels */}
                     {state.ui.selectedLabels.map((labelId) => {
-                      const label = state.labels.find((l) => l.id === labelId);
+                      const label = labels.find((l) => l.id === labelId);
                       return label ? (
                         <span
                           key={labelId}
@@ -460,7 +421,7 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            {/* Tabs - MODIFIÉ pour utiliser handleTabChange */}
+            {/* Tabs */}
             <div className="flex border-b border-gray-200 mb-6">
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -515,14 +476,14 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Content - MODIFIÉ pour passer les données de recherche */}
+            {/* Content */}
             {activeTab === "notes" && (
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-gray-800">
                     {state.ui.currentNotebook
                       ? `Notes - ${
-                          state.notebooks.find(
+                          notebooks.find(
                             (n) => n.id === state.ui.currentNotebook
                           )?.title
                         }`
@@ -551,7 +512,7 @@ const Dashboard: React.FC = () => {
                   </button>
                 </div>
 
-                {notesLoading.isLoading ? (
+                {loading ? (
                   <div className="flex justify-center py-8">
                     <div className="text-gray-500">Chargement des notes...</div>
                   </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Layout from "../layout/Layout";
-import CommentsSection from "../dashboard/CommentsSection";
-import { useApiService } from "../services/apiService";
-import { Note } from "../types";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import Layout from "../../../components/layout/Layout";
+import CommentsSection from "./CommentsSection";
+import { useApiService } from "../../../components/services/apiService";
+import { Note } from "../../../components/types";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
