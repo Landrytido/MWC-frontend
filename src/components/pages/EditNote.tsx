@@ -1,54 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../layout/Layout";
-import { useApiService } from "../services/apiService";
+import { useNotes } from "../../features/notes";
 import { useConfirmation } from "../../shared/hooks/useConfirmation";
 
 const EditNote: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const api = useApiService();
+  const { notes, updateNote, deleteNote } = useNotes();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
   const { confirm, ConfirmationComponent } = useConfirmation();
 
+  const note = notes.find((n) => n.id === parseInt(id || "0"));
+
   useEffect(() => {
-    const fetchNote = async () => {
-      if (!id) return;
-
-      try {
-        const note = await api.notes.getById(parseInt(id));
-        setTitle(note.title);
-        setContent(note.content);
-      } catch (err) {
-        console.error("Erreur lors de la récupération de la note:", err);
-        setError("Impossible de récupérer la note demandée");
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    fetchNote();
-  }, [api.notes, id]);
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+    }
+  }, [note]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!id) return;
-    if (!title.trim()) {
-      setError("Le titre est requis");
-      return;
-    }
+    if (!id || !title.trim()) return;
 
     setIsLoading(true);
     setError("");
 
     try {
-      await api.notes.update(parseInt(id), { title, content });
+      await updateNote(parseInt(id), { title, content });
       navigate("/dashboard");
     } catch (err) {
       console.error("Erreur lors de la mise à jour de la note:", err);
@@ -58,12 +42,32 @@ const EditNote: React.FC = () => {
     }
   };
 
-  if (isFetching) {
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Supprimer la note",
+      message:
+        "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+
+    if (!confirmed || !id) return;
+
+    try {
+      await deleteNote(parseInt(id));
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+    }
+  };
+
+  if (!note) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center">
-            <p className="text-gray-600">Chargement de la note...</p>
+            <p className="text-gray-600">Note introuvable</p>
           </div>
         </div>
       </Layout>
@@ -116,7 +120,7 @@ const EditNote: React.FC = () => {
                   onChange={(e) => setContent(e.target.value)}
                   rows={8}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                ></textarea>
+                />
               </div>
 
               <div className="flex justify-between">
@@ -130,25 +134,7 @@ const EditNote: React.FC = () => {
                 <div className="space-x-3">
                   <button
                     type="button"
-                    onClick={async () => {
-                      const confirmed = await confirm({
-                        title: "Supprimer la note",
-                        message:
-                          "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
-                        confirmText: "Supprimer",
-                        cancelText: "Annuler",
-                        variant: "danger",
-                      });
-
-                      if (!confirmed) return;
-
-                      try {
-                        api.notes.delete(parseInt(id || "0"));
-                        navigate("/dashboard");
-                      } catch (error) {
-                        console.error("Erreur lors de la suppression:", error);
-                      }
-                    }}
+                    onClick={handleDelete}
                     className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
                   >
                     Supprimer

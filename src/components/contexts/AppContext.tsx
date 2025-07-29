@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
-import { Note, BlocNote, User, LoadingState, Comment } from "../types";
+import { BlocNote, User, LoadingState } from "../types";
 import { Notebook } from "../../features/notebooks";
 import { Label } from "../../features/labels";
 import { SavedLink, LinkGroup } from "../../features/links";
@@ -7,24 +7,20 @@ import { Task } from "../../features/tasks";
 
 interface AppState {
   user: User | null;
-  notes: Note[];
   notebooks: Notebook[];
   labels: Label[];
   links: SavedLink[];
   linkGroups: LinkGroup[];
   tasks: Task[];
   blocNote: BlocNote | null;
-  comments: Comment[];
 
   loadingStates: {
-    notes: LoadingState;
     notebooks: LoadingState;
     labels: LoadingState;
     links: LoadingState;
     tasks: LoadingState;
     dailyTasks: LoadingState;
     blocNote: LoadingState;
-    comments: LoadingState;
   };
   ui: {
     sidebarCollapsed: boolean;
@@ -35,12 +31,9 @@ interface AppState {
     linkSearchTerm: string;
   };
 }
+
 type AppAction =
   | { type: "SET_USER"; payload: User | null }
-  | { type: "SET_NOTES"; payload: Note[] }
-  | { type: "ADD_NOTE"; payload: Note }
-  | { type: "UPDATE_NOTE"; payload: { id: number; note: Partial<Note> } }
-  | { type: "DELETE_NOTE"; payload: number }
   | { type: "SET_NOTEBOOKS"; payload: Notebook[] }
   | { type: "ADD_NOTEBOOK"; payload: Notebook }
   | {
@@ -82,39 +75,24 @@ type AppAction =
   | { type: "SET_CURRENT_NOTEBOOK"; payload: number | null }
   | { type: "SET_SELECTED_LABELS"; payload: string[] }
   | { type: "SET_SEARCH_TERM"; payload: string }
-  | { type: "RESET_FILTERS" }
-  | { type: "SET_COMMENTS"; payload: Comment[] }
-  | { type: "ADD_COMMENT"; payload: Comment }
-  | {
-      type: "UPDATE_COMMENT";
-      payload: { id: number; comment: Partial<Comment> };
-    }
-  | { type: "DELETE_COMMENT"; payload: number }
-  | {
-      type: "SET_NOTE_COMMENTS";
-      payload: { noteId: number; comments: Comment[] };
-    };
+  | { type: "RESET_FILTERS" };
 
 const initialState: AppState = {
   user: null,
-  notes: [],
   notebooks: [],
   labels: [],
   links: [],
   linkGroups: [],
   tasks: [],
   blocNote: null,
-  comments: [],
 
   loadingStates: {
-    notes: { isLoading: false },
     notebooks: { isLoading: false },
     labels: { isLoading: false },
     links: { isLoading: false },
     tasks: { isLoading: false },
     dailyTasks: { isLoading: false },
     blocNote: { isLoading: false },
-    comments: { isLoading: false },
   },
 
   ui: {
@@ -131,28 +109,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case "SET_USER":
       return { ...state, user: action.payload };
-
-    case "SET_NOTES":
-      return { ...state, notes: action.payload };
-
-    case "ADD_NOTE":
-      return { ...state, notes: [action.payload, ...state.notes] };
-
-    case "UPDATE_NOTE":
-      return {
-        ...state,
-        notes: state.notes.map((note) =>
-          note.id === action.payload.id
-            ? { ...note, ...action.payload.note }
-            : note
-        ),
-      };
-
-    case "DELETE_NOTE":
-      return {
-        ...state,
-        notes: state.notes.filter((note) => note.id !== action.payload),
-      };
 
     case "SET_NOTEBOOKS":
       return { ...state, notebooks: action.payload };
@@ -335,51 +291,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         },
       };
 
-    case "SET_COMMENTS":
-      return { ...state, comments: action.payload };
-
-    case "ADD_COMMENT":
-      return {
-        ...state,
-        comments: [action.payload, ...state.comments],
-        notes: state.notes.map((note) =>
-          note.id === action.payload.noteId
-            ? { ...note, commentCount: (note.commentCount || 0) + 1 }
-            : note
-        ),
-      };
-
-    case "UPDATE_COMMENT":
-      return {
-        ...state,
-        comments: state.comments.map((comment) =>
-          comment.id === action.payload.id
-            ? { ...comment, ...action.payload.comment }
-            : comment
-        ),
-      };
-
-    case "DELETE_COMMENT": {
-      const deletedComment = state.comments.find(
-        (c) => c.id === action.payload
-      );
-      return {
-        ...state,
-        comments: state.comments.filter(
-          (comment) => comment.id !== action.payload
-        ),
-        notes: deletedComment
-          ? state.notes.map((note) =>
-              note.id === deletedComment.noteId
-                ? {
-                    ...note,
-                    commentCount: Math.max((note.commentCount || 0) - 1, 0),
-                  }
-                : note
-            )
-          : state.notes,
-      };
-    }
     case "SET_TASK_SEARCH_TERM":
       return {
         ...state,
@@ -401,15 +312,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
           taskSearchTerm: "",
           linkSearchTerm: "",
         },
-      };
-
-    case "SET_NOTE_COMMENTS":
-      return {
-        ...state,
-        comments: [
-          ...state.comments.filter((c) => c.noteId !== action.payload.noteId),
-          ...action.payload.comments,
-        ],
       };
 
     default:
@@ -445,30 +347,6 @@ export const useApp = () => {
     throw new Error("useApp must be used within an AppProvider");
   }
   return context;
-};
-
-export const useNotes = () => {
-  const { state } = useApp();
-  return {
-    notes: state.notes,
-    filteredNotes: state.notes.filter((note) => {
-      const matchesNotebook =
-        !state.ui.currentNotebook ||
-        note.notebookId === state.ui.currentNotebook;
-      const matchesSearch =
-        !state.ui.searchTerm ||
-        note.title.toLowerCase().includes(state.ui.searchTerm.toLowerCase()) ||
-        note.content.toLowerCase().includes(state.ui.searchTerm.toLowerCase());
-      const matchesLabels =
-        state.ui.selectedLabels.length === 0 ||
-        state.ui.selectedLabels.some((labelId) =>
-          note.labels?.some((label) => label.id === labelId)
-        );
-
-      return matchesNotebook && matchesSearch && matchesLabels;
-    }),
-    loading: state.loadingStates.notes,
-  };
 };
 
 export const useNotebooks = () => {
@@ -521,15 +399,6 @@ export const useBlocNote = () => {
 export const useUI = () => {
   const { state } = useApp();
   return state.ui;
-};
-export const useComments = () => {
-  const { state } = useApp();
-  return {
-    comments: state.comments,
-    loading: state.loadingStates.comments,
-    getCommentsByNoteId: (noteId: number) =>
-      state.comments.filter((comment) => comment.noteId === noteId),
-  };
 };
 
 export type { AppState };

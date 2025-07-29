@@ -281,7 +281,6 @@ export const useNotes = (): UseNotesReturn => {
     getRecentNotes,
     toggleFavorite,
 
-    // Filtres locaux
     filteredNotes,
     setCurrentNotebook,
     setSelectedLabels,

@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../layout/Layout";
 import NoteForm from "../../features/notes/components/NoteForm";
-import { useApiService } from "../services/apiService";
-import { CreateNoteForm } from "../types";
+import { CreateNoteForm } from "../../features/notes/types";
+import { useNotes } from "../../features/notes";
 
 const CreateNote: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const api = useApiService();
+  const { createNote } = useNotes();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +21,7 @@ const CreateNote: React.FC = () => {
     setError("");
 
     try {
-      await api.notes.create(noteData);
+      await createNote(noteData);
       navigate("/dashboard");
     } catch (err) {
       console.error("Erreur lors de la création de la note:", err);
@@ -43,7 +43,6 @@ const CreateNote: React.FC = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Breadcrumb */}
           <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
             <button
               onClick={() => navigate("/dashboard")}

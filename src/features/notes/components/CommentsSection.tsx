@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../components/contexts/AuthContext";
-import { useComments } from "../../../components/contexts/AppContext";
-import { useApiService } from "../../../components/services/apiService";
+import { useComments } from "../hooks/useComments";
 import CommentCard from "./CommentCard";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
@@ -15,18 +14,23 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   className = "",
 }) => {
   const { state } = useAuth();
-  const { getCommentsByNoteId, loading } = useComments();
-  const api = useApiService();
+  const {
+    comments,
+    loading,
+    createComment,
+    updateComment,
+    deleteComment,
+    loadCommentsForNote,
+  } = useComments(noteId);
 
   const [newComment, setNewComment] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { confirm } = useConfirmation();
-  const comments = getCommentsByNoteId(noteId);
 
   useEffect(() => {
-    api.comments.getByNoteId(noteId);
-  }, [noteId]);
+    loadCommentsForNote(noteId);
+  }, [noteId, loadCommentsForNote]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +44,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
     setError("");
 
     try {
-      await api.comments.create(noteId, newComment.trim());
+      await createComment(noteId, newComment.trim());
       setNewComment("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -52,12 +56,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const handleEdit = useCallback(
     async (commentId: number, content: string) => {
       try {
-        await api.comments.update(commentId, content);
+        await updateComment(commentId, content);
       } catch (error) {
         console.error("Error updating comment:", error);
       }
     },
-    [api.comments]
+    [updateComment]
   );
 
   const handleDelete = useCallback(
@@ -74,12 +78,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
       if (!confirmed) return;
 
       try {
-        await api.comments.delete(commentId);
+        await deleteComment(commentId);
       } catch (error) {
         console.error("Error deleting comment:", error);
       }
     },
-    [confirm, api.comments]
+    [confirm, deleteComment]
   );
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -143,7 +147,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
       </div>
 
       <div className="space-y-4">
-        {loading.isLoading ? (
+        {loading ? (
           <div className="text-center py-4">
             <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
             <p className="mt-2 text-sm text-gray-500">

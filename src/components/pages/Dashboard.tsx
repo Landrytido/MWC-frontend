@@ -8,7 +8,6 @@ import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
 import { Note } from "../types";
 import { Task } from "../../features/tasks";
 import { SavedLink } from "../../features/links";
@@ -34,13 +33,13 @@ const Dashboard: React.FC = () => {
     setCurrentNotebook,
     setSelectedLabels,
     setSearchTerm,
+    deleteNote,
   } = useNotes();
 
   const { links } = useLinks();
   const { notebooks } = useNotebooks();
   const { labels } = useLabels();
 
-  const api = useApiService();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [searchParams] = useSearchParams();
@@ -171,15 +170,14 @@ const Dashboard: React.FC = () => {
       if (!confirmed) return;
 
       try {
-        await api.notes.delete(id);
+        await deleteNote(id);
       } catch (error) {
         console.error("Error deleting note:", error);
       }
     },
-    [confirm, api.notes]
+    [confirm, deleteNote]
   );
 
-  // Nettoyage des filtres
   const handleClearFilters = useCallback(() => {
     dispatch({ type: "CLEAR_ALL_SEARCH_TERMS" });
     setSearchedTasks([]);
@@ -191,7 +189,6 @@ const Dashboard: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800">
             Bonjour, {authState.user?.firstName || "utilisateur"} 👋
