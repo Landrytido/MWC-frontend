@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../../../components/contexts/AuthContext";
+import { useAuth } from "../../auth";
 import { Comment } from "../types";
 
 interface CommentCardProps {

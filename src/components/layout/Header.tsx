@@ -27,7 +27,6 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
           <div className="flex items-center">
             <Link
               to={state.isAuthenticated ? "/dashboard" : "/"}
@@ -37,7 +36,6 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link
               to={state.isAuthenticated ? "/dashboard" : "/"}
@@ -122,7 +120,6 @@ const Header: React.FC = () => {
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-gray-500 focus:outline-none"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -152,7 +149,6 @@ const Header: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 space-y-3">
             <Link

@@ -6,7 +6,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AppProvider } from "./components/contexts/AppContext";
-import { useAuth } from "./features/auth";
 import { ProtectedRoute } from "./features/auth";
 import Home from "./components/pages/Home";
 import SignUp from "./components/pages/SignUp";

@@ -1,4 +1,3 @@
-// features/auth/hooks/useAuth.ts
 import { useState, useEffect, useCallback } from "react";
 import { authService } from "../services/authService";
 import { User, LoginRequest, RegisterRequest, AuthState } from "../types";

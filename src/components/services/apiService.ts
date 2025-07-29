@@ -148,24 +148,8 @@ export const useApiService = () => {
 
   const commentsApi = useMemo(
     () => ({
-      getByNoteId: async (noteId: number) => {
-        setLoading("comments", true);
-        try {
-          const comments = await fetchWithAuth(`/comments/note/${noteId}`);
-          dispatch({
-            type: "SET_NOTE_COMMENTS",
-            payload: { noteId, comments },
-          });
-          setLoading("comments", false);
-          return comments;
-        } catch (error) {
-          setLoading(
-            "comments",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
+      getByNoteId: async (noteId: number): Promise<Comment[]> => {
+        return await fetchWithAuth(`/comments/note/${noteId}`);
       },
 
       getMy: async (): Promise<Comment[]> => {
@@ -173,29 +157,32 @@ export const useApiService = () => {
       },
 
       create: async (noteId: number, content: string): Promise<Comment> => {
-        const created = await fetchWithAuth(`/comments/note/${noteId}`, {
+        return await fetchWithAuth(`/comments/note/${noteId}`, {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ content }),
         });
-        dispatch({ type: "ADD_COMMENT", payload: created });
-        return created;
       },
 
       update: async (id: number, content: string): Promise<Comment> => {
-        const updated = await fetchWithAuth(`/comments/${id}`, {
+        return await fetchWithAuth(`/comments/${id}`, {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ content }),
         });
-        dispatch({ type: "UPDATE_COMMENT", payload: { id, comment: updated } });
-        return updated;
       },
 
       delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/comments/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_COMMENT", payload: id });
+        await fetchWithAuth(`/comments/${id}`, {
+          method: "DELETE",
+        });
       },
     }),
-    [fetchWithAuth, setLoading, dispatch]
+    [fetchWithAuth]
   );
 
   const blocNoteApi = useMemo(
@@ -236,7 +223,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ CALENDAR API - Pas encore migré en feature
   const calendarApi = useMemo(
     () => ({
       getMonthView: async (
@@ -318,7 +304,6 @@ export const useApiService = () => {
     [fetchWithAuth, dispatch]
   );
 
-  // ✅ FILES API - Pas encore migré en feature
   const filesApi = useMemo(
     () => ({
       getAll: async (): Promise<FileInfo[]> => {

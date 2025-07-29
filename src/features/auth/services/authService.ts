@@ -1,4 +1,3 @@
-// features/auth/services/authService.ts
 import { LoginRequest, RegisterRequest, AuthResponse, User } from "../types";
 
 const API_BASE_URL =

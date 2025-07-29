@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../../components/contexts/AuthContext";
+import { useAuth } from "../../auth";
 import { useComments } from "../hooks/useComments";
 import CommentCard from "./CommentCard";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";

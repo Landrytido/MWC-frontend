@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../features/auth";
 import Layout from "../layout/Layout";
 import NoteCard from "../../features/notes/components/NoteCard";
 import LinkManager from "../../features/links/components/LinkManager";
@@ -26,15 +26,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { state: authState } = useAuth();
   const { state, dispatch } = useApp();
-  const {
-    notes,
-    filteredNotes,
-    loading,
-    setCurrentNotebook,
-    setSelectedLabels,
-    setSearchTerm,
-    deleteNote,
-  } = useNotes();
+  const { notes, filteredNotes, loading, deleteNote } = useNotes();
 
   const { links } = useLinks();
   const { notebooks } = useNotebooks();
