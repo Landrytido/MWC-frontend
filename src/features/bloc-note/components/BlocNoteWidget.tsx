@@ -1,80 +1,38 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useBlocNote } from "../contexts/AppContext";
-import { useApiService } from "../services/apiService";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import { useBlocNote } from "../hooks/useBlocNote";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface BlocNoteWidgetProps {
   className?: string;
 }
 
 const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
-  const { blocNote, loading } = useBlocNote();
-  const api = useApiService();
-  const [content, setContent] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<
-    "saved" | "saving" | "unsaved" | null
-  >(null);
-
-  const loadedRef = useRef(false);
-  const autoSaveTimeoutRef = useRef<number | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const {
+    blocNote,
+    loading,
+    error,
+    saveStatus,
+    updateBlocNote,
+    deleteBlocNote,
+    autoSave,
+  } = useBlocNote();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  useEffect(() => {
-    if (!loadedRef.current && !blocNote && !loading.isLoading) {
-      console.log("🚀 Loading bloc note...");
-      loadedRef.current = true;
-      api.blocNote.get().catch((error) => {
-        console.error("❌ Error loading bloc note:", error);
-        loadedRef.current = false;
-      });
-    }
-  }, [loading.isLoading]);
+  const [content, setContent] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Sync content with blocNote
   useEffect(() => {
     if (blocNote) {
       setContent(blocNote.content);
     }
   }, [blocNote]);
-
-  const autoSave = useCallback(
-    async (newContent: string) => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-
-      if (newContent === (blocNote?.content || "")) {
-        setSaveStatus(null);
-        return;
-      }
-
-      setSaveStatus("unsaved");
-
-      autoSaveTimeoutRef.current = setTimeout(async () => {
-        if (newContent.trim() === "" && !blocNote?.content) return;
-
-        setSaveStatus("saving");
-        setIsSaving(true);
-
-        try {
-          await api.blocNote.update(newContent);
-          setSaveStatus("saved");
-          setTimeout(() => setSaveStatus(null), 2000); // Cache l'indicateur après 2s
-        } catch (err) {
-          setSaveStatus(null);
-          setError(err instanceof Error ? err.message : "Erreur de sauvegarde");
-        } finally {
-          setIsSaving(false);
-        }
-      }, 2000); // 2 secondes de délai
-    },
-    [api.blocNote, blocNote?.content]
-  );
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -84,35 +42,23 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   };
 
   const handleSave = useCallback(async () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
     setIsSaving(true);
-    setError("");
-    setSaveStatus("saving");
+    setLocalError("");
 
     try {
-      await api.blocNote.update(content);
+      await updateBlocNote(content);
       setIsEditing(false);
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-      setSaveStatus(null);
+      setLocalError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsSaving(false);
     }
-  }, [content, api.blocNote]);
+  }, [content, updateBlocNote]);
 
   const handleCancel = useCallback(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
     setContent(blocNote?.content || "");
     setIsEditing(false);
-    setError("");
-    setSaveStatus(null);
+    setLocalError("");
   }, [blocNote]);
 
   const handleDelete = useCallback(async () => {
@@ -128,16 +74,15 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     if (!confirmed) return;
 
     try {
-      await api.blocNote.delete();
+      await deleteBlocNote();
       setContent("");
       setIsEditing(false);
-      setSaveStatus(null);
     } catch (err) {
-      setError(
+      setLocalError(
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
     }
-  }, [confirm, api.blocNote]);
+  }, [confirm, deleteBlocNote]);
 
   const isEmpty = !content.trim();
 
@@ -225,9 +170,9 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
               </div>
             </div>
 
-            {error && (
+            {(error || localError) && (
               <div className="mx-4 mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">
-                {error}
+                {error || localError}
               </div>
             )}
 
@@ -262,7 +207,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     );
   };
 
-  if (!loadedRef.current && loading.isLoading) {
+  if (loading) {
     return (
       <div
         className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
@@ -407,9 +352,9 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
           </div>
         </div>
 
-        {error && (
+        {(error || localError) && (
           <div className="mb-3 p-2 bg-red-50 text-red-700 text-sm rounded-md">
-            {error}
+            {error || localError}
           </div>
         )}
 

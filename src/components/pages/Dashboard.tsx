@@ -6,7 +6,7 @@ import NoteCard from "../../features/notes/components/NoteCard";
 import LinkManager from "../../features/links/components/LinkManager";
 import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
-import BlocNoteWidget from "../dashboard/BlocNoteWidget";
+import { BlocNoteWidget } from "../../features/bloc-note";
 import { useApp } from "../contexts/AppContext";
 import { Task } from "../../features/tasks";
 import { SavedLink } from "../../features/links";
