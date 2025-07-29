@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useApiService } from "../services/apiService";
+import { useApiService } from "../../../components/services/apiService";
 import {
   CalendarViewDto,
   EventDto,
   formatEventTime,
   getEventColor,
-} from "../types/calendar";
-import { Task } from "../types";
+} from "../types";
+import { Task } from "../../../components/types";
 
 interface DayDetailModalProps {
   isOpen: boolean;

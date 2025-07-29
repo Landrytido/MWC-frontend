@@ -4,8 +4,8 @@ import {
   EventDto,
   getEventColor,
   formatEventTime,
-} from "../types/calendar";
-import { useCalendar } from "../contexts/CalendarContext";
+} from "../types";
+import { useCalendar } from "../CalendarContext";
 
 interface CalendarGridProps {
   monthData: CalendarViewDto[];
@@ -13,7 +13,6 @@ interface CalendarGridProps {
   onEventClick: (event: EventDto) => void;
 }
 
-// Interface pour les éléments mappés (tâches converties)
 interface MappedTaskItem extends EventDto {
   priority?: number;
   relatedTaskId: number;
@@ -26,13 +25,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 }) => {
   const { state } = useCalendar();
 
-  // Fonction utilitaire pour créer une date sans décalage timezone
   const createLocalDate = (
     year: number,
     month: number,
     day: number
   ): string => {
-    // Force midi pour éviter les décalages timezone
     const date = new Date(year, month, day, 12, 0, 0);
     return date.toISOString().split("T")[0];
   };
@@ -40,7 +37,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   const createCalendarGrid = () => {
     if (monthData.length === 0) return [];
 
-    // Force l'heure à midi pour éviter les problèmes de timezone
     const firstDate = new Date(monthData[0].date + "T12:00:00");
     const year = firstDate.getFullYear();
     const month = firstDate.getMonth();
@@ -52,7 +48,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
     const days = [];
 
-    // Jours du mois précédent
     for (let i = adjustedStartDay - 1; i >= 0; i--) {
       const date = new Date(year, month, -i);
       const dateString = date.toISOString().split("T")[0];
@@ -63,7 +58,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       });
     }
 
-    // Jours du mois actuel - utilise createLocalDate pour éviter les décalages
     for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
       const dateString = createLocalDate(year, month, day);
       days.push({
@@ -73,7 +67,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       });
     }
 
-    // Jours du mois suivant
     const totalCells = 42;
     const remainingCells = totalCells - days.length;
     for (let day = 1; day <= remainingCells; day++) {
@@ -155,7 +148,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-      {/* En-têtes des jours de la semaine */}
       <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
         {dayNames.map((day) => (
           <div
@@ -167,7 +159,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         ))}
       </div>
 
-      {/* Grille des jours du calendrier */}
       <div className="grid grid-cols-7 gap-0">
         {calendarDays.map((day, index) => {
           const dayData = getDayData(day.date);

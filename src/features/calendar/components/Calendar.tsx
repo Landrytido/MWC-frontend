@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useApiService } from "../services/apiService";
+import { useApiService } from "../../../components/services/apiService";
 import {
   useCalendar,
   useCalendarNavigation,
   useMonthViewData,
-} from "../contexts/CalendarContext";
+} from "../CalendarContext";
+
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
-import { CreateEventRequest, EventDto } from "../types/calendar";
-import { CreateTaskForm } from "../../features/tasks";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import { CreateEventRequest, EventDto } from "../types";
+import { CreateTaskForm } from "../../tasks";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface CalendarProps {
   className?: string;

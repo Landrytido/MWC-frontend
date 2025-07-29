@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  useCalendar,
-  useCalendarNavigation,
-} from "../contexts/CalendarContext";
+import { useCalendar, useCalendarNavigation } from "../CalendarContext";
 
 const CalendarHeader: React.FC = () => {
   const { state, dispatch } = useCalendar();

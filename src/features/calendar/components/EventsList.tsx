@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { EventDto, formatEventTime, getEventColor } from "../types/calendar";
+import { EventDto, formatEventTime, getEventColor } from "../types";
 
 interface EventsListProps {
   events: EventDto[];

@@ -5,12 +5,8 @@ import {
   EventMode,
   REMINDER_OPTIONS,
   EVENT_MODE_LABELS,
-} from "../types/calendar";
-import {
-  TaskPriority,
-  PRIORITY_LABELS,
-  CreateTaskForm,
-} from "../../features/tasks";
+} from "../types";
+import { TaskPriority, PRIORITY_LABELS, CreateTaskForm } from "../../tasks";
 
 interface EventModalProps {
   isOpen: boolean;
