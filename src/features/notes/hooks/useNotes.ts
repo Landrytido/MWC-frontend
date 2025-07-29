@@ -12,21 +12,24 @@ interface UseNotesReturn {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+
   createNote: (note: CreateNoteForm) => Promise<Note>;
   updateNote: (id: number, note: UpdateNoteForm) => Promise<Note>;
   deleteNote: (id: number) => Promise<void>;
+
   moveToNotebook: (id: number, notebookId: number | null) => Promise<Note>;
   addLabel: (noteId: number, labelId: string) => Promise<Note>;
   removeLabel: (noteId: number, labelId: string) => Promise<Note>;
   batchAddLabels: (noteId: number, labelIds: string[]) => Promise<Note>;
   batchRemoveLabels: (noteId: number, labelIds: string[]) => Promise<Note>;
+
   searchNotes: (
     params: NotesSearchParams
   ) => Promise<{ notes: Note[]; total?: number }>;
   getRecentNotes: (limit?: number) => Promise<Note[]>;
   toggleFavorite: (noteId: number) => Promise<Note>;
+  getNoteById: (id: number) => Note | undefined;
 
-  // Filtres locaux (pour compatibilité avec l'ancien système)
   filteredNotes: Note[];
   setCurrentNotebook: (notebookId: number | null) => void;
   setSelectedLabels: (labelIds: string[]) => void;
@@ -41,12 +44,10 @@ export const useNotes = (): UseNotesReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtres locaux (pour remplacer AppContext)
   const [currentNotebook, setCurrentNotebook] = useState<number | null>(null);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Notes filtrées (logique extraite d'AppContext)
   const filteredNotes = notes.filter((note) => {
     const matchesNotebook =
       !currentNotebook || note.notebookId === currentNotebook;
@@ -260,6 +261,13 @@ export const useNotes = (): UseNotesReturn => {
     }
   }, []);
 
+  const getNoteById = useCallback(
+    (id: number): Note | undefined => {
+      return notes.find((note) => note.id === id);
+    },
+    [notes]
+  );
+
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
@@ -269,17 +277,21 @@ export const useNotes = (): UseNotesReturn => {
     loading,
     error,
     refetch: fetchNotes,
+
     createNote,
     updateNote,
     deleteNote,
+
     moveToNotebook,
     addLabel,
     removeLabel,
     batchAddLabels,
     batchRemoveLabels,
+
     searchNotes,
     getRecentNotes,
     toggleFavorite,
+    getNoteById,
 
     filteredNotes,
     setCurrentNotebook,

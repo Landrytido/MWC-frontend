@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Note } from "../../../components/types";
+import { Note } from "../types";
 import { LABEL_COLORS } from "../../labels";
 import { LabelList } from "../../labels";
 import NotebookSelector from "../../notebooks/components/NotebookSelector";
 import LabelSelector from "../../labels/components/LabelSelector";
-import { useApiService } from "../../../components/services/apiService";
+import { useNotes } from "../hooks/useNotes";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface NoteCardProps {
@@ -24,7 +24,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   showActions = true,
   variant = "default",
 }) => {
-  const api = useApiService();
+  const { moveToNotebook, addLabel, removeLabel } = useNotes();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [isEditingNotebook, setIsEditingNotebook] = useState(false);
@@ -42,7 +42,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const handleNotebookChange = async (notebookId: number | null) => {
     setIsLoading(true);
     try {
-      await api.notes.moveToNotebook(note.id, notebookId);
+      await moveToNotebook(note.id, notebookId);
       setIsEditingNotebook(false);
     } catch (error) {
       console.error("Erreur lors du déplacement de la note:", error);
@@ -58,7 +58,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
     setIsLoading(true);
     try {
       for (const labelId of newLabelIds) {
-        await api.notes.addLabel(note.id, labelId);
+        await addLabel(note.id, labelId);
       }
       setIsEditingLabels(false);
     } catch (error) {
@@ -81,7 +81,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
     setIsLoading(true);
     try {
-      await api.notes.removeLabel(note.id, labelId);
+      await removeLabel(note.id, labelId);
     } catch (error) {
       console.error("Erreur lors de la suppression du label:", error);
     } finally {
@@ -90,86 +90,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   };
 
   const renderCompactCard = () => (
-    <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow group">
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <h3
-            className="font-medium text-gray-900 truncate cursor-pointer hover:text-teal-500 transition-colors"
-            onClick={() => onView?.(note)}
-            title={note.title}
-          >
-            {note.title}
-          </h3>
-
-          <div className="mt-1 flex items-center space-x-2 text-xs text-gray-500">
-            {note.notebookTitle && (
-              <span className="flex items-center">
-                <span className="mr-1">📓</span>
-                {note.notebookTitle}
-              </span>
-            )}
-            <span>•</span>
-            <span>{formattedDate}</span>
-          </div>
-
-          {note.labels && note.labels.length > 0 && (
-            <div className="mt-2">
-              <LabelList
-                labels={note.labels}
-                removable={true}
-                onRemove={handleLabelRemove}
-                size="sm"
-                maxDisplay={3}
-                spacing="tight"
-              />
-            </div>
-          )}
-        </div>
-
-        {showActions && (
-          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-3">
-            <button
-              onClick={() => onEdit(note)}
-              className="p-1 text-gray-400 hover:text-teal-500 rounded"
-              title="Modifier"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(note.id)}
-              className="p-1 text-gray-400 hover:text-red-500 rounded"
-              title="Supprimer"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+    <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow group"></div>
   );
 
   const renderDefaultCard = () => (
@@ -381,6 +302,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       <ConfirmationComponent />
     </div>
   );
+
   if (variant === "compact") {
     return renderCompactCard();
   }

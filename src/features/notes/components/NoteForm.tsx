@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
-import {
-  useNotebooks,
-  useLabels,
-} from "../../../components/contexts/AppContext";
-import { useApiService } from "../../../components/services/apiService";
+import { useLabels } from "../../../components/contexts/AppContext";
 import { NotebookSelector } from "../../notebooks";
 import { LabelSelector } from "../../labels";
-import { Note, CreateNoteForm } from "../../../components/types";
+import { Note, CreateNoteForm } from "../types";
 import { Notebook } from "../../notebooks";
+import { useNotebooks } from "../../notebooks";
 
 interface NoteFormProps {
-  note?: Note; // Pour l'édition
+  note?: Note;
   onSubmit: (noteData: CreateNoteForm) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -30,7 +27,6 @@ const NoteForm: React.FC<NoteFormProps> = ({
 }) => {
   const { notebooks } = useNotebooks();
   const { labels } = useLabels();
-  const api = useApiService();
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -43,7 +39,7 @@ const NoteForm: React.FC<NoteFormProps> = ({
     notebookId: note?.notebookId || defaultNotebookId,
     labelIds: note?.labels?.map((l) => l.id) || defaultLabelIds,
   });
-
+  const { createNotebook } = useNotebooks();
   const [previewMode, setPreviewMode] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   useEffect(() => {
@@ -80,7 +76,7 @@ const NoteForm: React.FC<NoteFormProps> = ({
   };
 
   const handleNotebookCreate = async (title: string): Promise<Notebook> => {
-    return await api.notebooks.create({ title });
+    return await createNotebook(title);
   };
 
   const handleCancel = () => {

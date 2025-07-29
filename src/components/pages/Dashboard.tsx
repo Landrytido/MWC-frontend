@@ -8,7 +8,6 @@ import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
 import BlocNoteWidget from "../dashboard/BlocNoteWidget";
 import { useApp } from "../contexts/AppContext";
-import { Note } from "../types";
 import { Task } from "../../features/tasks";
 import { SavedLink } from "../../features/links";
 import { TaskManager } from "../../features/tasks";
@@ -21,6 +20,7 @@ import { useLinks } from "../../features/links";
 import { useNotebooks } from "../../features/notebooks";
 import { useLabels } from "../../features/labels";
 import { useNotes } from "../../features/notes";
+import { Note } from "../../features/notes/types";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();

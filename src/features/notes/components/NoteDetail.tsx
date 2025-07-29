@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../../components/layout/Layout";
 import CommentsSection from "./CommentsSection";
-import { useApiService } from "../../../components/services/apiService";
-import { Note } from "../../../components/types";
+import { useNotes } from "../hooks/useNotes";
+import { Note } from "../types";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const api = useApiService();
+
+  const { notes, deleteNote, getNoteById } = useNotes();
   const { confirm } = useConfirmation();
 
   const [note, setNote] = useState<Note | null>(null);
@@ -17,23 +18,24 @@ const NoteDetail: React.FC = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchNote = async () => {
-      if (!id) return;
+    if (!id) {
+      setError("ID de note manquant");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        setIsLoading(true);
-        const noteData = await api.notes.getById(parseInt(id));
-        setNote(noteData);
-      } catch (err) {
-        console.error("Erreur lors de la récupération de la note:", err);
-        setError("Impossible de charger cette note");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const noteId = parseInt(id);
+    const foundNote = getNoteById(noteId);
 
-    fetchNote();
-  }, [id, api.notes]);
+    if (foundNote) {
+      setNote(foundNote);
+      setError("");
+    } else {
+      setError("Note introuvable");
+    }
+
+    setIsLoading(false);
+  }, [id, getNoteById, notes]);
 
   const handleEdit = () => {
     if (note) {
@@ -56,7 +58,7 @@ const NoteDetail: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      await api.notes.delete(note.id);
+      await deleteNote(note.id);
       navigate("/dashboard");
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
@@ -105,7 +107,6 @@ const NoteDetail: React.FC = () => {
     <Layout>
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          {/* Header avec actions */}
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate("/dashboard")}
@@ -169,9 +170,7 @@ const NoteDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Contenu de la note */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            {/* Métadonnées */}
             <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
               <div className="flex items-center space-x-4">
                 {note.notebookTitle && (
@@ -204,7 +203,6 @@ const NoteDetail: React.FC = () => {
                 </span>
               </div>
 
-              {/* Statistiques */}
               <div className="flex items-center space-x-4">
                 {(note.commentCount ?? 0) > 0 && (
                   <span className="flex items-center">
@@ -227,12 +225,10 @@ const NoteDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Titre */}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {note.title}
             </h1>
 
-            {/* Labels */}
             {note.labels && note.labels.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {note.labels.map((label) => (
@@ -247,7 +243,6 @@ const NoteDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Contenu */}
             <div className="prose max-w-none">
               <div className="text-gray-800 whitespace-pre-wrap leading-relaxed">
                 {note.content}
@@ -255,9 +250,7 @@ const NoteDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Section des commentaires */}
           <div className="space-y-6">
-            {/* Section des commentaires */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <CommentsSection noteId={note.id} />
             </div>

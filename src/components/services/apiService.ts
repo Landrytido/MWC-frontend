@@ -3,15 +3,13 @@ import { useApp, AppState } from "../contexts/AppContext";
 import { useCallback, useMemo } from "react";
 import { authService } from "./authService";
 import {
-  Note,
   BlocNote,
-  CreateNoteForm,
-  Comment,
   FileInfo,
   FileUploadResponse,
   FileStatistics,
   User,
 } from "../types";
+import { Comment } from "../../features/notes/types";
 import {
   CalendarViewDto,
   EventDto,
@@ -122,193 +120,6 @@ export const useApiService = () => {
     [dispatch]
   );
 
-  // ✅ NOTES API - Pas encore migré en feature
-  const notesApi = useMemo(
-    () => ({
-      getAll: async (): Promise<Note[]> => {
-        setLoading("notes", true);
-        try {
-          const notes = await fetchWithAuth("/notes");
-          dispatch({ type: "SET_NOTES", payload: notes });
-          setLoading("notes", false);
-          return notes;
-        } catch (error) {
-          setLoading(
-            "notes",
-            false,
-            error instanceof Error ? error.message : "Erreur inconnue"
-          );
-          throw error;
-        }
-      },
-
-      getById: async (id: number): Promise<Note> => {
-        return await fetchWithAuth(`/notes/${id}`);
-      },
-
-      getByNotebook: async (notebookId: number): Promise<Note[]> => {
-        return await fetchWithAuth(`/notes/notebooks/${notebookId}/notes`);
-      },
-
-      create: async (note: CreateNoteForm): Promise<Note> => {
-        const cleanedNote = {
-          ...note,
-          notebookId: note.notebookId || undefined,
-        };
-
-        const created = await fetchWithAuth("/notes", {
-          method: "POST",
-          body: JSON.stringify(cleanedNote),
-        });
-        dispatch({ type: "ADD_NOTE", payload: created });
-        return created;
-      },
-
-      createInNotebook: async (
-        notebookId: number,
-        note: Omit<CreateNoteForm, "notebookId">
-      ): Promise<Note> => {
-        const noteData = { ...note, notebookId };
-        const created = await fetchWithAuth("/notes", {
-          method: "POST",
-          body: JSON.stringify(noteData),
-        });
-        dispatch({ type: "ADD_NOTE", payload: created });
-        return created;
-      },
-
-      update: async (id: number, note: Partial<Note>): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(note),
-        });
-        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
-        return updated;
-      },
-
-      moveToNotebook: async (
-        id: number,
-        notebookId: number | null
-      ): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${id}/notebook`, {
-          method: "PUT",
-          body: JSON.stringify({ notebookId }),
-        });
-        dispatch({ type: "UPDATE_NOTE", payload: { id, note: updated } });
-        return updated;
-      },
-
-      delete: async (id: number): Promise<void> => {
-        await fetchWithAuth(`/notes/${id}`, { method: "DELETE" });
-        dispatch({ type: "DELETE_NOTE", payload: id });
-      },
-
-      addLabel: async (noteId: number, labelId: string): Promise<Note> => {
-        const updated = await fetchWithAuth(
-          `/notes/${noteId}/labels/${labelId}`,
-          {
-            method: "POST",
-          }
-        );
-        dispatch({
-          type: "UPDATE_NOTE",
-          payload: { id: noteId, note: updated },
-        });
-        return updated;
-      },
-
-      removeLabel: async (noteId: number, labelId: string): Promise<Note> => {
-        const updated = await fetchWithAuth(
-          `/notes/${noteId}/labels/${labelId}`,
-          {
-            method: "DELETE",
-          }
-        );
-        dispatch({
-          type: "UPDATE_NOTE",
-          payload: { id: noteId, note: updated },
-        });
-        return updated;
-      },
-
-      getByLabel: async (labelId: string): Promise<Note[]> => {
-        return await fetchWithAuth(`/labels/${labelId}/notes`);
-      },
-
-      search: async (params: {
-        query?: string;
-        notebookId?: number | null;
-        labelIds?: string[];
-        limit?: number;
-        offset?: number;
-      }): Promise<{ notes: Note[]; total?: number }> => {
-        const searchParams = new URLSearchParams();
-
-        if (params.query) searchParams.append("query", params.query);
-        if (params.notebookId)
-          searchParams.append("notebookId", params.notebookId.toString());
-        if (params.labelIds?.length) {
-          params.labelIds.forEach((id) => searchParams.append("labelIds", id));
-        }
-        if (params.limit) searchParams.append("limit", params.limit.toString());
-        if (params.offset)
-          searchParams.append("offset", params.offset.toString());
-
-        return await fetchWithAuth(`/notes/search?${searchParams.toString()}`);
-      },
-
-      getRecentNotes: async (limit: number = 10): Promise<Note[]> => {
-        return await fetchWithAuth(`/notes/recent?limit=${limit}`);
-      },
-
-      getFavoriteNotes: async (): Promise<Note[]> => {
-        return await fetchWithAuth("/notes/favorites");
-      },
-
-      toggleFavorite: async (noteId: number): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${noteId}/favorite`, {
-          method: "POST",
-        });
-        dispatch({
-          type: "UPDATE_NOTE",
-          payload: { id: noteId, note: updated },
-        });
-        return updated;
-      },
-
-      batchAddLabels: async (
-        noteId: number,
-        labelIds: string[]
-      ): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${noteId}/labels`, {
-          method: "POST",
-          body: JSON.stringify({ labelIds }),
-        });
-        dispatch({
-          type: "UPDATE_NOTE",
-          payload: { id: noteId, note: updated },
-        });
-        return updated;
-      },
-
-      batchRemoveLabels: async (
-        noteId: number,
-        labelIds: string[]
-      ): Promise<Note> => {
-        const updated = await fetchWithAuth(`/notes/${noteId}/labels`, {
-          method: "DELETE",
-          body: JSON.stringify({ labelIds }),
-        });
-        dispatch({
-          type: "UPDATE_NOTE",
-          payload: { id: noteId, note: updated },
-        });
-        return updated;
-      },
-    }),
-    [fetchWithAuth, setLoading, dispatch]
-  );
-
   // ✅ USER API - Pas encore migré en feature
   const userApi = useMemo(
     () => ({
@@ -388,7 +199,6 @@ export const useApiService = () => {
     [fetchWithAuth, setLoading, dispatch]
   );
 
-  // ✅ BLOC NOTE API - Pas encore migré en feature
   const blocNoteApi = useMemo(
     () => ({
       get: async (): Promise<BlocNote> => {
@@ -572,27 +382,13 @@ export const useApiService = () => {
 
   return useMemo(
     () => ({
-      // ✅ APIs conservées (pas encore migrées en features)
       health: healthApi,
       user: userApi,
-      notes: notesApi,
       comments: commentsApi,
       blocNote: blocNoteApi,
       calendar: calendarApi,
       files: filesApi,
-
-      // ❌ SUPPRIMÉ : notebooks, labels, tasks, links, linkGroups
-      // → Maintenant disponibles via leurs hooks respectifs :
-      // → useNotebooks(), useLabels(), useTasks(), useLinks()
     }),
-    [
-      healthApi,
-      userApi,
-      notesApi,
-      commentsApi,
-      blocNoteApi,
-      calendarApi,
-      filesApi,
-    ]
+    [healthApi, userApi, commentsApi, blocNoteApi, calendarApi, filesApi]
   );
 };
