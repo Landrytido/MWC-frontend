@@ -1,33 +1,5 @@
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  refreshToken: string;
-  user: {
-    id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    enabled: boolean;
-    emailVerified: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
-
-export interface RefreshTokenRequest {
-  refreshToken: string;
-}
+// features/auth/services/authService.ts
+import { LoginRequest, RegisterRequest, AuthResponse, User } from "../types";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080/api";
@@ -35,7 +7,7 @@ const API_BASE_URL =
 class AuthService {
   private token: string | null = null;
   private refreshToken: string | null = null;
-  private user: any = null;
+  private user: User | null = null;
 
   constructor() {
     this.token = localStorage.getItem("token");
@@ -43,7 +15,7 @@ class AuthService {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       try {
-        this.user = JSON.parse(savedUser);
+        this.user = JSON.parse(savedUser) as User;
       } catch (e) {
         console.error("Error parsing saved user:", e);
         this.clearStorage();
@@ -81,13 +53,9 @@ class AuthService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.log("🔍 Données d'erreur reçues:", errorData);
       const errorMessage =
         errorData?.message || errorData?.error || "Erreur de connexion";
-      console.log("🔍 Message d'erreur final:", errorMessage);
-      throw new Error(
-        errorData?.message || errorData?.error || "Erreur de connexion"
-      );
+      throw new Error(errorMessage);
     }
 
     const authResponse: AuthResponse = await response.json();
@@ -159,7 +127,7 @@ class AuthService {
     return this.token;
   }
 
-  getUser(): any {
+  getUser(): User | null {
     return this.user;
   }
 
@@ -182,6 +150,7 @@ class AuthService {
         Authorization: `Bearer ${this.token}`,
       },
     });
+
     if (response.status === 401 && this.refreshToken) {
       try {
         await this.refreshAccessToken();
@@ -199,6 +168,11 @@ class AuthService {
     }
 
     return response;
+  }
+
+  updateUser(user: User): void {
+    this.user = user;
+    localStorage.setItem("user", JSON.stringify(user));
   }
 }
 

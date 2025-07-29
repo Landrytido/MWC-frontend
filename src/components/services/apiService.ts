@@ -1,7 +1,7 @@
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../features/auth";
 import { useApp, AppState } from "../contexts/AppContext";
 import { useCallback, useMemo } from "react";
-import { authService } from "./authService";
+import { authService } from "../../features/auth";
 import {
   BlocNote,
   FileInfo,
@@ -146,7 +146,6 @@ export const useApiService = () => {
     [fetchWithAuth]
   );
 
-  // ✅ COMMENTS API - Pas encore migré en feature
   const commentsApi = useMemo(
     () => ({
       getByNoteId: async (noteId: number) => {

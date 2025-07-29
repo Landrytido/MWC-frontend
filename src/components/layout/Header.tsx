@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-
+import { useAuth } from "../../features/auth";
 const Header: React.FC = () => {
   const { state, logout } = useAuth();
   const navigate = useNavigate();
