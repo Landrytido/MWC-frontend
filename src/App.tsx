@@ -7,19 +7,19 @@ import {
 } from "react-router-dom";
 import { AppProvider } from "./components/contexts/AppContext";
 import { ProtectedRoute } from "./features/auth";
-import Home from "./components/pages/Home";
-import SignUp from "./components/pages/SignUp";
-import SignIn from "./components/pages/SignIn";
+import Home from "./pages/Home";
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
 import Dashboard from "./components/pages/Dashboard";
-import About from "./components/pages/About";
-import Privacy from "./components/pages/Privacy";
-import UserSettings from "./components/pages/UserSettings";
-import CreateNote from "./components/pages/CreateNote";
-import EditNote from "./components/pages/EditNote";
-import CreateLink from "./components/pages/CreateLink";
-import EditLink from "./components/pages/EditLink";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import UserSettings from "./pages/UserSettings";
+import CreateNote from "./pages/CreateNote";
+import EditNote from "./pages/EditNote";
+import CreateLink from "./pages/CreateLink";
+import EditLink from "./pages/EditLink";
 import NoteDetail from "./features/notes/components/NoteDetail";
-import CalendarPage from "./components/pages/CalendarPage";
+import CalendarPage from "./pages/CalendarPage";
 const App: React.FC = () => {
   return (
     <AppProvider>

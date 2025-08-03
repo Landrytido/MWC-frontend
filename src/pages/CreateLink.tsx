@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../layout/Layout";
-import { useApiService } from "../services/apiService";
+import Layout from "../components/layout/Layout";
+import { useApiService } from "../components/services/apiService";
 
 const CreateLink: React.FC = () => {
   const navigate = useNavigate();

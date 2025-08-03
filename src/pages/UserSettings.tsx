@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../features/auth";
-import Layout from "../layout/Layout";
-import { useApiService } from "../services/apiService";
+import { useAuth } from "../features/auth";
+import Layout from "../components/layout/Layout";
+import { useApiService } from "../components/services/apiService";
 
 const UserSettings: React.FC = () => {
   const { state, updateUser } = useAuth();

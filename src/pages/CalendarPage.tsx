@@ -1,7 +1,7 @@
 import React from "react";
-import Layout from "../layout/Layout";
-import Calendar from "../../features/calendar/components/Calendar";
-import { CalendarProvider } from "../../features/calendar/CalendarContext";
+import Layout from "../components/layout/Layout";
+import Calendar from "../features/calendar/components/Calendar";
+import { CalendarProvider } from "../features/calendar/CalendarContext";
 
 const CalendarPage: React.FC = () => {
   return (

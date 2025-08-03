@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth, LoginForm } from "../../features/auth";
-import Header from "../layout/Header";
-import Footer from "../layout/Footer";
-import personImage3 from "../../assets/person-3.png";
-import personImage4 from "../../assets/person-4.png";
+import { useAuth, LoginForm } from "../features/auth";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import personImage3 from "../../src/assets/person-3.png";
+import personImage4 from "../../src/assets/person-4.png";
 
 const SignIn: React.FC = () => {
   const { state } = useAuth();

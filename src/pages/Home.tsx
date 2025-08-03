@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Header from "../layout/Header";
-import Footer from "../layout/Footer";
-import heroImage from "../../assets/hero-image.png";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import heroImage from "../../src/assets/hero-image.png";
 
 const Home: React.FC = () => {
   return (

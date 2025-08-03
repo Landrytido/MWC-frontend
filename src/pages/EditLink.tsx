@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Layout from "../layout/Layout";
-import { useApiService } from "../services/apiService";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import Layout from "../components/layout/Layout";
+import { useApiService } from "../components/services/apiService";
+import { useConfirmation } from "../shared/hooks/useConfirmation";
 
 const EditLink: React.FC = () => {
   const { id } = useParams<{ id: string }>();

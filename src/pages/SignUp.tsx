@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth, SignupForm } from "../../features/auth";
-import Header from "../layout/Header";
-import Footer from "../layout/Footer";
-import personImage1 from "../../assets/person-1.png";
-import personImage2 from "../../assets/person-2.png";
+import { useAuth, SignupForm } from "../features/auth";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import personImage1 from "../../src/assets/person-1.png";
+import personImage2 from "../../src/assets/person-2.png";
 
 const SignUp: React.FC = () => {
   const { state } = useAuth();

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Layout from "../layout/Layout";
-import NoteForm from "../../features/notes/components/NoteForm";
-import { CreateNoteForm } from "../../features/notes/types";
-import { useNotes } from "../../features/notes";
+import Layout from "../components/layout/Layout";
+import NoteForm from "../features/notes/components/NoteForm";
+import { CreateNoteForm } from "../features/notes/types";
+import { useNotes } from "../features/notes";
 
 const CreateNote: React.FC = () => {
   const navigate = useNavigate();

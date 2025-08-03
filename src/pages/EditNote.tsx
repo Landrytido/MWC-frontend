@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Layout from "../layout/Layout";
-import { useNotes } from "../../features/notes";
-import { useConfirmation } from "../../shared/hooks/useConfirmation";
+import Layout from "../components/layout/Layout";
+import { useNotes } from "../features/notes";
+import { useConfirmation } from "../shared/hooks/useConfirmation";
 
 const EditNote: React.FC = () => {
   const { id } = useParams<{ id: string }>();
