@@ -1,4 +1,5 @@
-import {
+import { httpService } from "../../shared/services/httpService";
+import type {
   Task,
   CreateTaskForm,
   UpdateTaskForm,
@@ -6,213 +7,72 @@ import {
   ApiTaskStats,
 } from "./types";
 
-// Configuration de base (temporaire, sera dans shared plus tard)
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
-// Helper pour les appels authentifiés (temporaire, sera dans shared)
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-};
-
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Erreur ${response.status}: ${response.statusText}`
-    );
-  }
-
-  const text = await response.text();
-  return text && text.trim() !== "" ? JSON.parse(text) : null;
-};
-
-// API Tasks
+// ==========================================
+// API TASKS
+// ==========================================
 export const tasksApi = {
   // CRUD de base
-  getAll: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAll: (): Promise<Task[]> => httpService.get("/tasks"),
 
-  getById: async (id: number): Promise<Task> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getById: (id: number): Promise<Task> => httpService.get(`/tasks/${id}`),
 
-  create: async (task: CreateTaskForm): Promise<Task> => {
-    const response = await fetch(`${API_BASE_URL}/tasks`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(task),
-    });
-    return handleResponse(response);
-  },
+  create: (task: CreateTaskForm): Promise<Task> =>
+    httpService.post("/tasks", task),
 
-  update: async (id: number, task: UpdateTaskForm): Promise<Task> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(task),
-    });
-    return handleResponse(response);
-  },
+  update: (id: number, task: UpdateTaskForm): Promise<Task> =>
+    httpService.put(`/tasks/${id}`, task),
 
-  delete: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    await handleResponse(response);
-  },
+  delete: (id: number): Promise<void> => httpService.delete(`/tasks/${id}`),
 
-  toggle: async (id: number): Promise<Task> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}/toggle`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  toggle: (id: number): Promise<Task> => httpService.put(`/tasks/${id}/toggle`),
 
-  // Recherche et filtres
   search: async (keyword: string): Promise<Task[]> => {
     if (!keyword.trim()) {
       return await tasksApi.getAll();
     }
-    const response = await fetch(
-      `${API_BASE_URL}/tasks/search?keyword=${encodeURIComponent(keyword)}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
+    return httpService.get("/tasks/search", { keyword });
   },
 
   // Filtres par statut
-  getPending: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/pending`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getPending: (): Promise<Task[]> => httpService.get("/tasks/pending"),
 
-  getCompleted: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/completed`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getCompleted: (): Promise<Task[]> => httpService.get("/tasks/completed"),
 
-  getOverdue: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/overdue`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getOverdue: (): Promise<Task[]> => httpService.get("/tasks/overdue"),
 
-  getTodayTasks: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/today`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getTodayTasks: (): Promise<Task[]> => httpService.get("/tasks/today"),
 
-  getTomorrowTasks: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/tomorrow`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getTomorrowTasks: (): Promise<Task[]> => httpService.get("/tasks/tomorrow"),
 
-  getTasksByDate: async (date: string): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/by-date?date=${date}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getTasksByDate: (date: string): Promise<Task[]> =>
+    httpService.get("/tasks/by-date", { date }),
 
-  getCarriedOverTasks: async (): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/carried-over`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getCarriedOverTasks: (): Promise<Task[]> =>
+    httpService.get("/tasks/carried-over"),
 
-  getTasksDueInDays: async (days: number = 7): Promise<Task[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/tasks/due-in-days?days=${days}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  getTasksDueInDays: (days: number = 7): Promise<Task[]> =>
+    httpService.get("/tasks/due-in-days", { days }),
 
-  getTasksByPriority: async (priority: number): Promise<Task[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/tasks/by-priority?priority=${priority}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  getTasksByPriority: (priority: number): Promise<Task[]> =>
+    httpService.get("/tasks/by-priority", { priority }),
 
   // Statistiques
-  getPendingCount: async (): Promise<{ count: number }> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/pending/count`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getPendingCount: (): Promise<{ count: number }> =>
+    httpService.get("/tasks/pending/count"),
 
-  getSummary: async (): Promise<ApiTaskSummary> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/summary`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getSummary: (): Promise<ApiTaskSummary> => httpService.get("/tasks/summary"),
 
-  getMonthlyStats: async (
-    year: number,
-    month: number
-  ): Promise<ApiTaskStats> => {
-    const response = await fetch(
-      `${API_BASE_URL}/tasks/stats/monthly?year=${year}&month=${month}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
+  getMonthlyStats: (year: number, month: number): Promise<ApiTaskStats> =>
+    httpService.get("/tasks/stats/monthly", { year, month }),
 
-  // Actions avancées
-  endDay: async (data: {
+  endDay: (data: {
     date?: string;
     taskIdsToCarryOver?: number[];
     markDayAsCompleted?: boolean;
-  }): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/end-day`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
+  }): Promise<Task[]> => httpService.post("/tasks/end-day", data),
 
-  reorderTasks: async (data: {
+  reorderTasks: (data: {
     taskIds: number[];
     scheduledDate?: string;
-  }): Promise<Task[]> => {
-    const response = await fetch(`${API_BASE_URL}/tasks/reorder`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
+  }): Promise<Task[]> => httpService.post("/tasks/reorder", data),
 };

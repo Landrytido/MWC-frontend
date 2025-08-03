@@ -1,4 +1,5 @@
-import {
+import { httpService } from "../../shared/services/httpService";
+import type {
   SavedLink,
   LinkGroup,
   SavedLinkGroup,
@@ -6,211 +7,71 @@ import {
   CreateLinkGroupForm,
 } from "./types";
 
-// Configuration de base (temporaire, sera dans shared plus tard)
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
-// Helper pour les appels authentifiés (temporaire, sera dans shared)
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-};
-
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Erreur ${response.status}: ${response.statusText}`
-    );
-  }
-
-  const text = await response.text();
-  return text && text.trim() !== "" ? JSON.parse(text) : null;
-};
-
-// API Links
 export const linksApi = {
-  // CRUD des liens
-  getAll: async (): Promise<SavedLink[]> => {
-    const response = await fetch(`${API_BASE_URL}/links`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAll: (): Promise<SavedLink[]> => httpService.get("/links"),
 
-  getById: async (id: number): Promise<SavedLink> => {
-    const response = await fetch(`${API_BASE_URL}/links/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getById: (id: number): Promise<SavedLink> => httpService.get(`/links/${id}`),
 
-  create: async (link: CreateLinkForm): Promise<SavedLink> => {
-    const response = await fetch(`${API_BASE_URL}/links`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(link),
-    });
-    return handleResponse(response);
-  },
+  create: (link: CreateLinkForm): Promise<SavedLink> =>
+    httpService.post("/links", link),
 
-  update: async (id: number, link: Partial<SavedLink>): Promise<SavedLink> => {
-    const response = await fetch(`${API_BASE_URL}/links/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(link),
-    });
-    return handleResponse(response);
-  },
+  update: (id: number, link: Partial<SavedLink>): Promise<SavedLink> =>
+    httpService.put(`/links/${id}`, link),
 
-  delete: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/links/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    await handleResponse(response);
-  },
+  delete: (id: number): Promise<void> => httpService.delete(`/links/${id}`),
 
   search: async (keyword: string): Promise<SavedLink[]> => {
     if (!keyword.trim()) {
       return await linksApi.getAll();
     }
-    const response = await fetch(
-      `${API_BASE_URL}/links/search?keyword=${encodeURIComponent(keyword)}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
+    return httpService.get("/links/search", { keyword });
   },
 };
 
-// API Link Groups
 export const linkGroupsApi = {
-  getAll: async (): Promise<LinkGroup[]> => {
-    const response = await fetch(`${API_BASE_URL}/link-groups`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAll: (): Promise<LinkGroup[]> => httpService.get("/link-groups"),
 
-  getById: async (id: string): Promise<LinkGroup> => {
-    const response = await fetch(`${API_BASE_URL}/link-groups/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getById: (id: string): Promise<LinkGroup> =>
+    httpService.get(`/link-groups/${id}`),
 
-  create: async (data: CreateLinkGroupForm): Promise<LinkGroup> => {
-    const response = await fetch(`${API_BASE_URL}/link-groups`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
+  create: (data: CreateLinkGroupForm): Promise<LinkGroup> =>
+    httpService.post("/link-groups", data),
 
-  update: async (id: string, data: CreateLinkGroupForm): Promise<LinkGroup> => {
-    const response = await fetch(`${API_BASE_URL}/link-groups/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
+  update: (id: string, data: CreateLinkGroupForm): Promise<LinkGroup> =>
+    httpService.put(`/link-groups/${id}`, data),
 
-  delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/link-groups/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    await handleResponse(response);
-  },
+  delete: (id: string): Promise<void> =>
+    httpService.delete(`/link-groups/${id}`),
 
-  getLinksInGroup: async (groupId: string): Promise<SavedLinkGroup[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  getLinksInGroup: (groupId: string): Promise<SavedLinkGroup[]> =>
+    httpService.get(`/link-groups/${groupId}/links`),
 
-  addLinkToGroup: async (
+  addLinkToGroup: (
     groupId: string,
     linkId: number,
     linkName?: string
-  ): Promise<SavedLinkGroup> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links/${linkId}`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ linkName }),
-      }
-    );
-    return handleResponse(response);
-  },
+  ): Promise<SavedLinkGroup> =>
+    httpService.post(`/link-groups/${groupId}/links/${linkId}`, { linkName }),
 
-  updateLinkInGroup: async (
+  updateLinkInGroup: (
     groupId: string,
     linkId: number,
     linkName: string
-  ): Promise<SavedLinkGroup> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links/${linkId}`,
-      {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ linkName }),
-      }
-    );
-    return handleResponse(response);
-  },
+  ): Promise<SavedLinkGroup> =>
+    httpService.put(`/link-groups/${groupId}/links/${linkId}`, { linkName }),
 
-  removeLinkFromGroup: async (
+  removeLinkFromGroup: (groupId: string, linkId: number): Promise<void> =>
+    httpService.delete(`/link-groups/${groupId}/links/${linkId}`),
+
+  incrementClickCounter: (
     groupId: string,
     linkId: number
-  ): Promise<void> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links/${linkId}`,
-      {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      }
-    );
-    await handleResponse(response);
-  },
+  ): Promise<SavedLinkGroup> =>
+    httpService.post(`/link-groups/${groupId}/links/${linkId}/click`),
 
-  incrementClickCounter: async (
-    groupId: string,
-    linkId: number
-  ): Promise<SavedLinkGroup> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links/${linkId}/click`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  getTopClickedLinks: (groupId: string): Promise<SavedLinkGroup[]> =>
+    httpService.get(`/link-groups/${groupId}/links/top-clicked`),
 
-  getTopClickedLinks: async (groupId: string): Promise<SavedLinkGroup[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/${groupId}/links/top-clicked`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
-
-  getGlobalTopClickedLinks: async (): Promise<SavedLinkGroup[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/link-groups/links/global-top-clicked`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
+  getGlobalTopClickedLinks: (): Promise<SavedLinkGroup[]> =>
+    httpService.get("/link-groups/links/global-top-clicked"),
 };

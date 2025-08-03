@@ -1,98 +1,32 @@
-import { Notebook, CreateNotebookForm, NotebookUsageStats } from "./types";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-};
-
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Erreur ${response.status}: ${response.statusText}`
-    );
-  }
-
-  const text = await response.text();
-  return text && text.trim() !== "" ? JSON.parse(text) : null;
-};
+import { httpService } from "../../shared/services/httpService";
+import type {
+  Notebook,
+  CreateNotebookForm,
+  NotebookUsageStats,
+  NotebookWithNotes,
+} from "./types";
 
 export const notebooksApi = {
-  getAll: async (): Promise<Notebook[]> => {
-    const response = await fetch(`${API_BASE_URL}/notebooks`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAll: (): Promise<Notebook[]> => httpService.get("/notebooks"),
 
-  getById: async (id: number): Promise<Notebook> => {
-    const response = await fetch(`${API_BASE_URL}/notebooks/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getById: (id: number): Promise<Notebook> =>
+    httpService.get(`/notebooks/${id}`),
 
-  getNotes: async (
+  getNotes: (
     notebookId: number,
     params?: { limit?: number; offset?: number }
-  ) => {
-    const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.append("limit", params.limit.toString());
-    if (params?.offset) searchParams.append("offset", params.offset.toString());
+  ): Promise<NotebookWithNotes> =>
+    httpService.get(`/notebooks/${notebookId}/notes`, params),
 
-    const queryString = searchParams.toString();
-    const url = `/notebooks/${notebookId}/notes${
-      queryString ? `?${queryString}` : ""
-    }`;
+  create: (notebook: CreateNotebookForm): Promise<Notebook> =>
+    httpService.post("/notebooks", notebook),
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  update: (id: number, notebook: CreateNotebookForm): Promise<Notebook> =>
+    httpService.put(`/notebooks/${id}`, notebook),
 
-  create: async (notebook: CreateNotebookForm): Promise<Notebook> => {
-    const response = await fetch(`${API_BASE_URL}/notebooks`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(notebook),
-    });
-    return handleResponse(response);
-  },
+  delete: (id: number, forceDelete: boolean = true): Promise<void> =>
+    httpService.delete(`/notebooks/${id}?forceDelete=${forceDelete}`),
 
-  update: async (
-    id: number,
-    notebook: CreateNotebookForm
-  ): Promise<Notebook> => {
-    const response = await fetch(`${API_BASE_URL}/notebooks/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(notebook),
-    });
-    return handleResponse(response);
-  },
-
-  delete: async (id: number, forceDelete: boolean = true): Promise<void> => {
-    const response = await fetch(
-      `${API_BASE_URL}/notebooks/${id}?forceDelete=${forceDelete}`,
-      {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      }
-    );
-    await handleResponse(response);
-  },
-
-  getUsageStats: async (): Promise<NotebookUsageStats> => {
-    const response = await fetch(`${API_BASE_URL}/notebooks/stats`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getUsageStats: (): Promise<NotebookUsageStats> =>
+    httpService.get("/notebooks/stats"),
 };

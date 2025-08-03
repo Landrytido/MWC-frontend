@@ -1,98 +1,31 @@
+import { httpService } from "../../shared/services/httpService";
 import { Label, CreateLabelForm, LabelUsageStats } from "./types";
+import { Note } from "../notes/types";
 
-// Configuration de base (à déplacer plus tard dans shared/services)
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
-// Helper pour les appels authentifiés (temporaire, sera dans shared)
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-};
-
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Erreur ${response.status}: ${response.statusText}`
-    );
-  }
-
-  const text = await response.text();
-  return text && text.trim() !== "" ? JSON.parse(text) : null;
-};
-
-// API Labels
 export const labelsApi = {
-  getAll: async (): Promise<Label[]> => {
-    const response = await fetch(`${API_BASE_URL}/labels`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAll: (): Promise<Label[]> => httpService.get("/labels"),
 
-  getById: async (id: string): Promise<Label> => {
-    const response = await fetch(`${API_BASE_URL}/labels/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getById: (labelId: string): Promise<Label> =>
+    httpService.get(`/labels/${labelId}`),
 
-  getNotes: async (labelId: string) => {
-    const response = await fetch(`${API_BASE_URL}/labels/${labelId}/notes`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getNotes: (labelId: string): Promise<Note[]> =>
+    httpService.get(`/labels/${labelId}/notes`),
 
-  search: async (keyword: string): Promise<Label[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/labels/search?keyword=${encodeURIComponent(keyword)}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
+  search: (keyword: string): Promise<Label[]> =>
+    httpService.get("/labels/search", { keyword }),
 
-  create: async (label: CreateLabelForm): Promise<Label> => {
-    const response = await fetch(
-      `${API_BASE_URL}/labels?name=${encodeURIComponent(label.name)}`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  // ✅ Utiliser httpService.post() pour CREATE
+  create: (label: CreateLabelForm): Promise<Label> =>
+    httpService.post("/labels", label),
 
-  update: async (id: string, label: { name: string }): Promise<Label> => {
-    const response = await fetch(
-      `${API_BASE_URL}/labels/${id}?name=${encodeURIComponent(label.name)}`,
-      {
-        method: "PUT",
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  // ✅ Utiliser httpService.put() pour UPDATE
+  update: (id: string, label: { name: string }): Promise<Label> =>
+    httpService.put(`/labels/${id}`, label),
 
-  delete: async (id: string, forceDelete = false): Promise<void> => {
-    const response = await fetch(
-      `${API_BASE_URL}/labels/${id}?forceDelete=${forceDelete}`,
-      {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      }
-    );
-    await handleResponse(response);
-  },
+  // ✅ Cette méthode est correcte
+  delete: (id: string, forceDelete = false): Promise<void> =>
+    httpService.delete(`/labels/${id}?forceDelete=${forceDelete}`),
 
-  getUsageStats: async (): Promise<LabelUsageStats> => {
-    const response = await fetch(`${API_BASE_URL}/labels/stats`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getUsageStats: (): Promise<LabelUsageStats> =>
+    httpService.get("/labels/stats"),
 };

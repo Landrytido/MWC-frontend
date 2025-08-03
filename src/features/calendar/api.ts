@@ -1,133 +1,41 @@
-import { CalendarViewDto, EventDto, CreateEventRequest } from "./types";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-};
-
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Erreur ${response.status}: ${response.statusText}`
-    );
-  }
-
-  const text = await response.text();
-  return text && text.trim() !== "" ? JSON.parse(text) : null;
-};
+import { httpService } from "../../shared/services/httpService";
+import type {
+  CalendarViewDto,
+  EventDto,
+  CreateEventRequest,
+  TaskDto,
+} from "./types";
 
 export const calendarApi = {
-  getMonthView: async (
-    year: number,
-    month: number
-  ): Promise<CalendarViewDto[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/calendar/month/${year}/${month}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
-    return handleResponse(response);
-  },
+  getMonthView: (year: number, month: number): Promise<CalendarViewDto[]> =>
+    httpService.get(`/calendar/month/${year}/${month}`),
 
-  getDayView: async (date: string): Promise<CalendarViewDto> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/day/${date}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getDayView: (date: string): Promise<CalendarViewDto> =>
+    httpService.get(`/calendar/day/${date}`),
 
-  getAllEvents: async (): Promise<EventDto[]> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/events`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getAllEvents: (): Promise<EventDto[]> => httpService.get("/calendar/events"),
 
-  getEventById: async (id: number): Promise<EventDto> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/events/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  getEventById: (id: number): Promise<EventDto> =>
+    httpService.get(`/calendar/events/${id}`),
 
-  createEvent: async (event: CreateEventRequest): Promise<EventDto> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/events`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(event),
-    });
-    return handleResponse(response);
-  },
+  createEvent: (event: CreateEventRequest): Promise<EventDto> =>
+    httpService.post("/calendar/events", event),
 
-  updateEvent: async (
-    id: number,
-    event: CreateEventRequest
-  ): Promise<EventDto> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/events/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(event),
-    });
-    return handleResponse(response);
-  },
+  updateEvent: (id: number, event: CreateEventRequest): Promise<EventDto> =>
+    httpService.put(`/calendar/events/${id}`, event),
 
-  deleteEvent: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/events/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    await handleResponse(response);
-  },
+  deleteEvent: (id: number): Promise<void> =>
+    httpService.delete(`/calendar/events/${id}`),
 
-  createTaskFromCalendar: async (taskData: {
-    title: string;
-    description?: string;
-    scheduledDate?: string;
-    dueDate?: string;
-    priority?: number;
-  }): Promise<any> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/create-task`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(taskData),
-    });
-    return handleResponse(response);
-  },
+  createTaskFromCalendar: (taskData: CreateEventRequest): Promise<TaskDto> =>
+    httpService.post("/calendar/create-task", taskData),
 
-  getEventsInRange: async (
-    startDate: string,
-    endDate: string
-  ): Promise<EventDto[]> => {
-    const params = new URLSearchParams({ startDate, endDate });
-    const response = await fetch(
-      `${API_BASE_URL}/calendar/events/range?${params.toString()}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
+  getEventsInRange: (startDate: string, endDate: string): Promise<EventDto[]> =>
+    httpService.get("/calendar/events/range", { startDate, endDate }),
 
-  searchEvents: async (query: string): Promise<EventDto[]> => {
-    const params = new URLSearchParams({ query });
-    const response = await fetch(
-      `${API_BASE_URL}/calendar/events/search?${params.toString()}`,
-      { headers: getAuthHeaders() }
-    );
-    return handleResponse(response);
-  },
+  searchEvents: (query: string): Promise<EventDto[]> =>
+    httpService.get("/calendar/events/search", { query }),
 
-  testEmail: async (): Promise<string> => {
-    const response = await fetch(`${API_BASE_URL}/calendar/test-email`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
+  testEmail: (): Promise<{ message: string; success: boolean }> =>
+    httpService.post("/calendar/test-email"),
 };
