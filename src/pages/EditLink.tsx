@@ -1,41 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../shared/components/layout/Layout";
-import { useApiService } from "../components/services/apiService";
+import { useLinks } from "../features/links"; // ✅ Nouveau
 import { useConfirmation } from "../shared/hooks/useConfirmation";
 
 const EditLink: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const api = useApiService();
+  const { links, updateLink, deleteLink } = useLinks(); // ✅ Remplace useApiService
 
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
+
+  // ✅ Trouve le lien dans le state au lieu d'un appel API
+  const link = links.find((l) => l.id === parseInt(id || "0"));
 
   useEffect(() => {
-    const fetchLink = async () => {
-      if (!id) return;
-
-      try {
-        const link = await api.links.getById(parseInt(id));
-        setUrl(link.url);
-        setTitle(link.title);
-        setDescription(link.description || "");
-      } catch (err) {
-        console.error("Erreur lors de la récupération du lien:", err);
-        setError("Impossible de récupérer le lien demandé");
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    fetchLink();
-  }, [api.links, id]);
+    if (link) {
+      setUrl(link.url);
+      setTitle(link.title);
+      setDescription(link.description || "");
+    } else if (id) {
+      // Si le lien n'est pas en cache, rediriger ou afficher erreur
+      setError("Impossible de récupérer le lien demandé");
+    }
+  }, [link, id]);
 
   const validateUrl = (url: string) => {
     try {
@@ -65,7 +58,8 @@ const EditLink: React.FC = () => {
     setError("");
 
     try {
-      await api.links.update(parseInt(id), {
+      // ✅ Utilise le hook de la feature
+      await updateLink(parseInt(id), {
         url,
         title: title || new URL(url).hostname,
         description,
@@ -79,7 +73,31 @@ const EditLink: React.FC = () => {
     }
   };
 
-  if (isFetching) {
+  const handleDelete = async () => {
+    if (!id) return;
+
+    const confirmed = await confirm({
+      title: "Supprimer le lien",
+      message:
+        "Êtes-vous sûr de vouloir supprimer ce lien ? Cette action est irréversible.",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      // ✅ Utilise le hook de la feature
+      await deleteLink(parseInt(id));
+      navigate("/dashboard?tab=links");
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      setError("Erreur lors de la suppression du lien");
+    }
+  };
+
+  if (!link && !error) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
@@ -167,25 +185,7 @@ const EditLink: React.FC = () => {
                 <div className="space-x-3">
                   <button
                     type="button"
-                    onClick={async () => {
-                      const confirmed = await confirm({
-                        title: "Supprimer le lien",
-                        message:
-                          "Êtes-vous sûr de vouloir supprimer ce lien ? Cette action est irréversible.",
-                        confirmText: "Supprimer",
-                        cancelText: "Annuler",
-                        variant: "danger",
-                      });
-
-                      if (!confirmed) return;
-
-                      try {
-                        await api.links.delete(parseInt(id || "0"));
-                        navigate("/dashboard?tab=links");
-                      } catch (error) {
-                        console.error("Erreur lors de la suppression:", error);
-                      }
-                    }}
+                    onClick={handleDelete}
                     className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
                   >
                     Supprimer
@@ -203,6 +203,7 @@ const EditLink: React.FC = () => {
           </div>
         </div>
       </div>
+      <ConfirmationComponent />
     </Layout>
   );
 };

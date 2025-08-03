@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../features/auth";
+import { useAuth, useUser } from "../features/auth"; // ✅ Nouveau
 import Layout from "../shared/components/layout/Layout";
-import { useApiService } from "../components/services/apiService";
 
 const UserSettings: React.FC = () => {
   const { state, updateUser } = useAuth();
-  const api = useApiService();
+  const { updateProfile, loading } = useUser(); // ✅ Remplace useApiService
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
 
   useEffect(() => {
@@ -23,11 +21,11 @@ const UserSettings: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setMessage({ type: "", content: "" });
 
     try {
-      const updatedUser = await api.user.updateProfile({
+      // ✅ Utilise le hook de la feature auth
+      const updatedUser = await updateProfile({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
@@ -45,8 +43,6 @@ const UserSettings: React.FC = () => {
         content:
           "Une erreur est survenue lors de la mise à jour de vos informations.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -88,7 +84,7 @@ const UserSettings: React.FC = () => {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  disabled={isLoading}
+                  disabled={loading}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
                 />
               </div>
@@ -105,7 +101,7 @@ const UserSettings: React.FC = () => {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  disabled={isLoading}
+                  disabled={loading}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
                 />
               </div>
@@ -131,10 +127,10 @@ const UserSettings: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {loading ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Enregistrement...

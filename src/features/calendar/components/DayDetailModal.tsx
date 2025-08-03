@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useApiService } from "../../../components/services/apiService";
+// ✅ NOUVEAU : Hook pour les événements du calendrier
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
+
 import {
   CalendarViewDto,
   EventDto,
@@ -27,31 +29,29 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onCreateEvent,
   onCreateTask,
 }) => {
-  const api = useApiService();
+  // ✅ NOUVEAU : Utilisation du hook useCalendarEvents
+  const { loadDayData, loadingStates } = useCalendarEvents();
+
   const [dayData, setDayData] = useState<CalendarViewDto | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const loadDayData = useCallback(async () => {
-    setIsLoading(true);
+  // ✅ SIMPLIFIÉ : Chargement des données du jour
+  const loadDay = useCallback(async () => {
     setError("");
-
     try {
-      const data = await api.calendar.getDayView(date);
+      const data = await loadDayData(date);
       setDayData(data);
     } catch (err) {
       setError("Erreur lors du chargement des données du jour");
       console.error("Erreur chargement jour:", err);
-    } finally {
-      setIsLoading(false);
     }
-  }, [api.calendar, date]);
+  }, [loadDayData, date]);
 
   useEffect(() => {
     if (isOpen && date) {
-      loadDayData();
+      loadDay();
     }
-  }, [isOpen, date, loadDayData]);
+  }, [isOpen, date, loadDay]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -70,6 +70,9 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
+
+  // ✅ NOUVEAU : Utilise le loading state du hook
+  const isLoading = loadingStates.dayView?.isLoading || false;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -181,7 +184,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                 <div className="text-red-500 mb-4">⚠️</div>
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
-                  onClick={loadDayData}
+                  onClick={loadDay}
                   className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 >
                   Réessayer

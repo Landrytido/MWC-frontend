@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useApiService } from "../../../components/services/apiService";
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
+
 import {
   useCalendar,
   useCalendarNavigation,
@@ -20,11 +21,20 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
-  const api = useApiService();
+  const {
+    loadMonthData,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    createTaskFromCalendar,
+  } = useCalendarEvents();
+
   const { state, dispatch } = useCalendar();
   const { currentMonth, currentYear } = useCalendarNavigation();
   const { currentMonthData, getMonthKey } = useMonthViewData();
   const { confirm, ConfirmationComponent } = useConfirmation();
+
+  // États locaux inchangés
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
@@ -32,65 +42,9 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const [modalType, setModalType] = useState<"event" | "task">("event");
 
   useEffect(() => {
-    const loadMonthData = async () => {
-      const monthKey = getMonthKey(currentMonth, currentYear);
-      if (currentMonthData.length > 0) return;
+    loadMonthData(currentMonth, currentYear);
+  }, [currentMonth, currentYear, loadMonthData]);
 
-      dispatch({
-        type: "SET_LOADING",
-        payload: { key: "monthView", loading: { isLoading: true } },
-      });
-
-      try {
-        const monthData = await api.calendar.getMonthView(
-          currentYear,
-          currentMonth
-        );
-        dispatch({
-          type: "SET_MONTH_VIEW_DATA",
-          payload: { key: monthKey, data: monthData },
-        });
-      } catch (error) {
-        console.error("Erreur lors du chargement du mois:", error);
-        dispatch({
-          type: "SET_LOADING",
-          payload: {
-            key: "monthView",
-            loading: { isLoading: false, error: "Erreur de chargement" },
-          },
-        });
-      } finally {
-        dispatch({
-          type: "SET_LOADING",
-          payload: { key: "monthView", loading: { isLoading: false } },
-        });
-      }
-    };
-
-    loadMonthData();
-  }, [
-    currentMonth,
-    currentYear,
-    api.calendar,
-    dispatch,
-    currentMonthData.length,
-    getMonthKey,
-  ]);
-
-  useEffect(() => {
-    const loadAllEvents = async () => {
-      try {
-        const allEvents = await api.calendar.getAllEvents();
-        dispatch({ type: "SET_EVENTS", payload: allEvents });
-      } catch (error) {
-        console.error("Erreur chargement événements:", error);
-      }
-    };
-
-    if (state.events.length === 0) {
-      loadAllEvents();
-    }
-  }, [api.calendar, dispatch, state.events.length]);
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
@@ -123,17 +77,8 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     if (!confirmed) return;
 
     try {
-      await api.calendar.deleteEvent(eventId);
-      dispatch({ type: "DELETE_EVENT", payload: eventId });
-      const monthKey = getMonthKey(currentMonth, currentYear);
-      const monthData = await api.calendar.getMonthView(
-        currentYear,
-        currentMonth
-      );
-      dispatch({
-        type: "SET_MONTH_VIEW_DATA",
-        payload: { key: monthKey, data: monthData },
-      });
+      // ✅ NOUVEAU : Utilise le hook au lieu de l'API directement
+      await deleteEvent(eventId);
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
@@ -150,40 +95,21 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     try {
       if (editingEvent) {
         if (modalType === "task" && editingEvent.relatedTaskId) {
-          await api.tasks.update(
-            editingEvent.relatedTaskId,
-            data as CreateTaskForm
-          );
+          // ✅ NOUVEAU : Gestion des tâches via le hook
+          await updateEvent(editingEvent.id, data as CreateEventRequest);
         } else {
-          const updated = await api.calendar.updateEvent(
-            editingEvent.id,
-            data as CreateEventRequest
-          );
-          dispatch({
-            type: "UPDATE_EVENT",
-            payload: { id: editingEvent.id, event: updated },
-          });
+          // ✅ NOUVEAU : Utilise le hook pour la mise à jour
+          await updateEvent(editingEvent.id, data as CreateEventRequest);
         }
       } else {
         if (modalType === "task") {
-          await api.calendar.createTaskFromCalendar(data as CreateTaskForm);
+          // ✅ NOUVEAU : Création de tâche via le hook
+          await createTaskFromCalendar(data as CreateTaskForm);
         } else {
-          const created = await api.calendar.createEvent(
-            data as CreateEventRequest
-          );
-          dispatch({ type: "ADD_EVENT", payload: created });
+          // ✅ NOUVEAU : Création d'événement via le hook
+          await createEvent(data as CreateEventRequest);
         }
       }
-
-      const monthKey = getMonthKey(currentMonth, currentYear);
-      const monthData = await api.calendar.getMonthView(
-        currentYear,
-        currentMonth
-      );
-      dispatch({
-        type: "SET_MONTH_VIEW_DATA",
-        payload: { key: monthKey, data: monthData },
-      });
 
       setIsEventModalOpen(false);
       setEditingEvent(null);

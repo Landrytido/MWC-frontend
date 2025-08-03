@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../shared/components/layout/Layout";
-import { useApiService } from "../components/services/apiService";
+import { useLinks } from "../features/links"; // ✅ Nouveau
 
 const CreateLink: React.FC = () => {
   const navigate = useNavigate();
-  const api = useApiService();
+  const { createLink } = useLinks();
+
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -38,7 +39,8 @@ const CreateLink: React.FC = () => {
     setError("");
 
     try {
-      await api.links.create({
+      // ✅ Utilise le hook de la feature
+      await createLink({
         url,
         title: title || new URL(url).hostname,
         description,
@@ -51,6 +53,7 @@ const CreateLink: React.FC = () => {
       setIsLoading(false);
     }
   };
+
   const fetchTitleFromUrl = async () => {
     if (!url || !validateUrl(url)) return;
 
