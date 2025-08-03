@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Layout from "../components/layout/Layout";
+import Layout from "../shared/components/layout/Layout";
 import { useApiService } from "../components/services/apiService";
 import { useConfirmation } from "../shared/hooks/useConfirmation";
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Layout from "../components/layout/Layout";
+import Layout from "../shared/components/layout/Layout";
 import NoteForm from "../features/notes/components/NoteForm";
 import { CreateNoteForm } from "../features/notes/types";
 import { useNotes } from "../features/notes";

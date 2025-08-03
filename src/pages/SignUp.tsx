@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, SignupForm } from "../features/auth";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import Header from "../shared/components/layout/Header";
+import Footer from "../shared/components/layout/Footer";
 import personImage1 from "../../src/assets/person-1.png";
 import personImage2 from "../../src/assets/person-2.png";
 

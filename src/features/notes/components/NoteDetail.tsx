@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Layout from "../../../components/layout/Layout";
+import Layout from "../../../shared/components/layout/Layout";
 import CommentsSection from "./CommentsSection";
 import { useNotes } from "../hooks/useNotes";
 import { Note } from "../types";

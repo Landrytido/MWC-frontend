@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../features/auth";
-import Layout from "../components/layout/Layout";
+import Layout from "../shared/components/layout/Layout";
 import { useApiService } from "../components/services/apiService";
 
 const UserSettings: React.FC = () => {

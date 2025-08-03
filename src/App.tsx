@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AppProvider } from "./components/contexts/AppContext";
+import { AppProvider } from "./shared/contexts/AppContext";
 import { ProtectedRoute } from "./features/auth";
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";

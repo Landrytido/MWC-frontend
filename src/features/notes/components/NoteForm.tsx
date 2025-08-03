@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLabels } from "../../../components/contexts/AppContext";
+import { useLabels } from "../../labels/hooks/useLabels";
 import { NotebookSelector } from "../../notebooks";
 import { LabelSelector } from "../../labels";
 import { Note, CreateNoteForm } from "../types";

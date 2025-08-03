@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth";
-import Layout from "../layout/Layout";
+import Layout from "../../shared/components/layout/Layout";
 import NoteCard from "../../features/notes/components/NoteCard";
 import LinkManager from "../../features/links/components/LinkManager";
 import { NotebookSidebar } from "../../features/notebooks";
 import { LabelManager } from "../../features/labels";
 import { BlocNoteWidget } from "../../features/bloc-note";
-import { useApp } from "../contexts/AppContext";
+import { useUI } from "../../shared/contexts/AppContext";
 import { Task } from "../../features/tasks";
 import { SavedLink } from "../../features/links";
 import { TaskManager } from "../../features/tasks";
@@ -25,7 +25,7 @@ import { Note } from "../../features/notes/types";
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { state: authState } = useAuth();
-  const { state, dispatch } = useApp();
+  const ui = useUI();
   const { notes, filteredNotes, loading, deleteNote } = useNotes();
 
   const { links } = useLinks();
@@ -42,6 +42,8 @@ const Dashboard: React.FC = () => {
   const [searchedTasks, setSearchedTasks] = useState<Task[]>([]);
   const [searchedLinks, setSearchedLinks] = useState<SavedLink[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [taskSearchTerm, setTaskSearchTerm] = useState("");
+  const [linkSearchTerm, setLinkSearchTerm] = useState("");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -56,17 +58,16 @@ const Dashboard: React.FC = () => {
         return {
           show: true,
           placeholder: "Rechercher dans les notes...",
-          value: state.ui.searchTerm,
-          onChange: (term: string) =>
-            dispatch({ type: "SET_SEARCH_TERM", payload: term }),
+          value: ui.searchTerm,
+          onChange: (term: string) => ui.setSearchTerm(term),
         };
       case "tasks":
         return {
           show: true,
           placeholder: "Rechercher dans les tâches...",
-          value: state.ui.taskSearchTerm,
+          value: taskSearchTerm,
           onChange: (term: string) => {
-            dispatch({ type: "SET_TASK_SEARCH_TERM", payload: term });
+            setTaskSearchTerm(term);
             handleTaskSearch(term);
           },
         };
@@ -74,9 +75,9 @@ const Dashboard: React.FC = () => {
         return {
           show: true,
           placeholder: "Rechercher dans les liens...",
-          value: state.ui.linkSearchTerm,
+          value: linkSearchTerm,
           onChange: (term: string) => {
-            dispatch({ type: "SET_LINK_SEARCH_TERM", payload: term });
+            setLinkSearchTerm(term);
             handleLinkSearch(term);
           },
         };
@@ -107,7 +108,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // 🔧 CORRIGÉ: Recherche de liens avec la nouvelle API
+  // Recherche de liens avec la nouvelle API
   const handleLinkSearch = async (term: string) => {
     if (!term.trim()) {
       setSearchedLinks([]);
@@ -171,10 +172,12 @@ const Dashboard: React.FC = () => {
   );
 
   const handleClearFilters = useCallback(() => {
-    dispatch({ type: "CLEAR_ALL_SEARCH_TERMS" });
+    ui.clearAllSearchTerms();
+    setTaskSearchTerm("");
+    setLinkSearchTerm("");
     setSearchedTasks([]);
     setSearchedLinks([]);
-  }, [dispatch]);
+  }, [ui]);
 
   const searchConfig = getSearchConfig(activeTab);
 
@@ -193,10 +196,8 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 space-y-6">
             <NotebookSidebar
-              selectedNotebookId={state.ui.currentNotebook}
-              onNotebookSelect={(id) =>
-                dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: id })
-              }
+              selectedNotebookId={ui.currentNotebook}
+              onNotebookSelect={(id) => ui.setCurrentNotebook(id)}
               totalNotes={notes.length}
             />
             <LabelManager />
@@ -228,11 +229,11 @@ const Dashboard: React.FC = () => {
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
-                  {(state.ui.searchTerm ||
-                    state.ui.taskSearchTerm ||
-                    state.ui.linkSearchTerm ||
-                    state.ui.currentNotebook ||
-                    state.ui.selectedLabels.length > 0) && (
+                  {(ui.searchTerm ||
+                    taskSearchTerm ||
+                    linkSearchTerm ||
+                    ui.currentNotebook ||
+                    ui.selectedLabels.length > 0) && (
                     <button
                       onClick={handleClearFilters}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -264,27 +265,21 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {/* Active Filters Display */}
-                {(state.ui.currentNotebook ||
-                  state.ui.selectedLabels.length > 0 ||
-                  (activeTab === "tasks" && state.ui.taskSearchTerm) ||
-                  (activeTab === "links" && state.ui.linkSearchTerm)) && (
+                {(ui.currentNotebook ||
+                  ui.selectedLabels.length > 0 ||
+                  (activeTab === "tasks" && taskSearchTerm) ||
+                  (activeTab === "links" && linkSearchTerm)) && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {/* 🔧 CORRIGÉ: Filtre carnet */}
-                    {state.ui.currentNotebook && (
+                    {/* Filtre carnet */}
+                    {ui.currentNotebook && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                         📓{" "}
                         {
-                          notebooks.find(
-                            (n) => n.id === state.ui.currentNotebook
-                          )?.title
+                          notebooks.find((n) => n.id === ui.currentNotebook)
+                            ?.title
                         }
                         <button
-                          onClick={() =>
-                            dispatch({
-                              type: "SET_CURRENT_NOTEBOOK",
-                              payload: null,
-                            })
-                          }
+                          onClick={() => ui.setCurrentNotebook(null)}
                           className="ml-1 text-blue-600 hover:text-blue-800"
                         >
                           <svg
@@ -304,8 +299,8 @@ const Dashboard: React.FC = () => {
                       </span>
                     )}
 
-                    {/* 🔧 CORRIGÉ: Labels */}
-                    {state.ui.selectedLabels.map((labelId) => {
+                    {/* Labels */}
+                    {ui.selectedLabels.map((labelId) => {
                       const label = labels.find((l) => l.id === labelId);
                       return label ? (
                         <span
@@ -315,14 +310,10 @@ const Dashboard: React.FC = () => {
                           🏷️ {label.name}
                           <button
                             onClick={() => {
-                              const updatedLabels =
-                                state.ui.selectedLabels.filter(
-                                  (id) => id !== labelId
-                                );
-                              dispatch({
-                                type: "SET_SELECTED_LABELS",
-                                payload: updatedLabels,
-                              });
+                              const updatedLabels = ui.selectedLabels.filter(
+                                (id) => id !== labelId
+                              );
+                              ui.setSelectedLabels(updatedLabels);
                             }}
                             className="ml-1 text-teal-600 hover:text-teal-800"
                           >
@@ -345,15 +336,12 @@ const Dashboard: React.FC = () => {
                     })}
 
                     {/* Recherche tâches */}
-                    {activeTab === "tasks" && state.ui.taskSearchTerm && (
+                    {activeTab === "tasks" && taskSearchTerm && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-                        🔍 "{state.ui.taskSearchTerm}"
+                        🔍 "{taskSearchTerm}"
                         <button
                           onClick={() => {
-                            dispatch({
-                              type: "SET_TASK_SEARCH_TERM",
-                              payload: "",
-                            });
+                            setTaskSearchTerm("");
                             setSearchedTasks([]);
                           }}
                           className="ml-1 text-purple-600 hover:text-purple-800"
@@ -376,15 +364,12 @@ const Dashboard: React.FC = () => {
                     )}
 
                     {/* Recherche liens */}
-                    {activeTab === "links" && state.ui.linkSearchTerm && (
+                    {activeTab === "links" && linkSearchTerm && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full">
-                        🔍 "{state.ui.linkSearchTerm}"
+                        🔍 "{linkSearchTerm}"
                         <button
                           onClick={() => {
-                            dispatch({
-                              type: "SET_LINK_SEARCH_TERM",
-                              payload: "",
-                            });
+                            setLinkSearchTerm("");
                             setSearchedLinks([]);
                           }}
                           className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -431,7 +416,7 @@ const Dashboard: React.FC = () => {
                 onClick={() => handleTabChange("links")}
               >
                 Liens Sauvegardés (
-                {state.ui.linkSearchTerm ? searchedLinks.length : links.length})
+                {linkSearchTerm ? searchedLinks.length : links.length})
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -441,7 +426,7 @@ const Dashboard: React.FC = () => {
                 }`}
                 onClick={() => handleTabChange("tasks")}
               >
-                Tâches {state.ui.taskSearchTerm && `(${searchedTasks.length})`}
+                Tâches {taskSearchTerm && `(${searchedTasks.length})`}
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -470,15 +455,14 @@ const Dashboard: React.FC = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-gray-800">
-                    {state.ui.currentNotebook
+                    {ui.currentNotebook
                       ? `Notes - ${
-                          notebooks.find(
-                            (n) => n.id === state.ui.currentNotebook
-                          )?.title
+                          notebooks.find((n) => n.id === ui.currentNotebook)
+                            ?.title
                         }`
                       : "Toutes les notes"}
-                    {state.ui.selectedLabels.length > 0 &&
-                      ` (${state.ui.selectedLabels.length} label(s) filtrés)`}
+                    {ui.selectedLabels.length > 0 &&
+                      ` (${ui.selectedLabels.length} label(s) filtrés)`}
                   </h2>
                   <button
                     onClick={() => navigate("/dashboard/notes/new")}
@@ -529,18 +513,14 @@ const Dashboard: React.FC = () => {
 
             {activeTab === "links" && (
               <LinkManager
-                searchResults={
-                  state.ui.linkSearchTerm ? searchedLinks : undefined
-                }
+                searchResults={linkSearchTerm ? searchedLinks : undefined}
                 isSearching={isSearching}
               />
             )}
 
             {activeTab === "tasks" && (
               <TaskManager
-                searchResults={
-                  state.ui.taskSearchTerm ? searchedTasks : undefined
-                }
+                searchResults={taskSearchTerm ? searchedTasks : undefined}
                 isSearching={isSearching}
               />
             )}
