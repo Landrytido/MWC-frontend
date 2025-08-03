@@ -1,5 +1,3 @@
-// features/auth/types.ts
-
 export interface User {
   id: number;
   email: string;

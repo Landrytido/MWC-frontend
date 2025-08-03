@@ -1,19 +1,12 @@
-// src/shared/contexts/AppContext.tsx
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { UIState, LoadingState } from "../types/common";
 
-// ==========================================
-// ÉTAT GLOBAL RÉDUIT - SEULEMENT L'ESSENTIEL
-// ==========================================
-
 interface AppState {
-  // États UI globaux (partagés entre plusieurs composants)
   ui: UIState & {
-    selectedLabels: string[]; // Filtres globaux
-    currentNotebook: number | null; // Filtre global
+    selectedLabels: string[];
+    currentNotebook: number | null;
   };
 
-  // États de chargement globaux (si vraiment nécessaire)
   globalLoadingStates: {
     initializing: LoadingState;
     syncData: LoadingState;
@@ -125,10 +118,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-// ==========================================
-// CONTEXT ET PROVIDER
-// ==========================================
-
 const AppContext = createContext<
   | {
       state: AppState;
@@ -151,10 +140,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   );
 };
 
-// ==========================================
-// HOOKS SPÉCIALISÉS
-// ==========================================
-
 export const useApp = () => {
   const context = useContext(AppContext);
   if (context === undefined) {
@@ -163,12 +148,14 @@ export const useApp = () => {
   return context;
 };
 
-// Hook pour l'état UI uniquement
 export const useUI = () => {
   const { state, dispatch } = useApp();
 
   return {
     ui: state.ui,
+    searchTerm: state.ui.searchTerm,
+    selectedLabels: state.ui.selectedLabels,
+    currentNotebook: state.ui.currentNotebook,
     toggleSidebar: () => dispatch({ type: "TOGGLE_SIDEBAR" }),
     setCurrentNotebook: (id: number | null) =>
       dispatch({ type: "SET_CURRENT_NOTEBOOK", payload: id }),

@@ -29,12 +29,11 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     createTaskFromCalendar,
   } = useCalendarEvents();
 
-  const { state, dispatch } = useCalendar();
+  const { state } = useCalendar();
   const { currentMonth, currentYear } = useCalendarNavigation();
-  const { currentMonthData, getMonthKey } = useMonthViewData();
+  const { currentMonthData } = useMonthViewData();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  // États locaux inchangés
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);

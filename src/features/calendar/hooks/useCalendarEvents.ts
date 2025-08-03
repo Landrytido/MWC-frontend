@@ -14,6 +14,7 @@ export const useCalendarEvents = () => {
     setMonthViewData,
     getMonthKey,
     currentMonthData,
+    filteredEvents,
   } = useCalendar();
 
   // ✅ Chargement initial des événements
@@ -35,12 +36,10 @@ export const useCalendarEvents = () => {
     }
   }, [state.events.length, setLoading, setEvents]);
 
-  // ✅ Chargement des données d'un mois
   const loadMonthData = useCallback(
     async (month: number, year: number) => {
       const monthKey = getMonthKey(month, year);
 
-      // Vérifier si on a déjà les données
       if (state.monthViewData[monthKey]) return;
 
       setLoading("monthView", { isLoading: true });
@@ -60,7 +59,6 @@ export const useCalendarEvents = () => {
     [state.monthViewData, getMonthKey, setLoading, setMonthViewData]
   );
 
-  // ✅ Chargement des données d'un jour
   const loadDayData = useCallback(
     async (date: string): Promise<CalendarViewDto | null> => {
       setLoading("dayView", { isLoading: true });
@@ -80,14 +78,12 @@ export const useCalendarEvents = () => {
     [setLoading]
   );
 
-  // ✅ Création d'événement
   const createEvent = useCallback(
     async (eventData: CreateEventRequest): Promise<EventDto | null> => {
       try {
         const newEvent = await calendarApi.createEvent(eventData);
         addEvent(newEvent);
 
-        // Recharger les données du mois pour mettre à jour la vue
         await loadMonthData(state.currentMonth, state.currentYear);
 
         return newEvent;
@@ -99,7 +95,6 @@ export const useCalendarEvents = () => {
     [addEvent, loadMonthData, state.currentMonth, state.currentYear]
   );
 
-  // ✅ Mise à jour d'événement
   const updateEventById = useCallback(
     async (
       id: number,
@@ -109,7 +104,6 @@ export const useCalendarEvents = () => {
         const updatedEvent = await calendarApi.updateEvent(id, eventData);
         updateEvent(id, updatedEvent);
 
-        // Recharger les données du mois
         await loadMonthData(state.currentMonth, state.currentYear);
 
         return updatedEvent;
@@ -138,7 +132,6 @@ export const useCalendarEvents = () => {
     [deleteEvent, loadMonthData, state.currentMonth, state.currentYear]
   );
 
-  // ✅ Création de tâche depuis le calendrier
   const createTaskFromCalendar = useCallback(
     async (taskData: {
       title: string;
@@ -148,9 +141,23 @@ export const useCalendarEvents = () => {
       priority?: number;
     }) => {
       try {
-        const newTask = await calendarApi.createTaskFromCalendar(taskData);
+        const eventData: CreateEventRequest = {
+          title: taskData.title,
+          description: taskData.description,
+          startDate: taskData.scheduledDate || new Date().toISOString(),
+          endDate:
+            taskData.dueDate ||
+            taskData.scheduledDate ||
+            new Date().toISOString(),
+          type: "TASK_BASED",
+          location: undefined,
+          mode: undefined,
+          meetingLink: undefined,
+          reminders: [],
+          ...(taskData.priority && { priority: taskData.priority }),
+        };
 
-        // Recharger les données pour inclure la nouvelle tâche
+        const newTask = await calendarApi.createTaskFromCalendar(eventData);
         await loadMonthData(state.currentMonth, state.currentYear);
 
         return newTask;
@@ -162,7 +169,6 @@ export const useCalendarEvents = () => {
     [loadMonthData, state.currentMonth, state.currentYear]
   );
 
-  // ✅ Recherche d'événements
   const searchEvents = useCallback(
     async (query: string): Promise<EventDto[]> => {
       try {
@@ -175,7 +181,6 @@ export const useCalendarEvents = () => {
     []
   );
 
-  // ✅ Récupération d'événements dans une plage de dates
   const getEventsInRange = useCallback(
     async (startDate: string, endDate: string): Promise<EventDto[]> => {
       try {
@@ -188,7 +193,6 @@ export const useCalendarEvents = () => {
     []
   );
 
-  // ✅ Récupération d'un événement par ID
   const getEventById = useCallback(
     (id: number): EventDto | undefined => {
       return state.events.find((event) => event.id === id);
@@ -196,7 +200,6 @@ export const useCalendarEvents = () => {
     [state.events]
   );
 
-  // ✅ Récupération des événements pour une date donnée
   const getEventsForDate = useCallback(
     (date: string): EventDto[] => {
       return state.events.filter((event) => {
@@ -207,7 +210,6 @@ export const useCalendarEvents = () => {
     [state.events]
   );
 
-  // ✅ NOUVEAU : Rafraîchissement forcé des données
   const refreshCalendarData = useCallback(async () => {
     await Promise.all([
       loadAllEvents(),
@@ -215,13 +217,8 @@ export const useCalendarEvents = () => {
     ]);
   }, [loadAllEvents, loadMonthData, state.currentMonth, state.currentYear]);
 
-  // ✅ NOUVEAU : Nettoyage du cache
-  const clearCache = useCallback(() => {
-    // Cette méthode devrait être ajoutée au contexte useCalendar
-    // dispatch({ type: "CLEAR_CACHE" });
-  }, []);
+  const clearCache = useCallback(() => {}, []);
 
-  // ✅ Effets pour le chargement initial
   useEffect(() => {
     loadAllEvents();
   }, [loadAllEvents]);
@@ -230,34 +227,27 @@ export const useCalendarEvents = () => {
     loadMonthData(state.currentMonth, state.currentYear);
   }, [state.currentMonth, state.currentYear, loadMonthData]);
 
-  // ✅ Interface de retour complète
   return {
-    // États
     events: state.events,
-    filteredEvents: state.filteredEvents,
+    filteredEvents,
     currentMonthData,
     loadingStates: state.loadingStates,
 
-    // Chargement des données
     loadAllEvents,
     loadMonthData,
     loadDayData,
 
-    // CRUD Événements
     createEvent,
     updateEvent: updateEventById,
     deleteEvent: deleteEventById,
 
-    // Tâches
     createTaskFromCalendar,
 
-    // Recherche et filtrage
     searchEvents,
     getEventsInRange,
     getEventById,
     getEventsForDate,
 
-    // Utilitaires
     refreshCalendarData,
     clearCache,
   };

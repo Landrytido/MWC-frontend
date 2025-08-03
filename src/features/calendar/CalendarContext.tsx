@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { EventDto, CalendarViewDto } from "./types";
-import { LoadingState } from "../../components/types";
+import { LoadingState } from "../../shared/types/common";
 
 interface CalendarState {
   events: EventDto[];

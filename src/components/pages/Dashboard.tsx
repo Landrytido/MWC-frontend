@@ -256,7 +256,6 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* Indicateur de recherche en cours */}
                 {isSearching && (
                   <div className="mt-2 text-sm text-gray-500 flex items-center">
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
@@ -264,13 +263,11 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Active Filters Display */}
                 {(ui.currentNotebook ||
                   ui.selectedLabels.length > 0 ||
                   (activeTab === "tasks" && taskSearchTerm) ||
                   (activeTab === "links" && linkSearchTerm)) && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {/* Filtre carnet */}
                     {ui.currentNotebook && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                         📓{" "}
@@ -299,7 +296,6 @@ const Dashboard: React.FC = () => {
                       </span>
                     )}
 
-                    {/* Labels */}
                     {ui.selectedLabels.map((labelId) => {
                       const label = labels.find((l) => l.id === labelId);
                       return label ? (

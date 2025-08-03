@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-// ✅ NOUVEAU : Hook pour les événements du calendrier
 import { useCalendarEvents } from "../hooks/useCalendarEvents";
 
 import {
@@ -7,8 +6,8 @@ import {
   EventDto,
   formatEventTime,
   getEventColor,
+  TaskDto,
 } from "../types";
-import { Task } from "../../../components/types";
 
 interface DayDetailModalProps {
   isOpen: boolean;
@@ -29,13 +28,11 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onCreateEvent,
   onCreateTask,
 }) => {
-  // ✅ NOUVEAU : Utilisation du hook useCalendarEvents
   const { loadDayData, loadingStates } = useCalendarEvents();
 
   const [dayData, setDayData] = useState<CalendarViewDto | null>(null);
   const [error, setError] = useState("");
 
-  // ✅ SIMPLIFIÉ : Chargement des données du jour
   const loadDay = useCallback(async () => {
     setError("");
     try {
@@ -71,7 +68,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  // ✅ NOUVEAU : Utilise le loading state du hook
   const isLoading = loadingStates.dayView?.isLoading || false;
 
   const formatDate = (dateString: string) => {
@@ -108,26 +104,32 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       });
     }
   };
+  const formatTaskForDisplay = (task: TaskDto): EventDto => {
+    return {
+      id: task.id,
+      title: task.title,
+      description: task.description,
 
-  const formatTaskForDisplay = (task: Task) => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    startDate: task.scheduledDate || task.dueDate || date,
-    endDate: task.scheduledDate || task.dueDate || date,
-    type: "TASK_BASED" as const,
-    relatedTaskId: task.id,
-    reminders: [],
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-    completed: task.completed,
-    priority: task.priority,
-    dueDate: task.dueDate,
-    scheduledDate: task.scheduledDate,
-    location: undefined,
-    mode: undefined,
-    meetingLink: undefined,
-  });
+      startDate: task.scheduledDate || task.dueDate || date,
+      endDate: task.scheduledDate || task.dueDate || date,
+      type: "TASK_BASED" as const,
+      reminders: [],
+
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+
+      location: undefined,
+      mode: undefined,
+      meetingLink: undefined,
+      relatedTaskId: task.id,
+      relatedTaskTitle: undefined,
+
+      priority: task.priority,
+      completed: task.completed,
+      dueDate: task.dueDate,
+      scheduledDate: task.scheduledDate,
+    };
+  };
 
   if (!isOpen) return null;
 
