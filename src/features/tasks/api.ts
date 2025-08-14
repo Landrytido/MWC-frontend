@@ -7,11 +7,7 @@ import type {
   ApiTaskStats,
 } from "./types";
 
-// ==========================================
-// API TASKS
-// ==========================================
 export const tasksApi = {
-  // CRUD de base
   getAll: (): Promise<Task[]> => httpService.get("/tasks"),
 
   getById: (id: number): Promise<Task> => httpService.get(`/tasks/${id}`),
@@ -33,7 +29,6 @@ export const tasksApi = {
     return httpService.get("/tasks/search", { keyword });
   },
 
-  // Filtres par statut
   getPending: (): Promise<Task[]> => httpService.get("/tasks/pending"),
 
   getCompleted: (): Promise<Task[]> => httpService.get("/tasks/completed"),
@@ -56,7 +51,6 @@ export const tasksApi = {
   getTasksByPriority: (priority: number): Promise<Task[]> =>
     httpService.get("/tasks/by-priority", { priority }),
 
-  // Statistiques
   getPendingCount: (): Promise<{ count: number }> =>
     httpService.get("/tasks/pending/count"),
 

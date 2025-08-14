@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../shared/components/layout/Layout";
-import { useLinks } from "../features/links"; // ✅ Nouveau
+import { useLinks } from "../features/links";
 
 const CreateLink: React.FC = () => {
   const navigate = useNavigate();

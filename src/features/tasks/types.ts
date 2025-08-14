@@ -1,4 +1,3 @@
-// Enums et types de base
 export enum TaskPriority {
   LOW = 1,
   MEDIUM = 2,
@@ -30,7 +29,6 @@ export const SCHEDULE_LABELS = {
   [ScheduleType.TOMORROW]: "Pour demain",
 } as const;
 
-// Interfaces principales
 export interface Task {
   id: number;
   title: string;
@@ -67,7 +65,6 @@ export interface UpdateTaskForm extends Partial<CreateTaskForm> {
   orderIndex?: number;
 }
 
-// Statistiques et rapports
 export interface ApiTaskSummary {
   totalTasks: number;
   completedTasks: number;

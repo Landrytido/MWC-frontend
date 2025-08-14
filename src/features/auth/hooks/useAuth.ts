@@ -20,7 +20,6 @@ export const useAuth = (): UseAuthReturn => {
     error: null,
   });
 
-  // Initialisation - vérifier si l'utilisateur est déjà connecté
   useEffect(() => {
     const checkAuth = () => {
       const user = authService.getUser();
