@@ -1,8 +1,8 @@
 import React from "react";
-import { useCalendar, useCalendarNavigation } from "../CalendarContext";
+import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
 
 const CalendarHeader: React.FC = () => {
-  const { state, dispatch } = useCalendar();
   const {
     currentMonth,
     currentYear,
@@ -10,6 +10,8 @@ const CalendarHeader: React.FC = () => {
     navigateToNextMonth,
     navigateToToday,
   } = useCalendarNavigation();
+
+  const { loadingStates } = useCalendarEvents();
 
   const monthNames = [
     "Janvier",
@@ -25,12 +27,6 @@ const CalendarHeader: React.FC = () => {
     "Novembre",
     "Décembre",
   ];
-
-  const filterOptions = [
-    { value: "all", label: "Tout afficher", icon: "📅" },
-    { value: "events", label: "Événements", icon: "🎉" },
-    { value: "tasks", label: "Tâches", icon: "✅" },
-  ] as const;
 
   return (
     <div className="border-b border-gray-200 p-6">
@@ -94,34 +90,9 @@ const CalendarHeader: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Actions et filtres */}
-        <div className="flex items-center space-x-4">
-          {/* Filtres */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Afficher :</span>
-            <select
-              value={state.filterType}
-              onChange={(e) =>
-                dispatch({
-                  type: "SET_FILTER_TYPE",
-                  payload: e.target.value as "all" | "events" | "tasks",
-                })
-              }
-              className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              {filterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.icon} {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
       </div>
 
-      {/* Indicateur de chargement */}
-      {state.loadingStates.monthView.isLoading && (
+      {loadingStates.monthView.isLoading && (
         <div className="mt-4 flex items-center justify-center">
           <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
           <span className="text-sm text-gray-600">
@@ -130,10 +101,9 @@ const CalendarHeader: React.FC = () => {
         </div>
       )}
 
-      {/* Erreur de chargement */}
-      {state.loadingStates.monthView.error && (
+      {loadingStates.monthView.error && (
         <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">
-          {state.loadingStates.monthView.error}
+          {loadingStates.monthView.error}
         </div>
       )}
     </div>

@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useCalendarEvents } from "../hooks/useCalendarEvents";
-
-import {
-  useCalendar,
-  useCalendarNavigation,
-  useMonthViewData,
-} from "../CalendarContext";
+import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
 
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
@@ -27,11 +22,11 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     updateEvent,
     deleteEvent,
     createTaskFromCalendar,
+    events,
+    currentMonthData,
   } = useCalendarEvents();
 
-  const { state } = useCalendar();
   const { currentMonth, currentYear } = useCalendarNavigation();
-  const { currentMonthData } = useMonthViewData();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -76,7 +71,6 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     if (!confirmed) return;
 
     try {
-      // ✅ NOUVEAU : Utilise le hook au lieu de l'API directement
       await deleteEvent(eventId);
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
@@ -94,18 +88,14 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
     try {
       if (editingEvent) {
         if (modalType === "task" && editingEvent.relatedTaskId) {
-          // ✅ NOUVEAU : Gestion des tâches via le hook
           await updateEvent(editingEvent.id, data as CreateEventRequest);
         } else {
-          // ✅ NOUVEAU : Utilise le hook pour la mise à jour
           await updateEvent(editingEvent.id, data as CreateEventRequest);
         }
       } else {
         if (modalType === "task") {
-          // ✅ NOUVEAU : Création de tâche via le hook
           await createTaskFromCalendar(data as CreateTaskForm);
         } else {
-          // ✅ NOUVEAU : Création d'événement via le hook
           await createEvent(data as CreateEventRequest);
         }
       }
@@ -134,7 +124,7 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
 
           <div className="lg:col-span-1">
             <EventsList
-              events={state.events}
+              events={events}
               onEventClick={handleEditEvent}
               onEventDelete={handleDeleteEvent}
             />
