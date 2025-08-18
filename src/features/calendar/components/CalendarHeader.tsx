@@ -1,18 +1,24 @@
 import React from "react";
-import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
-import { useCalendarEvents } from "../hooks/useCalendarEvents";
 
-const CalendarHeader: React.FC = () => {
-  const {
-    currentMonth,
-    currentYear,
-    navigateToPreviousMonth,
-    navigateToNextMonth,
-    navigateToToday,
-  } = useCalendarNavigation();
+interface CalendarHeaderProps {
+  currentMonth: number;
+  currentYear: number;
+  loading: boolean;
+  error: string | null;
+  onPreviousMonth: () => void;
+  onNextMonth: () => void;
+  onToday: () => void;
+}
 
-  const { loadingStates } = useCalendarEvents();
-
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({
+  currentMonth,
+  currentYear,
+  loading,
+  error,
+  onPreviousMonth,
+  onNextMonth,
+  onToday,
+}) => {
   const monthNames = [
     "Janvier",
     "Février",
@@ -31,7 +37,6 @@ const CalendarHeader: React.FC = () => {
   return (
     <div className="border-b border-gray-200 p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        {/* Titre et navigation */}
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-semibold text-gray-800">
             📅 Calendrier
@@ -39,7 +44,7 @@ const CalendarHeader: React.FC = () => {
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={navigateToPreviousMonth}
+              onClick={onPreviousMonth}
               className="p-2 rounded-md hover:bg-gray-100 transition-colors"
               title="Mois précédent"
             >
@@ -63,7 +68,7 @@ const CalendarHeader: React.FC = () => {
             </h2>
 
             <button
-              onClick={navigateToNextMonth}
+              onClick={onNextMonth}
               className="p-2 rounded-md hover:bg-gray-100 transition-colors"
               title="Mois suivant"
             >
@@ -83,7 +88,7 @@ const CalendarHeader: React.FC = () => {
             </button>
 
             <button
-              onClick={navigateToToday}
+              onClick={onToday}
               className="ml-4 px-3 py-1 text-sm bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
             >
               Aujourd'hui
@@ -92,7 +97,7 @@ const CalendarHeader: React.FC = () => {
         </div>
       </div>
 
-      {loadingStates.monthView.isLoading && (
+      {loading && (
         <div className="mt-4 flex items-center justify-center">
           <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin mr-2"></div>
           <span className="text-sm text-gray-600">
@@ -101,9 +106,9 @@ const CalendarHeader: React.FC = () => {
         </div>
       )}
 
-      {loadingStates.monthView.error && (
+      {error && (
         <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">
-          {loadingStates.monthView.error}
+          {error}
         </div>
       )}
     </div>

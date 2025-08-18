@@ -1,43 +1,47 @@
-import React, { useState, useEffect } from "react";
-import { useCalendarEvents } from "../hooks/useCalendarEvents";
+import React, { useState } from "react";
+import { useCalendar } from "../hooks/useCalendar";
 import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
-
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
 import { CreateEventRequest, EventDto } from "../types";
-import { CreateTaskForm } from "../../tasks";
+import { CreateTaskForm } from "../../tasks/types";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
-interface CalendarProps {
-  className?: string;
-}
-
-const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
+const Calendar: React.FC = () => {
+  // Navigation
   const {
-    loadMonthData,
+    currentMonth,
+    currentYear,
+    navigateToPreviousMonth,
+    navigateToNextMonth,
+    navigateToToday,
+  } = useCalendarNavigation();
+
+  // Données et état
+  const { currentMonthData } = useCalendar();
+
+  // Actions
+  const {
+    events,
     createEvent,
     updateEvent,
     deleteEvent,
     createTaskFromCalendar,
-    events,
-    currentMonthData,
+    loadingStates,
   } = useCalendarEvents();
 
-  const { currentMonth, currentYear } = useCalendarNavigation();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
+  // État local du composant (modales)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalType, setModalType] = useState<"event" | "task">("event");
-
-  useEffect(() => {
-    loadMonthData(currentMonth, currentYear);
-  }, [currentMonth, currentYear, loadMonthData]);
 
   const handleCreateEvent = () => {
     setEditingEvent(null);
@@ -61,8 +65,7 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   const handleDeleteEvent = async (eventId: number) => {
     const confirmed = await confirm({
       title: "Supprimer l'événement",
-      message:
-        "Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.",
+      message: "Êtes-vous sûr de vouloir supprimer cet événement ?",
       confirmText: "Supprimer",
       cancelText: "Annuler",
       variant: "danger",
@@ -87,19 +90,23 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   ) => {
     try {
       if (editingEvent) {
-        if (modalType === "task" && editingEvent.relatedTaskId) {
-          await updateEvent(editingEvent.id, data as CreateEventRequest);
-        } else {
-          await updateEvent(editingEvent.id, data as CreateEventRequest);
-        }
+        // Pour la mise à jour, on s'assure que c'est un CreateEventRequest
+        await updateEvent(editingEvent.id, data as CreateEventRequest);
       } else {
         if (modalType === "task") {
-          await createTaskFromCalendar(data as CreateTaskForm);
+          // Pour les tâches, on convertit en CreateEventRequest
+          const eventData = data as CreateTaskForm;
+          await createTaskFromCalendar({
+            title: eventData.title,
+            description: eventData.description,
+            scheduledDate: eventData.scheduledDate,
+            dueDate: eventData.dueDate,
+            priority: eventData.priority,
+          });
         } else {
           await createEvent(data as CreateEventRequest);
         }
       }
-
       setIsEventModalOpen(false);
       setEditingEvent(null);
     } catch (error) {
@@ -109,14 +116,23 @@ const Calendar: React.FC<CalendarProps> = ({ className = "" }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md ${className}`}>
-      <CalendarHeader />
+    <div className="bg-white rounded-lg shadow-md">
+      {/* Header avec navigation - maintenant synchronisé ! */}
+      <CalendarHeader
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+        loading={loadingStates?.monthView?.isLoading || false}
+        error={loadingStates?.monthView?.error || null}
+        onPreviousMonth={navigateToPreviousMonth}
+        onNextMonth={navigateToNextMonth}
+        onToday={navigateToToday}
+      />
 
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
             <CalendarGrid
-              monthData={currentMonthData}
+              monthData={currentMonthData} // ← Maintenant synchronisé !
               onDayClick={handleDayClick}
               onEventClick={handleEditEvent}
             />

@@ -1,254 +1,313 @@
-import { useCallback, useEffect } from "react";
-import { useCalendar } from "./useCalendar";
+import { useState, useEffect, useCallback } from "react";
 import { calendarApi } from "../api";
-import { EventDto, CreateEventRequest, CalendarViewDto } from "../types";
+import { EventDto, CalendarViewDto, CreateEventRequest } from "../types";
 
-export const useCalendarEvents = () => {
-  const {
-    state,
-    setLoading,
-    setEvents,
-    addEvent,
-    updateEvent,
-    deleteEvent,
-    setMonthViewData,
-    getMonthKey,
-    currentMonthData,
-    filteredEvents,
-  } = useCalendar();
+interface UseCalendarReturn {
+  // 📅 ÉTAT DE NAVIGATION
+  currentMonth: number;
+  currentYear: number;
 
-  // ✅ Chargement initial des événements
-  const loadAllEvents = useCallback(async () => {
-    if (state.events.length > 0) return; // Éviter de recharger inutilement
+  // 📊 DONNÉES
+  events: EventDto[];
+  currentMonthData: CalendarViewDto[];
 
-    setLoading("events", { isLoading: true });
-    try {
-      const events = await calendarApi.getAllEvents();
-      setEvents(events);
-    } catch (error) {
-      setLoading("events", {
-        isLoading: false,
-        error: "Erreur lors du chargement des événements",
-      });
-      console.error("Erreur chargement événements:", error);
-    } finally {
-      setLoading("events", { isLoading: false });
+  // ⚡ ÉTATS DE CHARGEMENT
+  loading: {
+    events: boolean;
+    monthView: boolean;
+    dayView: boolean;
+  };
+  error: string | null;
+
+  // 🧭 NAVIGATION (comme setCurrentNotebook dans Notes)
+  navigateToPreviousMonth: () => void;
+  navigateToNextMonth: () => void;
+  navigateToToday: () => void;
+  navigateToMonth: (month: number, year: number) => void;
+
+  // 📝 ACTIONS (comme createNote, deleteNote)
+  createEvent: (eventData: CreateEventRequest) => Promise<EventDto>;
+  updateEvent: (id: number, eventData: CreateEventRequest) => Promise<EventDto>;
+  deleteEvent: (id: number) => Promise<void>;
+  createTaskFromCalendar: (taskData: any) => Promise<any>;
+
+  // 🔍 UTILITAIRES
+  loadDayData: (date: string) => Promise<CalendarViewDto>;
+  refreshCalendarData: () => Promise<void>;
+}
+
+export const useCalendar = (): UseCalendarReturn => {
+  // 📅 ÉTAT DE NAVIGATION (comme currentNotebook dans Notes)
+  const [currentMonth, setCurrentMonth] = useState(
+    () => new Date().getMonth() + 1
+  );
+  const [currentYear, setCurrentYear] = useState(() =>
+    new Date().getFullYear()
+  );
+
+  // 📊 DONNÉES
+  const [events, setEvents] = useState<EventDto[]>([]);
+  const [monthViewData, setMonthViewData] = useState<
+    Record<string, CalendarViewDto[]>
+  >({});
+
+  // ⚡ ÉTATS DE CHARGEMENT
+  const [loading, setLoading] = useState({
+    events: false,
+    monthView: false,
+    dayView: false,
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  // 🔑 CLÉS DE CACHE (comme dans ton ancien système)
+  const getMonthKey = useCallback(
+    (month: number, year: number) =>
+      `${year}-${month.toString().padStart(2, "0")}`,
+    []
+  );
+
+  const currentMonthKey = getMonthKey(currentMonth, currentYear);
+  const currentMonthData = monthViewData[currentMonthKey] || [];
+
+  // 🧭 NAVIGATION (exactement comme setCurrentNotebook dans Notes)
+  const navigateToMonth = useCallback((month: number, year: number) => {
+    setCurrentMonth(month);
+    setCurrentYear(year);
+  }, []);
+
+  const navigateToPreviousMonth = useCallback(() => {
+    if (currentMonth === 1) {
+      navigateToMonth(12, currentYear - 1);
+    } else {
+      navigateToMonth(currentMonth - 1, currentYear);
     }
-  }, [state.events.length, setLoading, setEvents]);
+  }, [currentMonth, currentYear, navigateToMonth]);
 
+  const navigateToNextMonth = useCallback(() => {
+    if (currentMonth === 12) {
+      navigateToMonth(1, currentYear + 1);
+    } else {
+      navigateToMonth(currentMonth + 1, currentYear);
+    }
+  }, [currentMonth, currentYear, navigateToMonth]);
+
+  const navigateToToday = useCallback(() => {
+    const today = new Date();
+    navigateToMonth(today.getMonth() + 1, today.getFullYear());
+  }, [navigateToMonth]);
+
+  // 📊 CHARGEMENT DES DONNÉES
   const loadMonthData = useCallback(
     async (month: number, year: number) => {
       const monthKey = getMonthKey(month, year);
 
-      if (state.monthViewData[monthKey]) return;
+      // ✅ Cache check comme dans ton ancien code
+      if (monthViewData[monthKey]) {
+        console.log("✅ Données du mois déjà en cache");
+        return;
+      }
 
-      setLoading("monthView", { isLoading: true });
+      console.log("🌐 Chargement du mois:", { month, year, monthKey });
+
+      setLoading((prev) => ({ ...prev, monthView: true }));
+      setError(null);
+
       try {
-        const monthData = await calendarApi.getMonthView(year, month);
-        setMonthViewData(monthKey, monthData);
-      } catch (error) {
-        setLoading("monthView", {
-          isLoading: false,
-          error: "Erreur lors du chargement du mois",
-        });
-        console.error("Erreur chargement mois:", error);
+        const data = await calendarApi.getMonthView(year, month);
+        console.log("📥 Données reçues de l'API:", data);
+
+        setMonthViewData((prev) => ({
+          ...prev,
+          [monthKey]: data,
+        }));
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : "Erreur lors du chargement du mois";
+        setError(errorMsg);
+        console.error("❌ Erreur chargement mois:", err);
       } finally {
-        setLoading("monthView", { isLoading: false });
+        setLoading((prev) => ({ ...prev, monthView: false }));
       }
     },
-    [state.monthViewData, getMonthKey, setLoading, setMonthViewData]
+    [monthViewData, getMonthKey]
   );
 
   const loadDayData = useCallback(
-    async (date: string): Promise<CalendarViewDto | null> => {
-      setLoading("dayView", { isLoading: true });
+    async (date: string): Promise<CalendarViewDto> => {
+      setLoading((prev) => ({ ...prev, dayView: true }));
+      setError(null);
+
       try {
-        const dayData = await calendarApi.getDayView(date);
-        setLoading("dayView", { isLoading: false });
-        return dayData;
-      } catch (error) {
-        setLoading("dayView", {
-          isLoading: false,
-          error: "Erreur lors du chargement du jour",
-        });
-        console.error("Erreur chargement jour:", error);
-        return null;
+        const data = await calendarApi.getDayView(date);
+        return data;
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : "Erreur lors du chargement du jour";
+        setError(errorMsg);
+        throw err;
+      } finally {
+        setLoading((prev) => ({ ...prev, dayView: false }));
       }
     },
-    [setLoading]
+    []
   );
 
+  // 📝 ACTIONS CRUD (comme createNote, deleteNote)
   const createEvent = useCallback(
-    async (eventData: CreateEventRequest): Promise<EventDto | null> => {
+    async (eventData: CreateEventRequest): Promise<EventDto> => {
       try {
         const newEvent = await calendarApi.createEvent(eventData);
-        addEvent(newEvent);
+        setEvents((prev) => [newEvent, ...prev]);
 
-        await loadMonthData(state.currentMonth, state.currentYear);
+        // ♻️ Recharger les données du mois courant
+        const currentKey = getMonthKey(currentMonth, currentYear);
+        setMonthViewData((prev) => {
+          const newData = { ...prev };
+          delete newData[currentKey]; // Force le rechargement
+          return newData;
+        });
+        await loadMonthData(currentMonth, currentYear);
 
         return newEvent;
-      } catch (error) {
-        console.error("Erreur création événement:", error);
-        throw error;
+      } catch (err) {
+        console.error("❌ Erreur création événement:", err);
+        throw err;
       }
     },
-    [addEvent, loadMonthData, state.currentMonth, state.currentYear]
+    [currentMonth, currentYear, getMonthKey, loadMonthData]
   );
 
-  const updateEventById = useCallback(
-    async (
-      id: number,
-      eventData: CreateEventRequest
-    ): Promise<EventDto | null> => {
+  const updateEvent = useCallback(
+    async (id: number, eventData: CreateEventRequest): Promise<EventDto> => {
       try {
         const updatedEvent = await calendarApi.updateEvent(id, eventData);
-        updateEvent(id, updatedEvent);
+        setEvents((prev) =>
+          prev.map((event) => (event.id === id ? updatedEvent : event))
+        );
 
-        await loadMonthData(state.currentMonth, state.currentYear);
+        // ♻️ Recharger les données du mois courant
+        const currentKey = getMonthKey(currentMonth, currentYear);
+        setMonthViewData((prev) => {
+          const newData = { ...prev };
+          delete newData[currentKey];
+          return newData;
+        });
+        await loadMonthData(currentMonth, currentYear);
 
         return updatedEvent;
-      } catch (error) {
-        console.error("Erreur mise à jour événement:", error);
-        throw error;
+      } catch (err) {
+        console.error("❌ Erreur mise à jour événement:", err);
+        throw err;
       }
     },
-    [updateEvent, loadMonthData, state.currentMonth, state.currentYear]
+    [currentMonth, currentYear, getMonthKey, loadMonthData]
   );
 
-  // ✅ Suppression d'événement
-  const deleteEventById = useCallback(
+  const deleteEvent = useCallback(
     async (id: number): Promise<void> => {
       try {
         await calendarApi.deleteEvent(id);
-        deleteEvent(id);
+        setEvents((prev) => prev.filter((event) => event.id !== id));
 
-        // Recharger les données du mois
-        await loadMonthData(state.currentMonth, state.currentYear);
-      } catch (error) {
-        console.error("Erreur suppression événement:", error);
-        throw error;
+        // ♻️ Recharger les données du mois courant
+        const currentKey = getMonthKey(currentMonth, currentYear);
+        setMonthViewData((prev) => {
+          const newData = { ...prev };
+          delete newData[currentKey];
+          return newData;
+        });
+        await loadMonthData(currentMonth, currentYear);
+      } catch (err) {
+        console.error("❌ Erreur suppression événement:", err);
+        throw err;
       }
     },
-    [deleteEvent, loadMonthData, state.currentMonth, state.currentYear]
+    [currentMonth, currentYear, getMonthKey, loadMonthData]
   );
 
   const createTaskFromCalendar = useCallback(
-    async (taskData: {
-      title: string;
-      description?: string;
-      scheduledDate?: string;
-      dueDate?: string;
-      priority?: number;
-    }) => {
+    async (taskData: any) => {
       try {
-        const eventData: CreateEventRequest = {
-          title: taskData.title,
-          description: taskData.description,
-          startDate: taskData.scheduledDate || new Date().toISOString(),
-          endDate:
-            taskData.dueDate ||
-            taskData.scheduledDate ||
-            new Date().toISOString(),
-          type: "TASK_BASED",
-          location: undefined,
-          mode: undefined,
-          meetingLink: undefined,
-          reminders: [],
-          ...(taskData.priority && { priority: taskData.priority }),
-        };
+        const newTask = await calendarApi.createTaskFromCalendar(taskData);
 
-        const newTask = await calendarApi.createTaskFromCalendar(eventData);
-        await loadMonthData(state.currentMonth, state.currentYear);
+        // ♻️ Recharger les données du mois courant
+        const currentKey = getMonthKey(currentMonth, currentYear);
+        setMonthViewData((prev) => {
+          const newData = { ...prev };
+          delete newData[currentKey];
+          return newData;
+        });
+        await loadMonthData(currentMonth, currentYear);
 
         return newTask;
-      } catch (error) {
-        console.error("Erreur création tâche depuis calendrier:", error);
-        throw error;
+      } catch (err) {
+        console.error("❌ Erreur création tâche depuis calendrier:", err);
+        throw err;
       }
     },
-    [loadMonthData, state.currentMonth, state.currentYear]
+    [currentMonth, currentYear, getMonthKey, loadMonthData]
   );
 
-  const searchEvents = useCallback(
-    async (query: string): Promise<EventDto[]> => {
-      try {
-        return await calendarApi.searchEvents(query);
-      } catch (error) {
-        console.error("Erreur recherche événements:", error);
-        return [];
-      }
-    },
-    []
-  );
-
-  const getEventsInRange = useCallback(
-    async (startDate: string, endDate: string): Promise<EventDto[]> => {
-      try {
-        return await calendarApi.getEventsInRange(startDate, endDate);
-      } catch (error) {
-        console.error("Erreur récupération événements par période:", error);
-        return [];
-      }
-    },
-    []
-  );
-
-  const getEventById = useCallback(
-    (id: number): EventDto | undefined => {
-      return state.events.find((event) => event.id === id);
-    },
-    [state.events]
-  );
-
-  const getEventsForDate = useCallback(
-    (date: string): EventDto[] => {
-      return state.events.filter((event) => {
-        const eventDate = new Date(event.startDate).toISOString().split("T")[0];
-        return eventDate === date;
-      });
-    },
-    [state.events]
-  );
-
+  // 🔄 RECHARGEMENT COMPLET
   const refreshCalendarData = useCallback(async () => {
-    await Promise.all([
-      loadAllEvents(),
-      loadMonthData(state.currentMonth, state.currentYear),
-    ]);
-  }, [loadAllEvents, loadMonthData, state.currentMonth, state.currentYear]);
+    // Vider le cache et recharger
+    setMonthViewData({});
+    await loadMonthData(currentMonth, currentYear);
+  }, [currentMonth, currentYear, loadMonthData]);
 
-  const clearCache = useCallback(() => {}, []);
-
+  // 🎣 EFFETS - Charger automatiquement quand le mois change
   useEffect(() => {
+    loadMonthData(currentMonth, currentYear);
+  }, [currentMonth, currentYear, loadMonthData]);
+
+  // 🎣 EFFET - Charger les événements au début
+  useEffect(() => {
+    const loadAllEvents = async () => {
+      setLoading((prev) => ({ ...prev, events: true }));
+      try {
+        const eventsData = await calendarApi.getAllEvents();
+        setEvents(eventsData);
+      } catch (err) {
+        console.error("❌ Erreur chargement événements:", err);
+      } finally {
+        setLoading((prev) => ({ ...prev, events: false }));
+      }
+    };
+
     loadAllEvents();
-  }, [loadAllEvents]);
-
-  useEffect(() => {
-    loadMonthData(state.currentMonth, state.currentYear);
-  }, [state.currentMonth, state.currentYear, loadMonthData]);
+  }, []);
 
   return {
-    events: state.events,
-    filteredEvents,
+    // 📅 ÉTAT DE NAVIGATION
+    currentMonth,
+    currentYear,
+
+    // 📊 DONNÉES
+    events,
     currentMonthData,
-    loadingStates: state.loadingStates,
 
-    loadAllEvents,
-    loadMonthData,
-    loadDayData,
+    // ⚡ ÉTATS DE CHARGEMENT
+    loading,
+    error,
 
+    // 🧭 NAVIGATION
+    navigateToPreviousMonth,
+    navigateToNextMonth,
+    navigateToToday,
+    navigateToMonth,
+
+    // 📝 ACTIONS
     createEvent,
-    updateEvent: updateEventById,
-    deleteEvent: deleteEventById,
-
+    updateEvent,
+    deleteEvent,
     createTaskFromCalendar,
 
-    searchEvents,
-    getEventsInRange,
-    getEventById,
-    getEventsForDate,
-
+    // 🔍 UTILITAIRES
+    loadDayData,
     refreshCalendarData,
-    clearCache,
   };
 };
