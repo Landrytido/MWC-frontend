@@ -5,12 +5,12 @@ import {
   getEventColor,
   formatEventTime,
 } from "../types";
-import { useCalendar } from "../CalendarContext";
 
 interface CalendarGridProps {
   monthData: CalendarViewDto[];
   onDayClick: (date: string) => void;
   onEventClick: (event: EventDto) => void;
+  filterType: "all" | "events" | "tasks";
 }
 
 interface MappedTaskItem extends EventDto {
@@ -22,9 +22,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   monthData,
   onDayClick,
   onEventClick,
+  filterType,
 }) => {
-  const { state } = useCalendar();
-
   const createLocalDate = (
     year: number,
     month: number,
@@ -97,11 +96,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   ): (EventDto | MappedTaskItem)[] => {
     const items: (EventDto | MappedTaskItem)[] = [];
 
-    if (state.filterType === "all" || state.filterType === "events") {
+    if (filterType === "all" || filterType === "events") {
       items.push(...dayData.events);
     }
 
-    if (state.filterType === "all" || state.filterType === "tasks") {
+    if (filterType === "all" || filterType === "tasks") {
       const taskItems: MappedTaskItem[] = dayData.tasks.map((task) => ({
         id: task.id,
         title: task.title,

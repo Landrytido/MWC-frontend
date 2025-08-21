@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useCalendarEvents } from "../hooks/useCalendarEvents";
-
 import {
   CalendarViewDto,
   EventDto,
@@ -17,6 +15,7 @@ interface DayDetailModalProps {
   onEventDelete: (eventId: number) => void;
   onCreateEvent: () => void;
   onCreateTask: () => void;
+  loadDayData: (date: string) => Promise<CalendarViewDto>; // ✅ Passé depuis le composant parent
 }
 
 const DayDetailModal: React.FC<DayDetailModalProps> = ({
@@ -27,20 +26,26 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onEventDelete,
   onCreateEvent,
   onCreateTask,
+  loadDayData, // ✅ Reçu en prop
 }) => {
-  const { loadDayData, loadingStates } = useCalendarEvents();
-
   const [dayData, setDayData] = useState<CalendarViewDto | null>(null);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadDay = useCallback(async () => {
+    if (!date) return;
+
     setError("");
+    setIsLoading(true);
+
     try {
       const data = await loadDayData(date);
       setDayData(data);
     } catch (err) {
       setError("Erreur lors du chargement des données du jour");
       console.error("Erreur chargement jour:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [loadDayData, date]);
 
@@ -67,8 +72,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
-
-  const isLoading = loadingStates.dayView?.isLoading || false;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -104,26 +107,23 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       });
     }
   };
+
   const formatTaskForDisplay = (task: TaskDto): EventDto => {
     return {
       id: task.id,
       title: task.title,
       description: task.description,
-
       startDate: task.scheduledDate || task.dueDate || date,
       endDate: task.scheduledDate || task.dueDate || date,
       type: "TASK_BASED" as const,
       reminders: [],
-
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
-
       location: undefined,
       mode: undefined,
       meetingLink: undefined,
       relatedTaskId: task.id,
       relatedTaskTitle: undefined,
-
       priority: task.priority,
       completed: task.completed,
       dueDate: task.dueDate,

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { useCalendar } from "../hooks/useCalendar";
-import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
-import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
@@ -12,37 +10,35 @@ import { CreateTaskForm } from "../../tasks/types";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 const Calendar: React.FC = () => {
-  // Navigation
+  // 🎣 HOOK PRINCIPAL - Pattern identique aux autres features
   const {
     currentMonth,
     currentYear,
+    currentMonthData,
+    events,
+    loading,
+    error,
+    loadingStates,
     navigateToPreviousMonth,
     navigateToNextMonth,
     navigateToToday,
-  } = useCalendarNavigation();
-
-  // Données et état
-  const { currentMonthData } = useCalendar();
-
-  // Actions
-  const {
-    events,
     createEvent,
     updateEvent,
     deleteEvent,
     createTaskFromCalendar,
-    loadingStates,
-  } = useCalendarEvents();
+    loadDayData,
+  } = useCalendar();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  // État local du composant (modales)
+  // 🗄️ ÉTAT LOCAL DU COMPOSANT (modales uniquement)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalType, setModalType] = useState<"event" | "task">("event");
 
+  // 📝 HANDLERS
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
@@ -90,11 +86,9 @@ const Calendar: React.FC = () => {
   ) => {
     try {
       if (editingEvent) {
-        // Pour la mise à jour, on s'assure que c'est un CreateEventRequest
         await updateEvent(editingEvent.id, data as CreateEventRequest);
       } else {
         if (modalType === "task") {
-          // Pour les tâches, on convertit en CreateEventRequest
           const eventData = data as CreateTaskForm;
           await createTaskFromCalendar({
             title: eventData.title,
@@ -117,12 +111,12 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md">
-      {/* Header avec navigation - maintenant synchronisé ! */}
+      {/* Header avec navigation */}
       <CalendarHeader
         currentMonth={currentMonth}
         currentYear={currentYear}
-        loading={loadingStates?.monthView?.isLoading || false}
-        error={loadingStates?.monthView?.error || null}
+        loading={loadingStates.monthView}
+        error={error}
         onPreviousMonth={navigateToPreviousMonth}
         onNextMonth={navigateToNextMonth}
         onToday={navigateToToday}
@@ -130,14 +124,16 @@ const Calendar: React.FC = () => {
 
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Grille du calendrier */}
           <div className="lg:col-span-3">
             <CalendarGrid
-              monthData={currentMonthData} // ← Maintenant synchronisé !
+              monthData={currentMonthData}
               onDayClick={handleDayClick}
               onEventClick={handleEditEvent}
             />
           </div>
 
+          {/* Liste des événements */}
           <div className="lg:col-span-1">
             <EventsList
               events={events}
@@ -148,6 +144,7 @@ const Calendar: React.FC = () => {
         </div>
       </div>
 
+      {/* 🗂️ MODALES */}
       <EventModal
         isOpen={isEventModalOpen}
         onClose={() => {
@@ -176,6 +173,7 @@ const Calendar: React.FC = () => {
           setSelectedDate(selectedDate);
           handleCreateTask();
         }}
+        loadDayData={loadDayData}
       />
 
       <ConfirmationComponent />
