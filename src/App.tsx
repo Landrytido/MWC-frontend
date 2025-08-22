@@ -10,7 +10,7 @@ import { ProtectedRoute } from "./features/auth";
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-import Dashboard from "./components/pages/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import UserSettings from "./pages/UserSettings";
