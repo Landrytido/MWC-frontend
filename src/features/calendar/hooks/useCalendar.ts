@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { calendarApi } from "../api";
-import { EventDto, CalendarViewDto, CreateEventRequest } from "../types";
+import {
+  EventDto,
+  CalendarViewDto,
+  CreateEventRequest,
+  TaskDto,
+} from "../types";
 
 interface UseCalendarReturn {
   // 📊 DONNÉES
@@ -12,7 +17,6 @@ interface UseCalendarReturn {
   currentYear: number;
 
   // ⚡ ÉTATS DE CHARGEMENT
-  loading: boolean;
   error: string | null;
   loadingStates: {
     events: boolean;
@@ -30,7 +34,7 @@ interface UseCalendarReturn {
   createEvent: (eventData: CreateEventRequest) => Promise<EventDto>;
   updateEvent: (id: number, eventData: CreateEventRequest) => Promise<EventDto>;
   deleteEvent: (id: number) => Promise<void>;
-  createTaskFromCalendar: (taskData: CreateEventRequest) => Promise<any>;
+  createTaskFromCalendar: (taskData: CreateEventRequest) => Promise<TaskDto>;
 
   // 🔍 UTILITAIRES
   loadDayData: (date: string) => Promise<CalendarViewDto>;
@@ -52,8 +56,7 @@ export const useCalendar = (): UseCalendarReturn => {
     []
   );
 
-  // ⚡ ÉTATS DE CHARGEMENT
-  const [loading, setLoading] = useState(false);
+  // ⚡ ÉTATS DE CHARGEMENT - ✅ Suppression de 'loading' inutilisé
   const [error, setError] = useState<string | null>(null);
   const [loadingStates, setLoadingStates] = useState({
     events: false,
@@ -214,8 +217,9 @@ export const useCalendar = (): UseCalendarReturn => {
     [currentMonth, currentYear, loadMonthData]
   );
 
+  // ✅ CORRECTION : Type TaskDto au lieu de any
   const createTaskFromCalendar = useCallback(
-    async (taskData: CreateEventRequest) => {
+    async (taskData: CreateEventRequest): Promise<TaskDto> => {
       try {
         const newTask = await calendarApi.createTaskFromCalendar(taskData);
 
@@ -273,8 +277,7 @@ export const useCalendar = (): UseCalendarReturn => {
     currentMonth,
     currentYear,
 
-    // ⚡ ÉTATS DE CHARGEMENT
-    loading: loadingStates.monthView || loadingStates.events,
+    // ⚡ ÉTATS DE CHARGEMENT - ✅ Suppression de loading global
     error,
     loadingStates,
 
