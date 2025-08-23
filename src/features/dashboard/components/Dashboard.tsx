@@ -1,26 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../features/auth";
-import Layout from "../shared/components/layout/Layout";
-import NoteCard from "../features/notes/components/NoteCard";
-import LinkManager from "../features/links/components/LinkManager";
-import { NotebookSidebar } from "../features/notebooks";
-import { LabelManager } from "../features/labels";
-import { BlocNoteWidget } from "../features/bloc-note";
-import { useUI } from "../shared/contexts/AppContext";
-import { Task } from "../features/tasks";
-import { SavedLink } from "../features/links";
-import { TaskManager } from "../features/tasks";
-import { useConfirmation } from "../shared/hooks/useConfirmation";
-import ToolsManager from "../features/tools/components/ToolsManager";
+import { useAuth } from "../../auth";
+import Layout from "../../../shared/components/layout/Layout";
+import NoteCard from "../../notes/components/NoteCard";
+import LinkManager from "../../links/components/LinkManager";
+import { NotebookSidebar } from "../../notebooks";
+import { LabelManager } from "../../labels";
+import { BlocNoteWidget } from "../../bloc-note";
+import { useUI } from "../../../shared/contexts/AppContext";
+import { TaskManager } from "../../tasks";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
+import ToolsManager from "../../../features/tools/components/ToolsManager";
 import { useSearchParams } from "react-router-dom";
-import { tasksApi } from "../features/tasks";
-import { linksApi } from "../features/links";
-import { useLinks } from "../features/links";
-import { useNotebooks } from "../features/notebooks";
-import { useLabels } from "../features/labels";
-import { useNotes } from "../features/notes";
-import { Note } from "../features/notes/types";
+import { useLinks } from "../../links";
+import { useNotebooks } from "../../notebooks";
+import { useLabels } from "../../labels";
+import { useNotes } from "../../notes";
+import { useDashboard } from "../hooks/useDashboard";
+import { Note } from "../../notes/types";
+import type { TabType } from "../types";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -35,105 +33,25 @@ const Dashboard: React.FC = () => {
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<
-    "notes" | "links" | "tasks" | "tools" | "calendar"
-  >("notes");
 
-  const [searchedTasks, setSearchedTasks] = useState<Task[]>([]);
-  const [searchedLinks, setSearchedLinks] = useState<SavedLink[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [taskSearchTerm, setTaskSearchTerm] = useState("");
-  const [linkSearchTerm, setLinkSearchTerm] = useState("");
+  const {
+    activeTab,
+    currentSearchResults,
+    isSearching,
+    hasActiveSearch,
+    handleTabChange,
+    clearAllSearches,
+    getSearchConfig,
+  } = useDashboard();
 
-  useEffect(() => {
+  React.useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "links" || tab === "tasks" || tab === "tools") {
-      setActiveTab(tab);
+      handleTabChange(tab as TabType);
     }
-  }, [searchParams]);
+  }, [searchParams, handleTabChange]);
 
-  const getSearchConfig = (activeTab: string) => {
-    switch (activeTab) {
-      case "notes":
-        return {
-          show: true,
-          placeholder: "Rechercher dans les notes...",
-          value: ui.searchTerm,
-          onChange: (term: string) => ui.setSearchTerm(term),
-        };
-      case "tasks":
-        return {
-          show: true,
-          placeholder: "Rechercher dans les tâches...",
-          value: taskSearchTerm,
-          onChange: (term: string) => {
-            setTaskSearchTerm(term);
-            handleTaskSearch(term);
-          },
-        };
-      case "links":
-        return {
-          show: true,
-          placeholder: "Rechercher dans les liens...",
-          value: linkSearchTerm,
-          onChange: (term: string) => {
-            setLinkSearchTerm(term);
-            handleLinkSearch(term);
-          },
-        };
-      case "tools":
-      case "calendar":
-        return { show: false };
-      default:
-        return { show: true, placeholder: "Rechercher..." };
-    }
-  };
-
-  // Recherche de tâches
-  const handleTaskSearch = async (term: string) => {
-    if (!term.trim()) {
-      setSearchedTasks([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const results = await tasksApi.search(term);
-      setSearchedTasks(results);
-    } catch (error) {
-      console.error("Erreur lors de la recherche de tâches:", error);
-      setSearchedTasks([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Recherche de liens avec la nouvelle API
-  const handleLinkSearch = async (term: string) => {
-    if (!term.trim()) {
-      setSearchedLinks([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const results = await linksApi.search(term);
-      setSearchedLinks(results);
-    } catch (error) {
-      console.error("Erreur lors de la recherche de liens:", error);
-      setSearchedLinks([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleTabChange = (
-    tab: "notes" | "links" | "tasks" | "tools" | "calendar"
-  ) => {
-    setActiveTab(tab);
-    setSearchedTasks([]);
-    setSearchedLinks([]);
-  };
+  const searchConfig = getSearchConfig(activeTab);
 
   const handleEditNote = useCallback(
     (note: Note) => {
@@ -173,13 +91,12 @@ const Dashboard: React.FC = () => {
 
   const handleClearFilters = useCallback(() => {
     ui.clearAllSearchTerms();
-    setTaskSearchTerm("");
-    setLinkSearchTerm("");
-    setSearchedTasks([]);
-    setSearchedLinks([]);
-  }, [ui]);
+    clearAllSearches();
+  }, [ui, clearAllSearches]);
 
-  const searchConfig = getSearchConfig(activeTab);
+  const displayedSearchResults = hasActiveSearch
+    ? currentSearchResults
+    : undefined;
 
   return (
     <Layout>
@@ -204,7 +121,6 @@ const Dashboard: React.FC = () => {
             <BlocNoteWidget />
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             {searchConfig.show && (
               <div className="mb-6">
@@ -229,9 +145,7 @@ const Dashboard: React.FC = () => {
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
-                  {(ui.searchTerm ||
-                    taskSearchTerm ||
-                    linkSearchTerm ||
+                  {(hasActiveSearch ||
                     ui.currentNotebook ||
                     ui.selectedLabels.length > 0) && (
                     <button
@@ -265,8 +179,7 @@ const Dashboard: React.FC = () => {
 
                 {(ui.currentNotebook ||
                   ui.selectedLabels.length > 0 ||
-                  (activeTab === "tasks" && taskSearchTerm) ||
-                  (activeTab === "links" && linkSearchTerm)) && (
+                  hasActiveSearch) && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {ui.currentNotebook && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
@@ -331,44 +244,12 @@ const Dashboard: React.FC = () => {
                       ) : null;
                     })}
 
-                    {/* Recherche tâches */}
-                    {activeTab === "tasks" && taskSearchTerm && (
+                    {hasActiveSearch && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-                        🔍 "{taskSearchTerm}"
+                        🔍 "{searchConfig.value}"
                         <button
-                          onClick={() => {
-                            setTaskSearchTerm("");
-                            setSearchedTasks([]);
-                          }}
+                          onClick={() => clearAllSearches()}
                           className="ml-1 text-purple-600 hover:text-purple-800"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </span>
-                    )}
-
-                    {/* Recherche liens */}
-                    {activeTab === "links" && linkSearchTerm && (
-                      <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full">
-                        🔍 "{linkSearchTerm}"
-                        <button
-                          onClick={() => {
-                            setLinkSearchTerm("");
-                            setSearchedLinks([]);
-                          }}
-                          className="ml-1 text-indigo-600 hover:text-indigo-800"
                         >
                           <svg
                             className="w-3 h-3"
@@ -391,7 +272,6 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            {/* Tabs */}
             <div className="flex border-b border-gray-200 mb-6">
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -401,7 +281,11 @@ const Dashboard: React.FC = () => {
                 }`}
                 onClick={() => handleTabChange("notes")}
               >
-                Notes ({filteredNotes.length})
+                Notes (
+                {hasActiveSearch
+                  ? currentSearchResults.length
+                  : filteredNotes.length}
+                )
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -412,7 +296,7 @@ const Dashboard: React.FC = () => {
                 onClick={() => handleTabChange("links")}
               >
                 Liens Sauvegardés (
-                {linkSearchTerm ? searchedLinks.length : links.length})
+                {hasActiveSearch ? currentSearchResults.length : links.length})
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -422,7 +306,7 @@ const Dashboard: React.FC = () => {
                 }`}
                 onClick={() => handleTabChange("tasks")}
               >
-                Tâches {taskSearchTerm && `(${searchedTasks.length})`}
+                Tâches {hasActiveSearch && `(${currentSearchResults.length})`}
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -446,7 +330,6 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Content */}
             {activeTab === "notes" && (
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -459,6 +342,8 @@ const Dashboard: React.FC = () => {
                       : "Toutes les notes"}
                     {ui.selectedLabels.length > 0 &&
                       ` (${ui.selectedLabels.length} label(s) filtrés)`}
+                    {hasActiveSearch &&
+                      ` (${currentSearchResults.length} résultats)`}
                   </h2>
                   <button
                     onClick={() => navigate("/dashboard/notes/new")}
@@ -485,9 +370,13 @@ const Dashboard: React.FC = () => {
                   <div className="flex justify-center py-8">
                     <div className="text-gray-500">Chargement des notes...</div>
                   </div>
-                ) : filteredNotes.length > 0 ? (
+                ) : (hasActiveSearch ? currentSearchResults : filteredNotes)
+                    .length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredNotes.map((note) => (
+                    {(hasActiveSearch
+                      ? currentSearchResults
+                      : filteredNotes
+                    ).map((note) => (
                       <NoteCard
                         key={note.id}
                         note={note}
@@ -501,6 +390,8 @@ const Dashboard: React.FC = () => {
                   <div className="text-center py-8 text-gray-500">
                     {notes.length === 0
                       ? "Vous n'avez pas encore de notes. Commencez par en créer une !"
+                      : hasActiveSearch
+                      ? "Aucun résultat trouvé pour votre recherche."
                       : "Aucune note ne correspond aux filtres sélectionnés."}
                   </div>
                 )}
@@ -509,14 +400,14 @@ const Dashboard: React.FC = () => {
 
             {activeTab === "links" && (
               <LinkManager
-                searchResults={linkSearchTerm ? searchedLinks : undefined}
+                searchResults={displayedSearchResults}
                 isSearching={isSearching}
               />
             )}
 
             {activeTab === "tasks" && (
               <TaskManager
-                searchResults={taskSearchTerm ? searchedTasks : undefined}
+                searchResults={displayedSearchResults}
                 isSearching={isSearching}
               />
             )}
