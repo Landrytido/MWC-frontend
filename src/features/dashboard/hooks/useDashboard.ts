@@ -6,22 +6,22 @@ import { notesApi } from "../../notes";
 import { useNotes } from "../../notes";
 import { useLinks } from "../../links";
 import { useTasks } from "../../tasks";
-import type { TabType } from "../types";
+import type { TabType, SearchConfig } from "../types";
 import type { Task } from "../../tasks/types";
 import type { SavedLink } from "../../links/types";
 import type { Note } from "../../notes/types";
 
 type SearchResult = Task | SavedLink | Note;
 
-const debounce = <T extends (...args: unknown[]) => unknown>(
-  func: T,
+const debounce = <T extends unknown[]>(
+  func: (...args: T) => unknown,
   wait: number
-): T => {
+): ((...args: T) => void) => {
   let timeoutId: number;
-  return ((...args: unknown[]) => {
+  return (...args: T) => {
     clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => func(...args), wait);
-  }) as T;
+  };
 };
 
 // 🔥 NOUVELLE FONCTION: Recherche locale pour les notes
@@ -92,6 +92,9 @@ export const useDashboard = () => {
     calendar: "",
   });
 
+  // Mode développement pour afficher les messages de debug
+  const isDev = import.meta.env.DEV;
+
   // 🔥 AJOUT: Accès aux données locales pour le fallback
   const { notes } = useNotes();
   const { links } = useLinks();
@@ -121,75 +124,97 @@ export const useDashboard = () => {
           switch (tab) {
             case "notes": {
               try {
-                // 🔥 TENTATIVE API d'abord
-                console.log(`🔍 Recherche API notes: "${term}"`);
+                // Tentative API d'abord
+                if (isDev) console.log(`🔍 Recherche API notes: "${term}"`);
                 const response = await notesApi.search({ query: term });
                 results = Array.isArray(response)
                   ? response
                   : response.notes || [];
-                console.log(`✅ API notes trouvées: ${results.length}`);
-              } catch (apiError) {
-                // 🔥 FALLBACK vers recherche locale
-                console.warn(
-                  `❌ API notes échoue, fallback local pour: "${term}"`
-                );
+                if (isDev)
+                  console.log(`✅ API notes trouvées: ${results.length}`);
+              } catch {
+                // Fallback vers recherche locale sans message utilisateur visible
+                if (isDev) {
+                  console.warn(
+                    `❌ API notes échoue, fallback local pour: "${term}"`
+                  );
+                }
                 results = searchNotesLocally(notes, term);
-                console.log(
-                  `🔍 Recherche locale notes: ${results.length} trouvées`
-                );
+                if (isDev) {
+                  console.log(
+                    `🔍 Recherche locale notes: ${results.length} trouvées`
+                  );
+                }
 
-                setSearchErrors((prev) => ({
-                  ...prev,
-                  [tab]: `Recherche locale activée (API indisponible)`,
-                }));
+                // En mode développement uniquement, afficher l'info
+                if (isDev) {
+                  setSearchErrors((prev) => ({
+                    ...prev,
+                    [tab]: `Mode hors-ligne`,
+                  }));
+                }
               }
               break;
             }
 
             case "links": {
               try {
-                console.log(`🔍 Recherche API liens: "${term}"`);
+                if (isDev) console.log(`🔍 Recherche API liens: "${term}"`);
                 const linkResults = await linksApi.search(term);
                 results = linkResults;
-                console.log(`✅ API liens trouvés: ${results.length}`);
-              } catch (apiError) {
-                // 🔥 FALLBACK vers recherche locale
-                console.warn(
-                  `❌ API liens échoue, fallback local pour: "${term}"`
-                );
+                if (isDev)
+                  console.log(`✅ API liens trouvés: ${results.length}`);
+              } catch {
+                // Fallback vers recherche locale
+                if (isDev) {
+                  console.warn(
+                    `❌ API liens échoue, fallback local pour: "${term}"`
+                  );
+                }
                 results = searchLinksLocally(links, term);
-                console.log(
-                  `🔍 Recherche locale liens: ${results.length} trouvés`
-                );
+                if (isDev) {
+                  console.log(
+                    `🔍 Recherche locale liens: ${results.length} trouvés`
+                  );
+                }
 
-                setSearchErrors((prev) => ({
-                  ...prev,
-                  [tab]: `Recherche locale activée (API indisponible)`,
-                }));
+                if (isDev) {
+                  setSearchErrors((prev) => ({
+                    ...prev,
+                    [tab]: `Mode hors-ligne`,
+                  }));
+                }
               }
               break;
             }
 
             case "tasks": {
               try {
-                console.log(`🔍 Recherche API tâches: "${term}"`);
+                if (isDev) console.log(`🔍 Recherche API tâches: "${term}"`);
                 const taskResults = await tasksApi.search(term);
                 results = taskResults;
-                console.log(`✅ API tâches trouvées: ${results.length}`);
-              } catch (apiError) {
-                // 🔥 FALLBACK vers recherche locale
-                console.warn(
-                  `❌ API tâches échoue, fallback local pour: "${term}"`
-                );
+                if (isDev)
+                  console.log(`✅ API tâches trouvées: ${results.length}`);
+              } catch {
+                // Fallback vers recherche locale
+                if (isDev) {
+                  console.warn(
+                    `❌ API tâches échoue, fallback local pour: "${term}"`
+                  );
+                }
                 results = searchTasksLocally(tasks, term);
-                console.log(
-                  `🔍 Recherche locale tâches: ${results.length} trouvées`
-                );
+                if (isDev) {
+                  console.log(
+                    `🔍 Recherche locale tâches: ${results.length} trouvées`
+                  );
+                }
 
-                setSearchErrors((prev) => ({
-                  ...prev,
-                  [tab]: `Recherche locale activée (API indisponible)`,
-                }));
+                if (isDev) {
+                  setSearchErrors((prev) => ({
+                    ...prev,
+                    [tab]: `Mode hors-ligne`,
+                  }));
+                }
               }
               break;
             }
@@ -208,8 +233,8 @@ export const useDashboard = () => {
         } finally {
           setIsSearching(false);
         }
-      }, 300), // 🔥 Augmenté le debounce pour éviter trop de requêtes
-    [notes, links, tasks] // 🔥 IMPORTANT: Dépendances pour le fallback local
+      }, 300), // Debounce pour éviter trop de requêtes
+    [notes, links, tasks, isDev] // Dépendances pour le fallback local et mode debug
   );
 
   const handleSearch = useCallback(
@@ -250,7 +275,7 @@ export const useDashboard = () => {
   }, []);
 
   const getSearchConfig = useCallback(
-    (tab: TabType) => {
+    (tab: TabType): SearchConfig => {
       const configs = {
         notes: {
           show: true,
@@ -270,14 +295,27 @@ export const useDashboard = () => {
           hasError: !!searchErrors.links,
           errorMessage: searchErrors.links,
         },
-        tools: { show: false },
-        calendar: { show: false },
+        tools: {
+          show: false,
+          placeholder: undefined,
+          hasError: false,
+          errorMessage: "",
+        },
+        calendar: {
+          show: false,
+          placeholder: undefined,
+          hasError: false,
+          errorMessage: "",
+        },
       };
 
-      const config = configs[tab] || { show: false };
+      const config = configs[tab];
 
       return {
-        ...config,
+        show: config.show,
+        placeholder: config.placeholder,
+        hasError: config.hasError,
+        errorMessage: config.errorMessage,
         value: searches[tab] || "",
         onChange: (term: string) => handleSearch(tab, term),
       };
@@ -292,6 +330,19 @@ export const useDashboard = () => {
     [searchResults]
   );
 
+  // Fonctions typées spécifiques pour chaque type de contenu
+  const getNotesSearchResults = useCallback((): Note[] => {
+    return (searchResults.notes || []) as Note[];
+  }, [searchResults.notes]);
+
+  const getLinksSearchResults = useCallback((): SavedLink[] => {
+    return (searchResults.links || []) as SavedLink[];
+  }, [searchResults.links]);
+
+  const getTasksSearchResults = useCallback((): Task[] => {
+    return (searchResults.tasks || []) as Task[];
+  }, [searchResults.tasks]);
+
   return {
     activeTab,
     currentSearchTerm: searches[activeTab] || "",
@@ -305,6 +356,9 @@ export const useDashboard = () => {
     clearAllSearches,
     getSearchConfig,
     getTabSearchResults,
+    getNotesSearchResults,
+    getLinksSearchResults,
+    getTasksSearchResults,
 
     hasSearchResults: (searchResults[activeTab]?.length || 0) > 0,
   };

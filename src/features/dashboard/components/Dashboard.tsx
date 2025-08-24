@@ -36,13 +36,15 @@ const Dashboard: React.FC = () => {
 
   const {
     activeTab,
-    currentSearchResults,
     isSearching,
     hasActiveSearch,
     handleTabChange,
     clearAllSearches,
     getSearchConfig,
     getTabSearchResults,
+    getNotesSearchResults,
+    getLinksSearchResults,
+    getTasksSearchResults,
   } = useDashboard();
 
   React.useEffect(() => {
@@ -95,9 +97,10 @@ const Dashboard: React.FC = () => {
     clearAllSearches();
   }, [ui, clearAllSearches]);
 
-  const displayedSearchResults = hasActiveSearch
-    ? currentSearchResults
-    : undefined;
+  // Obtenir les résultats de recherche typés pour l'onglet actuel
+  const currentNotesResults = getNotesSearchResults();
+  const currentLinksResults = getLinksSearchResults();
+  const currentTasksResults = getTasksSearchResults();
 
   return (
     <Layout>
@@ -175,25 +178,27 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* Indicateur d'erreur/fallback */}
-                {searchConfig.hasError && searchConfig.errorMessage && (
-                  <div className="mt-2 text-sm text-orange-600 flex items-center">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                    {searchConfig.errorMessage}
-                  </div>
-                )}
+                {/* Indicateur d'erreur/fallback - Seulement en mode développement */}
+                {import.meta.env.DEV &&
+                  searchConfig.hasError &&
+                  searchConfig.errorMessage && (
+                    <div className="mt-2 text-xs text-gray-400 flex items-center">
+                      <svg
+                        className="w-3 h-3 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {searchConfig.errorMessage}
+                    </div>
+                  )}
 
                 {isSearching && (
                   <div className="mt-2 text-sm text-gray-500 flex items-center">
@@ -374,7 +379,7 @@ const Dashboard: React.FC = () => {
                     {ui.selectedLabels.length > 0 &&
                       ` (${ui.selectedLabels.length} label(s) filtrés)`}
                     {hasActiveSearch &&
-                      ` (${currentSearchResults.length} résultats)`}
+                      ` (${currentNotesResults.length} résultats)`}
                   </h2>
                   <button
                     onClick={() => navigate("/dashboard/notes/new")}
@@ -401,13 +406,13 @@ const Dashboard: React.FC = () => {
                   <div className="flex justify-center py-8">
                     <div className="text-gray-500">Chargement des notes...</div>
                   </div>
-                ) : (hasActiveSearch ? currentSearchResults : filteredNotes)
+                ) : (hasActiveSearch ? currentNotesResults : filteredNotes)
                     .length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(hasActiveSearch
-                      ? currentSearchResults
+                      ? currentNotesResults
                       : filteredNotes
-                    ).map((note) => (
+                    ).map((note: Note) => (
                       <NoteCard
                         key={note.id}
                         note={note}
@@ -431,14 +436,18 @@ const Dashboard: React.FC = () => {
 
             {activeTab === "links" && (
               <LinkManager
-                searchResults={displayedSearchResults}
+                searchResults={
+                  hasActiveSearch ? currentLinksResults : undefined
+                }
                 isSearching={isSearching}
               />
             )}
 
             {activeTab === "tasks" && (
               <TaskManager
-                searchResults={displayedSearchResults}
+                searchResults={
+                  hasActiveSearch ? currentTasksResults : undefined
+                }
                 isSearching={isSearching}
               />
             )}

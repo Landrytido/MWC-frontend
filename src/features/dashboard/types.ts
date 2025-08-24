@@ -5,6 +5,8 @@ export interface SearchConfig {
   placeholder?: string;
   value: string;
   onChange: (term: string) => void;
+  hasError?: boolean;
+  errorMessage?: string;
 }
 
 export interface TabConfig {
