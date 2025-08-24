@@ -42,6 +42,7 @@ const Dashboard: React.FC = () => {
     handleTabChange,
     clearAllSearches,
     getSearchConfig,
+    getTabSearchResults,
   } = useDashboard();
 
   React.useEffect(() => {
@@ -282,8 +283,8 @@ const Dashboard: React.FC = () => {
                 onClick={() => handleTabChange("notes")}
               >
                 Notes (
-                {hasActiveSearch
-                  ? currentSearchResults.length
+                {hasActiveSearch && activeTab === "notes"
+                  ? getTabSearchResults("notes").length
                   : filteredNotes.length}
                 )
               </button>
@@ -296,7 +297,10 @@ const Dashboard: React.FC = () => {
                 onClick={() => handleTabChange("links")}
               >
                 Liens Sauvegardés (
-                {hasActiveSearch ? currentSearchResults.length : links.length})
+                {hasActiveSearch && activeTab === "links"
+                  ? getTabSearchResults("links").length
+                  : links.length}
+                )
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${
@@ -306,7 +310,10 @@ const Dashboard: React.FC = () => {
                 }`}
                 onClick={() => handleTabChange("tasks")}
               >
-                Tâches {hasActiveSearch && `(${currentSearchResults.length})`}
+                Tâches{" "}
+                {hasActiveSearch && activeTab === "tasks"
+                  ? `(${getTabSearchResults("tasks").length})`
+                  : ""}
               </button>
               <button
                 className={`px-4 py-2 font-medium text-sm ${

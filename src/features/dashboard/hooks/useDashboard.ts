@@ -48,6 +48,11 @@ export const useDashboard = () => {
           return;
         }
 
+        if (term.length < 3) {
+          setSearchResults((prev) => ({ ...prev, [tab]: [] }));
+          return;
+        }
+
         setIsSearching(true);
         try {
           let results: SearchResult[] = [];
@@ -64,7 +69,9 @@ export const useDashboard = () => {
             }
             case "notes": {
               const response = await notesApi.search({ query: term });
-              results = response.notes || response;
+              results = Array.isArray(response)
+                ? response
+                : response.notes || [];
               break;
             }
           }
@@ -75,7 +82,7 @@ export const useDashboard = () => {
         } finally {
           setIsSearching(false);
         }
-      }, 300),
+      }, 200),
     []
   );
 
@@ -89,6 +96,8 @@ export const useDashboard = () => {
 
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
+    setSearches((prev) => ({ ...prev, [tab]: "" }));
+    setSearchResults((prev) => ({ ...prev, [tab]: [] }));
   }, []);
 
   const clearAllSearches = useCallback(() => {
@@ -111,9 +120,18 @@ export const useDashboard = () => {
   const getSearchConfig = useCallback(
     (tab: TabType) => {
       const configs = {
-        notes: { show: true, placeholder: "Rechercher dans les notes..." },
-        tasks: { show: true, placeholder: "Rechercher dans les tâches..." },
-        links: { show: true, placeholder: "Rechercher dans les liens..." },
+        notes: {
+          show: true,
+          placeholder: "Rechercher dans les notes... (min 3 caractères)",
+        },
+        tasks: {
+          show: true,
+          placeholder: "Rechercher dans les tâches... (min 3 caractères)",
+        },
+        links: {
+          show: true,
+          placeholder: "Rechercher dans les liens... (min 3 caractères)",
+        },
         tools: { show: false },
         calendar: { show: false },
       };
@@ -129,6 +147,13 @@ export const useDashboard = () => {
     [searches, handleSearch]
   );
 
+  const getTabSearchResults = useCallback(
+    (tab: TabType) => {
+      return searchResults[tab] || [];
+    },
+    [searchResults]
+  );
+
   return {
     activeTab,
     currentSearchTerm: searches[activeTab] || "",
@@ -140,6 +165,7 @@ export const useDashboard = () => {
     handleSearch,
     clearAllSearches,
     getSearchConfig,
+    getTabSearchResults,
 
     hasSearchResults: (searchResults[activeTab]?.length || 0) > 0,
   };
