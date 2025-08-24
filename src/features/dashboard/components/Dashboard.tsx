@@ -131,7 +131,11 @@ const Dashboard: React.FC = () => {
                     placeholder={searchConfig.placeholder}
                     value={searchConfig.value}
                     onChange={(e) => searchConfig.onChange?.(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
+                      searchConfig.hasError
+                        ? "border-orange-300 focus:ring-orange-500 bg-orange-50"
+                        : "border-gray-300 focus:ring-teal-500"
+                    }`}
                   />
                   <svg
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -170,6 +174,26 @@ const Dashboard: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Indicateur d'erreur/fallback */}
+                {searchConfig.hasError && searchConfig.errorMessage && (
+                  <div className="mt-2 text-sm text-orange-600 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
+                    </svg>
+                    {searchConfig.errorMessage}
+                  </div>
+                )}
 
                 {isSearching && (
                   <div className="mt-2 text-sm text-gray-500 flex items-center">
