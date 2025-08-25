@@ -59,10 +59,31 @@ export const notesApi = {
     return httpService.delete(`/notes/${noteId}/labels?${labelIdsParam}`);
   },
 
-  search: (
+  search: async (
     params: NotesSearchParams
-  ): Promise<{ notes: Note[]; total?: number }> =>
-    httpService.get("/notes/search", params),
+  ): Promise<{ notes: Note[]; total?: number }> => {
+    // Si pas de terme de recherche, retourner toutes les notes
+    if (!params.query?.trim()) {
+      const allNotes = await notesApi.getAll();
+      return { notes: allNotes, total: allNotes.length };
+    }
+
+    try {
+      // Utiliser 'keyword' au lieu de 'query' pour correspondre au backend
+      const notes = await httpService.get<Note[]>("/notes/search", {
+        keyword: params.query,
+      });
+
+      return {
+        notes: Array.isArray(notes) ? notes : [],
+        total: Array.isArray(notes) ? notes.length : 0,
+      };
+    } catch (error) {
+      console.error("Erreur lors de la recherche de notes:", error);
+      // Fallback : retourner un tableau vide au lieu de lancer l'erreur
+      return { notes: [], total: 0 };
+    }
+  },
 
   getRecentNotes: (limit: number = 10): Promise<Note[]> =>
     httpService.get("/notes/recent", { limit }),
