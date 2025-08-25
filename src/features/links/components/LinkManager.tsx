@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { useLinks } from "../hooks/useLinks";
 import type { SavedLink } from "../types"; // ✅ Ajout de l'import manquant
@@ -14,6 +15,7 @@ const LinkManager: React.FC<LinkManagerProps> = ({
   searchResults,
   isSearching = false,
 }) => {
+  const navigate = useNavigate();
   const { links, loading, error, deleteLink } = useLinks();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
@@ -65,9 +67,7 @@ const LinkManager: React.FC<LinkManagerProps> = ({
           {searchResults && ` (${searchResults.length} résultat(s))`}
         </h2>
         <button
-          onClick={() => {
-            /* Logique pour ajouter un lien */
-          }}
+          onClick={() => navigate("/dashboard/links/new")}
           className="flex items-center text-sm font-medium text-teal-500 hover:text-teal-600"
         >
           <svg

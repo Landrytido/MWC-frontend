@@ -8,15 +8,12 @@ import {
 } from "../types";
 
 interface UseCalendarReturn {
-  // 📊 DONNÉES
   events: EventDto[];
   currentMonthData: CalendarViewDto[];
 
-  // 📅 NAVIGATION
   currentMonth: number;
   currentYear: number;
 
-  // ⚡ ÉTATS DE CHARGEMENT
   error: string | null;
   loadingStates: {
     events: boolean;
@@ -24,25 +21,21 @@ interface UseCalendarReturn {
     dayView: boolean;
   };
 
-  // 🧭 NAVIGATION
   navigateToPreviousMonth: () => void;
   navigateToNextMonth: () => void;
   navigateToToday: () => void;
   navigateToMonth: (month: number, year: number) => void;
 
-  // 📝 ACTIONS CRUD
   createEvent: (eventData: CreateEventRequest) => Promise<EventDto>;
   updateEvent: (id: number, eventData: CreateEventRequest) => Promise<EventDto>;
   deleteEvent: (id: number) => Promise<void>;
   createTaskFromCalendar: (taskData: CreateEventRequest) => Promise<TaskDto>;
 
-  // 🔍 UTILITAIRES
   loadDayData: (date: string) => Promise<CalendarViewDto>;
   refreshCalendarData: () => Promise<void>;
 }
 
 export const useCalendar = (): UseCalendarReturn => {
-  // 📅 ÉTAT DE NAVIGATION
   const [currentMonth, setCurrentMonth] = useState(
     () => new Date().getMonth() + 1
   );
@@ -56,7 +49,6 @@ export const useCalendar = (): UseCalendarReturn => {
     []
   );
 
-  // ⚡ ÉTATS DE CHARGEMENT - ✅ Suppression de 'loading' inutilisé
   const [error, setError] = useState<string | null>(null);
   const [loadingStates, setLoadingStates] = useState({
     events: false,
@@ -64,7 +56,6 @@ export const useCalendar = (): UseCalendarReturn => {
     dayView: false,
   });
 
-  // 🔑 CLÉS DE CACHE - Simple, juste pour éviter les rechargements inutiles
   const [lastLoadedMonth, setLastLoadedMonth] = useState<string | null>(null);
 
   const getMonthKey = useCallback(
@@ -73,7 +64,6 @@ export const useCalendar = (): UseCalendarReturn => {
     []
   );
 
-  // 🧭 NAVIGATION
   const navigateToMonth = useCallback((month: number, year: number) => {
     setCurrentMonth(month);
     setCurrentYear(year);
@@ -100,12 +90,10 @@ export const useCalendar = (): UseCalendarReturn => {
     navigateToMonth(today.getMonth() + 1, today.getFullYear());
   }, [navigateToMonth]);
 
-  // 📊 CHARGEMENT DES DONNÉES
   const loadMonthData = useCallback(
     async (month: number, year: number) => {
       const monthKey = getMonthKey(month, year);
 
-      // Simple cache check - pas de stockage en mémoire complexe
       if (lastLoadedMonth === monthKey) {
         return;
       }
@@ -115,6 +103,7 @@ export const useCalendar = (): UseCalendarReturn => {
 
       try {
         const data = await calendarApi.getMonthView(year, month);
+
         setCurrentMonthData(data);
         setLastLoadedMonth(monthKey);
       } catch (err) {
@@ -217,13 +206,11 @@ export const useCalendar = (): UseCalendarReturn => {
     [currentMonth, currentYear, loadMonthData]
   );
 
-  // ✅ CORRECTION : Type TaskDto au lieu de any
   const createTaskFromCalendar = useCallback(
     async (taskData: CreateEventRequest): Promise<TaskDto> => {
       try {
         const newTask = await calendarApi.createTaskFromCalendar(taskData);
 
-        // ♻️ Recharger les données du mois courant pour voir la nouvelle tâche
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
