@@ -67,7 +67,10 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         case "today": {
           const today = new Date().toISOString().split("T")[0];
           return searchResults.filter(
-            (task) => !task.completed && task.scheduledDate === today
+            (task) =>
+              !task.completed &&
+              task.dueDate &&
+              task.dueDate.split("T")[0] === today
           );
         }
         case "tomorrow": {
@@ -75,7 +78,10 @@ const TaskManager: React.FC<TaskManagerProps> = ({
             .toISOString()
             .split("T")[0];
           return searchResults.filter(
-            (task) => !task.completed && task.scheduledDate === tomorrow
+            (task) =>
+              !task.completed &&
+              task.dueDate &&
+              task.dueDate.split("T")[0] === tomorrow
           );
         }
         case "all":
@@ -128,6 +134,10 @@ const TaskManager: React.FC<TaskManagerProps> = ({
       }
       handleCloseModal();
     } catch (err) {
+      // Si l'opération a été annulée par l'utilisateur, on ne fait rien
+      if (err instanceof Error && err.message === "OPERATION_CANCELLED") {
+        return;
+      }
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };

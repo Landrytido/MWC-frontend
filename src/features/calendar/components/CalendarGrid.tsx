@@ -104,8 +104,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       const taskItems: MappedTaskItem[] = dayData.tasks.map((task) => ({
         id: task.id,
         title: task.title,
-        startDate: task.scheduledDate || task.dueDate || dayData.date,
-        endDate: task.scheduledDate || task.dueDate || dayData.date,
+        startDate: task.dueDate || dayData.date,
+        endDate: task.dueDate || dayData.date,
         type: "TASK_BASED" as const,
         relatedTaskId: task.id,
         reminders: [],

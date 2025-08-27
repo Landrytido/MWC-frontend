@@ -113,8 +113,8 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       id: task.id,
       title: task.title,
       description: task.description,
-      startDate: task.scheduledDate || task.dueDate || date,
-      endDate: task.scheduledDate || task.dueDate || date,
+      startDate: task.dueDate || date,
+      endDate: task.dueDate || date,
       type: "TASK_BASED" as const,
       reminders: [],
       createdAt: task.createdAt,
@@ -127,7 +127,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       priority: task.priority,
       completed: task.completed,
       dueDate: task.dueDate,
-      scheduledDate: task.scheduledDate,
     };
   };
 
@@ -455,10 +454,15 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                                   </span>
                                   {task.dueDate && (
                                     <span>
-                                      Échéance:{" "}
+                                      Prévue:{" "}
                                       {new Date(
                                         task.dueDate
-                                      ).toLocaleDateString("fr-FR")}
+                                      ).toLocaleDateString("fr-FR", {
+                                        day: "numeric",
+                                        month: "short",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
                                     </span>
                                   )}
                                 </div>

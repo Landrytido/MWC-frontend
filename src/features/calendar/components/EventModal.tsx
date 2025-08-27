@@ -7,6 +7,7 @@ import {
   EVENT_MODE_LABELS,
 } from "../types";
 import { TaskPriority, PRIORITY_LABELS, CreateTaskForm } from "../../tasks";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ const EventModal: React.FC<EventModalProps> = ({
   modalType,
   selectedDate,
 }) => {
+  const { confirm } = useConfirmation();
+
   const [formData, setFormData] = useState<CreateEventRequest>({
     title: "",
     description: "",
@@ -45,11 +48,6 @@ const EventModal: React.FC<EventModalProps> = ({
   const [selectedReminders, setSelectedReminders] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const formatDateForBackend = (dateString: string): string => {
-    if (!dateString) return "";
-    return dateString.split("T")[0];
-  };
 
   const formatDateTimeForBackend = (dateString: string): string => {
     if (!dateString) return "";
@@ -147,23 +145,22 @@ const EventModal: React.FC<EventModalProps> = ({
   }, [isOpen, editingEvent, modalType, selectedDate]);
   useEffect(() => {
     if (modalType === "task" && isOpen) {
+      // Pour les tâches, gérer la date via dueDate directement
       if (selectedDate) {
-        setFormData((prev) => ({ ...prev, scheduledDate: selectedDate }));
+        setDueDate(`${selectedDate}T09:00`);
         return;
       }
-      const today = new Date().toISOString().split("T")[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
 
-      let scheduledDate = "";
+      const today = new Date();
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
       if (scheduleType === "today") {
-        scheduledDate = today;
+        today.setHours(9, 0, 0, 0);
+        setDueDate(today.toISOString().slice(0, 16));
       } else if (scheduleType === "tomorrow") {
-        scheduledDate = tomorrow;
+        tomorrow.setHours(9, 0, 0, 0);
+        setDueDate(tomorrow.toISOString().slice(0, 16));
       }
-
-      setFormData((prev) => ({ ...prev, scheduledDate }));
     }
   }, [scheduleType, modalType, selectedDate, isOpen]);
   useEffect(() => {
@@ -232,15 +229,40 @@ const EventModal: React.FC<EventModalProps> = ({
 
     try {
       if (modalType === "task") {
+        // Pour les tâches, on n'envoie que dueDate (concept unifié)
+        const taskDueDate = dueDate
+          ? formatDateTimeForBackend(dueDate)
+          : selectedDate
+          ? `${selectedDate}T09:00:00` // 9h par défaut si seulement la date est sélectionnée
+          : undefined;
+
+        // ✅ VALIDATION : Vérifier si la date est dans le passé
+        if (taskDueDate) {
+          const selectedDateTime = new Date(taskDueDate);
+          const now = new Date();
+
+          if (selectedDateTime < now) {
+            const confirmed = await confirm({
+              title: "Date passée",
+              message:
+                "⚠️ Vous créez une tâche pour une date passée. Continuer ?",
+              confirmText: "Continuer",
+              cancelText: "Modifier",
+              variant: "warning",
+            });
+
+            if (!confirmed) {
+              setIsSubmitting(false);
+              // L'utilisateur a annulé - on lance une exception spéciale
+              throw new Error("OPERATION_CANCELLED");
+            }
+          }
+        }
+
         const taskData: CreateTaskForm = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
-          scheduledDate:
-            selectedDate ||
-            (formData.scheduledDate
-              ? formatDateForBackend(formData.scheduledDate)
-              : undefined),
-          dueDate: dueDate ? formatDateTimeForBackend(dueDate) : undefined,
+          dueDate: taskDueDate,
           priority: priority,
         };
 
@@ -520,7 +542,7 @@ const EventModal: React.FC<EventModalProps> = ({
                           htmlFor="dueDate"
                           className="block text-sm font-medium text-gray-700 mb-2"
                         >
-                          Date d'échéance (optionnelle)
+                          Date de réalisation (optionnelle)
                         </label>
                         <input
                           id="dueDate"
@@ -531,8 +553,8 @@ const EventModal: React.FC<EventModalProps> = ({
                           disabled={isSubmitting}
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          Laissez vide si vous voulez juste une tâche à faire
-                          sans date limite
+                          Laissez vide pour une tâche sans date de réalisation
+                          spécifique
                         </p>
                       </div>
                     )}

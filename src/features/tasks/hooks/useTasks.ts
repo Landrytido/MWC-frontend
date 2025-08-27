@@ -35,7 +35,7 @@ export const useTasks = (): UseTasksReturn => {
   const todayTasks = tasks.filter((task) => {
     if (task.completed) return false;
     const today = new Date().toISOString().split("T")[0];
-    return task.scheduledDate === today;
+    return task.dueDate && task.dueDate.split("T")[0] === today;
   });
 
   const tomorrowTasks = tasks.filter((task) => {
@@ -43,7 +43,7 @@ export const useTasks = (): UseTasksReturn => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0];
-    return task.scheduledDate === tomorrow;
+    return task.dueDate && task.dueDate.split("T")[0] === tomorrow;
   });
 
   const fetchTasks = useCallback(async () => {

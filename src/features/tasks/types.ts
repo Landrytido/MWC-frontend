@@ -33,8 +33,7 @@ export interface Task {
   id: number;
   title: string;
   description?: string;
-  dueDate?: string;
-  scheduledDate?: string;
+  dueDate?: string; // DateTime unifié (align avec backend)
   priority: number;
   completed: boolean;
   completedAt?: string;
@@ -52,8 +51,7 @@ export interface Task {
 export interface CreateTaskForm {
   title: string;
   description?: string;
-  dueDate?: string;
-  scheduledDate?: string;
+  dueDate?: string; // DateTime unifié (align avec backend)
   priority?: number;
   orderIndex?: number;
 }

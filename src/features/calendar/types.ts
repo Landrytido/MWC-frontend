@@ -47,8 +47,7 @@ export interface EventDto {
 
   priority?: number;
   completed?: boolean;
-  dueDate?: string;
-  scheduledDate?: string;
+  dueDate?: string; // Unifié avec backend
 }
 
 export interface TaskDto {
@@ -57,8 +56,7 @@ export interface TaskDto {
   description?: string;
   priority: number;
   completed: boolean;
-  dueDate?: string;
-  scheduledDate?: string;
+  dueDate?: string; // Unifié avec backend
   createdAt: string;
   updatedAt: string;
 }
@@ -86,8 +84,7 @@ export interface CreateEventRequest {
   type?: EventType;
   relatedTaskId?: number;
   reminders?: CreateReminderRequest[];
-  dueDate?: string; // Pour les tâches
-  scheduledDate?: string; // Pour les tâches
+  dueDate?: string; // Pour les tâches - Unifié avec backend
   priority?: TaskPriority; // Pour les tâches
 }
 

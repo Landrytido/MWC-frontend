@@ -8,9 +8,10 @@ import EventsList from "./EventsList";
 import { CreateEventRequest, EventDto } from "../types";
 import { CreateTaskForm } from "../../tasks/types";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
+import { useTasks } from "../../tasks/hooks/useTasks";
 
 const Calendar: React.FC = () => {
-  // 🎣 HOOK PRINCIPAL
+  // 🎣 HOOKS
   const {
     currentMonth,
     currentYear,
@@ -24,9 +25,11 @@ const Calendar: React.FC = () => {
     createEvent,
     updateEvent,
     deleteEvent,
-    createTaskFromCalendar,
     loadDayData,
+    refreshCalendarData,
   } = useCalendar();
+
+  const { createTask, updateTask, refetch: refetchTasks } = useTasks();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -41,23 +44,6 @@ const Calendar: React.FC = () => {
   const [filterType, setFilterType] = useState<"all" | "events" | "tasks">(
     "all"
   );
-
-  // ✅ FONCTION UTILITAIRE : Conversion CreateTaskForm vers CreateEventRequest
-  const convertTaskToEventRequest = (
-    taskData: CreateTaskForm
-  ): CreateEventRequest => {
-    const now = new Date().toISOString();
-    return {
-      title: taskData.title,
-      description: taskData.description,
-      startDate: taskData.scheduledDate || now,
-      endDate: taskData.dueDate || taskData.scheduledDate || now,
-      type: "TASK_BASED",
-      reminders: [],
-      // Les champs spécifiques aux tâches ne sont pas dans CreateEventRequest
-      // Ils seront gérés par l'API backend
-    };
-  };
 
   // 📝 HANDLERS
   const handleCreateEvent = () => {
@@ -110,8 +96,17 @@ const Calendar: React.FC = () => {
       if (editingEvent) {
         // Pour la modification, vérifier le type de l'événement
         if (modalType === "task" || editingEvent.type === "TASK_BASED") {
-          const eventData = convertTaskToEventRequest(data as CreateTaskForm);
-          await updateEvent(editingEvent.id, eventData);
+          // Pour les tâches, utiliser l'API tasks
+          const taskData = data as CreateTaskForm;
+          await updateTask(editingEvent.relatedTaskId!, {
+            title: taskData.title,
+            description: taskData.description,
+            dueDate: taskData.dueDate,
+            priority: taskData.priority,
+          });
+          // Rafraîchir le calendrier après modification de tâche
+          await refetchTasks();
+          await refreshCalendarData();
         } else {
           await updateEvent(editingEvent.id, data as CreateEventRequest);
         }
@@ -119,20 +114,11 @@ const Calendar: React.FC = () => {
         // Pour la création, différencier selon le modalType
         if (modalType === "task") {
           const taskData = data as CreateTaskForm;
-          // ✅ SOLUTION : Créer un objet compatible avec l'API createTaskFromCalendar
-          const taskEventData: CreateEventRequest = {
-            title: taskData.title,
-            description: taskData.description || undefined,
-            startDate: taskData.scheduledDate || new Date().toISOString(),
-            endDate:
-              taskData.dueDate ||
-              taskData.scheduledDate ||
-              new Date().toISOString(),
-            type: "TASK_BASED",
-            reminders: [],
-            // Ajouter les champs nécessaires selon votre API
-          };
-          await createTaskFromCalendar(taskEventData);
+          // ✅ UTILISER L'API TASKS DIRECTEMENT au lieu de createTaskFromCalendar
+          await createTask(taskData);
+          // Rafraîchir le calendrier après création de tâche
+          await refetchTasks();
+          await refreshCalendarData();
         } else {
           await createEvent(data as CreateEventRequest);
         }
@@ -140,6 +126,10 @@ const Calendar: React.FC = () => {
       setIsEventModalOpen(false);
       setEditingEvent(null);
     } catch (error) {
+      // Si l'opération a été annulée par l'utilisateur, on ne fait rien
+      if (error instanceof Error && error.message === "OPERATION_CANCELLED") {
+        return;
+      }
       console.error("Erreur lors de la sauvegarde:", error);
       throw error;
     }

@@ -6,6 +6,7 @@ import {
   Task,
   getPriorityConfig,
 } from "../types";
+import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface TaskCreationFormProps {
   onSubmit: (taskData: CreateTaskForm) => Promise<void>;
@@ -22,23 +23,24 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
   error = "",
   editingTask,
 }) => {
+  const { confirm } = useConfirmation();
   const [formData, setFormData] = useState<CreateTaskForm>({
     title: editingTask?.title || "",
     description: editingTask?.description || "",
     dueDate: editingTask?.dueDate ? editingTask.dueDate.slice(0, 16) : "",
-    scheduledDate: editingTask?.scheduledDate || "",
     priority: editingTask?.priority || 2,
   });
 
   const [scheduleType, setScheduleType] = useState<ScheduleType>(() => {
-    if (editingTask?.scheduledDate) {
+    if (editingTask?.dueDate) {
       const today = new Date().toISOString().split("T")[0];
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
 
-      if (editingTask.scheduledDate === today) return ScheduleType.TODAY;
-      if (editingTask.scheduledDate === tomorrow) return ScheduleType.TOMORROW;
+      const taskDate = editingTask.dueDate.split("T")[0];
+      if (taskDate === today) return ScheduleType.TODAY;
+      if (taskDate === tomorrow) return ScheduleType.TOMORROW;
     }
     return ScheduleType.NONE;
   });
@@ -46,16 +48,21 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
   const handleScheduleTypeChange = (type: ScheduleType) => {
     setScheduleType(type);
 
-    let scheduledDate = "";
+    let dueDate = "";
     if (type === ScheduleType.TODAY) {
-      scheduledDate = new Date().toISOString().split("T")[0];
+      // Définir à 9h par défaut (comme dans le backend)
+      const today = new Date();
+      today.setHours(9, 0, 0, 0);
+      dueDate = today.toISOString().slice(0, 16);
     } else if (type === ScheduleType.TOMORROW) {
-      scheduledDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
+      // Définir à demain 9h par défaut
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(9, 0, 0, 0);
+      dueDate = tomorrow.toISOString().slice(0, 16);
     }
 
-    setFormData((prev) => ({ ...prev, scheduledDate }));
+    setFormData((prev) => ({ ...prev, dueDate }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,12 +70,32 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     if (!formData.title.trim()) return;
 
+    // ✅ VALIDATION : Vérifier si la date est dans le passé
+    if (formData.dueDate) {
+      const selectedDateTime = new Date(formData.dueDate);
+      const now = new Date();
+
+      if (selectedDateTime < now) {
+        const confirmed = await confirm({
+          title: "Date passée",
+          message: "⚠️ Vous créez une tâche pour une date passée. Continuer ?",
+          confirmText: "Continuer",
+          cancelText: "Modifier",
+          variant: "warning",
+        });
+
+        if (!confirmed) {
+          // L'utilisateur a annulé - on lance une exception spéciale
+          throw new Error("OPERATION_CANCELLED");
+        }
+      }
+    }
+
     const taskData: CreateTaskForm = {
       ...formData,
       title: formData.title.trim(),
       description: formData.description?.trim() || undefined,
       dueDate: formData.dueDate || undefined,
-      scheduledDate: formData.scheduledDate || undefined,
     };
 
     await onSubmit(taskData);
@@ -200,14 +227,14 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
           </div>
         </div>
 
-        {/* Date d'échéance (seulement si pas de planification quotidienne) */}
+        {/* Date de réalisation (seulement si pas de planification quotidienne) */}
         {scheduleType === ScheduleType.NONE && (
           <div>
             <label
               htmlFor="dueDate"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Date d'échéance (optionnelle)
+              Date de réalisation (optionnelle)
             </label>
             <input
               id="dueDate"
@@ -220,8 +247,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
               disabled={isLoading}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Laissez vide si vous voulez juste une tâche à faire sans date
-              limite
+              Laissez vide pour une tâche sans date de réalisation spécifique
             </p>
           </div>
         )}

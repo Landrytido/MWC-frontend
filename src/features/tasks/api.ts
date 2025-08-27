@@ -67,6 +67,6 @@ export const tasksApi = {
 
   reorderTasks: (data: {
     taskIds: number[];
-    scheduledDate?: string;
+    dueDate?: string;
   }): Promise<Task[]> => httpService.post("/tasks/reorder", data),
 };

@@ -30,13 +30,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
       })
     : null;
 
-  const formattedScheduledDate = task.scheduledDate
-    ? new Date(task.scheduledDate).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "short",
-      })
-    : null;
-
   const getPriorityBadgeColor = () => {
     switch (task.priority) {
       case 3:
@@ -155,8 +148,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </p>
             )}
 
-            {(formattedDueDate ||
-              (showScheduleInfo && formattedScheduledDate)) && (
+            {formattedDueDate && (
               <div className="flex items-center space-x-4 mt-3 text-xs">
                 {formattedDueDate && (
                   <span
@@ -179,26 +171,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    Échéance: {formattedDueDate}
-                  </span>
-                )}
-
-                {showScheduleInfo && formattedScheduledDate && (
-                  <span className="flex items-center text-gray-500">
-                    <svg
-                      className="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    Planifiée: {formattedScheduledDate}
+                    Prévue: {formattedDueDate}
                   </span>
                 )}
 
