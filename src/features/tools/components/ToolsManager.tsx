@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { Calculator } from "./Calculator";
+import { Timer } from "./Timer";
+import { Converter } from "./Converter";
 
 interface ToolsManagerProps {
   className?: string;
 }
 
-type ToolType = "calculator" | "weather" | "stopwatch" | "timer" | "converter";
+type ToolType = "calculator" | "weather" | "timer" | "converter";
 
 const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
   const [activeTool, setActiveTool] = useState<ToolType | null>(null);
@@ -15,7 +18,7 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
       icon: "🧮",
       description: "Calculatrice simple pour vos calculs rapides",
       color: "bg-blue-50 border-blue-200 text-blue-800",
-      available: false, // À passer à true quand le composant sera créé
+      available: true,
     },
     {
       key: "weather",
@@ -26,20 +29,12 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
       available: false,
     },
     {
-      key: "stopwatch",
-      name: "Chronomètre",
-      icon: "⏱️",
-      description: "Chronomètre et minuteur",
-      color: "bg-orange-50 border-orange-200 text-orange-800",
-      available: false,
-    },
-    {
       key: "timer",
-      name: "Minuteur",
-      icon: "⏲️",
-      description: "Minuteur avec alarme",
-      color: "bg-red-50 border-red-200 text-red-800",
-      available: false,
+      name: "Timer",
+      icon: "⏱️",
+      description: "Chronomètre et minuteur avec alarmes",
+      color: "bg-orange-50 border-orange-200 text-orange-800",
+      available: true, // Maintenant disponible
     },
     {
       key: "converter",
@@ -47,7 +42,7 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
       icon: "🔄",
       description: "Conversion d'unités (longueur, poids, etc.)",
       color: "bg-green-50 border-green-200 text-green-800",
-      available: false,
+      available: true,
     },
   ];
 
@@ -103,13 +98,18 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
 
         {/* Composant de l'outil */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Placeholder - à remplacer par les vrais composants */}
-          <ToolPlaceholder toolName={selectedTool?.name || ""} />
+          {activeTool === "calculator" ? (
+            <Calculator />
+          ) : activeTool === "timer" ? (
+            <Timer />
+          ) : activeTool === "converter" ? (
+            <Converter />
+          ) : (
+            <ToolPlaceholder toolName={selectedTool?.name || ""} />
+          )}
 
           {/* Exemple d'implementation future :
-          {activeTool === "calculator" && <Calculator />}
           {activeTool === "weather" && <Weather />}
-          {activeTool === "stopwatch" && <Stopwatch />}
           */}
         </div>
       </div>
