@@ -5,39 +5,35 @@ export class TimerService {
   private static readonly PRESETS_KEY = "timer-presets";
   private static readonly LAPS_KEY = "timer-laps";
 
-  // Formatage du temps
+  // Formatage du temps (HH:MM:SS ou MM:SS.cc)
   static formatTime(milliseconds: number): string {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    const ms = Math.floor((milliseconds % 1000) / 10); // centièmes
+    const ms = Math.floor((milliseconds % 1000) / 10);
 
     if (hours > 0) {
       return `${hours.toString().padStart(2, "0")}:${minutes
         .toString()
         .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-    } else {
-      return `${minutes.toString().padStart(2, "0")}:${seconds
-        .toString()
-        .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
     }
+
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
   }
 
-  // Formatage compact (pour les minuteurs)
+  // Format compact (ex: 25m 0s)
   static formatTimeCompact(milliseconds: number): string {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
-    } else {
-      return `${seconds}s`;
-    }
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+    if (minutes > 0) return `${minutes}m ${seconds}s`;
+    return `${seconds}s`;
   }
 
   // Conversion depuis les inputs utilisateur
@@ -49,7 +45,7 @@ export class TimerService {
     return (hours * 3600 + minutes * 60 + seconds) * 1000;
   }
 
-  // Conversion vers les inputs utilisateur
+  // Conversion vers inputs
   static timeToInputs(milliseconds: number): {
     hours: number;
     minutes: number;
@@ -59,33 +55,54 @@ export class TimerService {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-
     return { hours, minutes, seconds };
   }
 
-  // Gestion des préréglages
+  // Préréglages par défaut (libellés originaux)
+  static getDefaultPresets(): TimerPreset[] {
+    return [
+      {
+        id: "default-pomodoro",
+        name: "Pomodoro",
+        duration: 25 * 60 * 1000,
+        isDefault: true,
+      },
+      {
+        id: "default-short-break",
+        name: "Pause courte",
+        duration: 5 * 60 * 1000,
+        isDefault: true,
+      },
+      {
+        id: "default-long-break",
+        name: "Pause longue",
+        duration: 15 * 60 * 1000,
+        isDefault: true,
+      },
+    ];
+  }
+
   static getPresets(): TimerPreset[] {
     try {
       const stored = localStorage.getItem(this.PRESETS_KEY);
-      const presets = stored ? JSON.parse(stored) : [];
+      const presets = stored ? (JSON.parse(stored) as TimerPreset[]) : [];
 
-      // Vérifier si on a les nouveaux préréglages par défaut
-      const hasNewDefaults = presets.some(
-        (p: TimerPreset) =>
-          p.isDefault &&
-          (p.name === "5 minutes" ||
-            p.name === "15 minutes" ||
-            p.name === "30 minutes")
+      if (!Array.isArray(presets) || presets.length === 0) {
+        const defaults = this.getDefaultPresets();
+        this.savePresets(defaults);
+        return defaults;
+      }
+
+      const defaultIds = this.getDefaultPresets().map((d) => d.id);
+      const hasAnyDefault = presets.some(
+        (p) => p.isDefault && defaultIds.includes(p.id)
       );
 
-      // Si on n'a pas les nouveaux préréglages ou s'il n'y a pas de préréglages
-      if (presets.length === 0 || !hasNewDefaults) {
-        // Garder seulement les préréglages personnalisés (non par défaut)
-        const customPresets = presets.filter((p: TimerPreset) => !p.isDefault);
-        const defaultPresets = this.getDefaultPresets();
-        const newPresets = [...defaultPresets, ...customPresets];
-        this.savePresets(newPresets);
-        return newPresets;
+      if (!hasAnyDefault) {
+        const custom = presets.filter((p) => !p.isDefault);
+        const merged = [...this.getDefaultPresets(), ...custom];
+        this.savePresets(merged);
+        return merged;
       }
 
       return presets;
@@ -94,30 +111,18 @@ export class TimerService {
     }
   }
 
-  static getDefaultPresets(): TimerPreset[] {
-    return [
-      { id: "1", name: "5 minutes", duration: 5 * 60 * 1000, isDefault: true },
-      {
-        id: "2",
-        name: "15 minutes",
-        duration: 15 * 60 * 1000,
-        isDefault: true,
-      },
-      {
-        id: "3",
-        name: "30 minutes",
-        duration: 30 * 60 * 1000,
-        isDefault: true,
-      },
-    ];
-  }
-
   static savePresets(presets: TimerPreset[]): void {
-    localStorage.setItem(this.PRESETS_KEY, JSON.stringify(presets));
+    try {
+      localStorage.setItem(this.PRESETS_KEY, JSON.stringify(presets));
+    } catch (e) {
+      console.warn("Impossible de sauvegarder les préréglages :", e);
+    }
   }
 
   static addPreset(name: string, duration: number): TimerPreset {
-    const presets = this.getPresets();
+    const stored = localStorage.getItem(this.PRESETS_KEY);
+    const presets = stored ? (JSON.parse(stored) as TimerPreset[]) : [];
+
     const newPreset: TimerPreset = {
       id: Date.now().toString(),
       name,
@@ -132,58 +137,58 @@ export class TimerService {
 
   static deletePreset(id: string): boolean {
     const presets = this.getPresets();
-    const presetToDelete = presets.find((p) => p.id === id);
+    const preset = presets.find((p) => p.id === id);
+    if (!preset) return false;
+    if (preset.isDefault) return false;
 
-    // Ne permettre la suppression que des préréglages personnalisés (pas les préréglages par défaut)
-    if (!presetToDelete || presetToDelete.isDefault) {
-      return false; // Impossible de supprimer un préréglage par défaut
-    }
-
-    const filteredPresets = presets.filter((p) => p.id !== id);
-    this.savePresets(filteredPresets);
-    return true; // Suppression réussie
+    const filtered = presets.filter((p) => p.id !== id);
+    this.savePresets(filtered);
+    return true;
   }
 
   static resetToDefaultPresets(): void {
-    // Garder seulement les préréglages personnalisés
-    const currentPresets = this.getPresets();
-    const customPresets = currentPresets.filter((p) => !p.isDefault);
-    const defaultPresets = this.getDefaultPresets();
-    const newPresets = [...defaultPresets, ...customPresets];
-    this.savePresets(newPresets);
+    const custom = this.getPresets().filter((p) => !p.isDefault);
+    const merged = [...this.getDefaultPresets(), ...custom];
+    this.savePresets(merged);
   }
 
-  // Gestion des tours (chronomètre)
+  // Laps (chronomètre)
   static saveLap(lap: TimerLap): void {
-    const laps = this.getLaps();
-    laps.unshift(lap); // Ajouter au début
-
-    // Garder seulement les 50 derniers tours
-    if (laps.length > 50) {
-      laps.splice(50);
+    try {
+      const stored = localStorage.getItem(this.LAPS_KEY);
+      const laps = stored ? (JSON.parse(stored) as TimerLap[]) : [];
+      laps.unshift(lap);
+      if (laps.length > 50) laps.splice(50);
+      localStorage.setItem(this.LAPS_KEY, JSON.stringify(laps));
+    } catch (e) {
+      console.warn("Impossible de sauvegarder le tour :", e);
     }
-
-    localStorage.setItem(this.LAPS_KEY, JSON.stringify(laps));
   }
 
   static getLaps(): TimerLap[] {
     try {
       const stored = localStorage.getItem(this.LAPS_KEY);
-      return stored ? JSON.parse(stored) : [];
+      return stored ? (JSON.parse(stored) as TimerLap[]) : [];
     } catch {
       return [];
     }
   }
 
   static clearLaps(): void {
-    localStorage.removeItem(this.LAPS_KEY);
+    try {
+      localStorage.setItem(this.LAPS_KEY, JSON.stringify([]));
+    } catch (e) {
+      console.warn("Impossible d'effacer les tours :", e);
+    }
   }
 
-  // Gestion des paramètres
+  // Settings
   static getSettings(): TimerSettings {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      const settings = stored ? JSON.parse(stored) : {};
+      const settings = stored
+        ? (JSON.parse(stored) as Partial<TimerSettings>)
+        : {};
 
       return {
         soundEnabled: settings.soundEnabled ?? true,
@@ -202,66 +207,58 @@ export class TimerService {
   }
 
   static saveSettings(settings: TimerSettings): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn("Impossible de sauvegarder les réglages :", e);
+    }
   }
 
   // Notifications et son
   static async requestNotificationPermission(): Promise<boolean> {
-    if (!("Notification" in window)) {
-      return false;
-    }
-
-    if (Notification.permission === "granted") {
-      return true;
-    }
-
-    if (Notification.permission === "denied") {
-      return false;
-    }
-
+    if (!("Notification" in window)) return false;
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
     const permission = await Notification.requestPermission();
     return permission === "granted";
   }
 
   static showNotification(title: string, body: string): void {
-    if (Notification.permission === "granted") {
-      new Notification(title, {
-        body,
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-      });
+    try {
+      if (Notification.permission === "granted") {
+        new Notification(title, {
+          body,
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+        });
+      }
+    } catch (e) {
+      console.warn("Impossible d'afficher la notification :", e);
     }
   }
 
   static playAlarmSound(): void {
-    // Son simple avec Web Audio API
     try {
+      const win = window as unknown as {
+        AudioContext?: typeof AudioContext;
+        webkitAudioContext?: typeof AudioContext;
+      };
       const AudioContextConstructor =
-        window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (!AudioContextConstructor) {
-        console.warn("Web Audio API non supportée");
-        return;
-      }
-
+        win.AudioContext || win.webkitAudioContext;
+      if (!AudioContextConstructor) return;
       const audioContext = new AudioContextConstructor();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
       oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
       oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
       oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(
         0.01,
         audioContext.currentTime + 0.5
       );
-
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
     } catch (error) {

@@ -77,8 +77,7 @@ export const getLabelColor = (labelId: string): LabelColorName => {
 };
 
 export const getLabelColorClasses = (
-  colorName: LabelColorName,
-  variant: "default" | "outlined" | "minimal" = "default"
+  colorName: LabelColorName
 ): LabelColorConfig => {
   return LABEL_COLORS[colorName];
 };

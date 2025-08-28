@@ -5,7 +5,6 @@ interface PaginationProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
-  itemName: string;
   className?: string;
 }
 
@@ -14,7 +13,6 @@ const Pagination: React.FC<PaginationProps> = ({
   totalItems,
   itemsPerPage,
   onPageChange,
-  itemName,
   className = "",
 }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
