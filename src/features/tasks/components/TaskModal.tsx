@@ -8,6 +8,13 @@ interface TaskModalProps {
   onSubmit: (taskData: CreateTaskForm) => Promise<void>;
   editingTask?: Task;
   error?: string;
+  confirm?: (config: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: "danger" | "warning" | "info";
+  }) => Promise<boolean>;
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({
@@ -16,6 +23,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   onSubmit,
   editingTask,
   error,
+  confirm,
 }) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -80,6 +88,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
               onCancel={onClose}
               error={error}
               editingTask={editingTask}
+              confirm={confirm}
             />
           </div>
         </div>

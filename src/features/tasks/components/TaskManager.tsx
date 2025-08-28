@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTasks } from "../hooks/useTasks";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import TaskCard from "./TaskCard";
@@ -27,6 +28,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
   isSearching = false,
 }) => {
   const TASKS_PER_PAGE = 4;
+  const navigate = useNavigate();
 
   // Utilisation du nouveau hook
   const {
@@ -134,10 +136,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
       }
       handleCloseModal();
     } catch (err) {
-      // Si l'opération a été annulée par l'utilisateur, on ne fait rien
-      if (err instanceof Error && err.message === "OPERATION_CANCELLED") {
-        return;
-      }
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
@@ -289,7 +287,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
           </h2>
           {activeFilter !== "report" && !searchResults && (
             <button
-              onClick={() => handleOpenModal()}
+              onClick={() => navigate("/dashboard/tasks/new?returnTo=tasks")}
               className="flex items-center text-sm font-medium text-teal-500 hover:text-teal-600 transition-colors"
             >
               <svg
@@ -449,6 +447,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         onSubmit={handleSubmit}
         editingTask={editingTask || undefined}
         error={error}
+        confirm={confirm}
       />
     </>
   );

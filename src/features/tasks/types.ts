@@ -24,7 +24,7 @@ export enum ScheduleType {
 }
 
 export const SCHEDULE_LABELS = {
-  [ScheduleType.NONE]: "Pas de planification",
+  [ScheduleType.NONE]: "Choisir une date",
   [ScheduleType.TODAY]: "Pour aujourd'hui",
   [ScheduleType.TOMORROW]: "Pour demain",
 } as const;

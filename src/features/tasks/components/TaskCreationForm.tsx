@@ -6,7 +6,6 @@ import {
   Task,
   getPriorityConfig,
 } from "../types";
-import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface TaskCreationFormProps {
   onSubmit: (taskData: CreateTaskForm) => Promise<void>;
@@ -14,6 +13,14 @@ interface TaskCreationFormProps {
   isLoading?: boolean;
   error?: string;
   editingTask?: Task;
+  defaultDate?: string;
+  confirm?: (config: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: "danger" | "warning" | "info";
+  }) => Promise<boolean>;
 }
 
 const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
@@ -22,12 +29,17 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
   isLoading = false,
   error = "",
   editingTask,
+  defaultDate,
+  confirm,
 }) => {
-  const { confirm } = useConfirmation();
   const [formData, setFormData] = useState<CreateTaskForm>({
     title: editingTask?.title || "",
     description: editingTask?.description || "",
-    dueDate: editingTask?.dueDate ? editingTask.dueDate.slice(0, 16) : "",
+    dueDate: editingTask?.dueDate
+      ? editingTask.dueDate.slice(0, 16)
+      : defaultDate
+      ? `${defaultDate}T09:00`
+      : "",
     priority: editingTask?.priority || 2,
   });
 
@@ -70,8 +82,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     if (!formData.title.trim()) return;
 
-    // ✅ VALIDATION : Vérifier si la date est dans le passé
-    if (formData.dueDate) {
+    if (formData.dueDate && confirm) {
       const selectedDateTime = new Date(formData.dueDate);
       const now = new Date();
 
@@ -85,8 +96,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
         });
 
         if (!confirmed) {
-          // L'utilisateur a annulé - on lance une exception spéciale
-          throw new Error("OPERATION_CANCELLED");
+          return;
         }
       }
     }

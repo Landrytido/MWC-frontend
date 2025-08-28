@@ -350,7 +350,9 @@ const Dashboard: React.FC = () => {
                     ? "text-teal-500 border-b-2 border-teal-500"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                onClick={() => navigate("/dashboard/calendar")}
+                onClick={() =>
+                  navigate(`/dashboard/calendar?returnTo=${activeTab}`)
+                }
               >
                 📅 Calendrier
               </button>

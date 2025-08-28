@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCalendar } from "../hooks/useCalendar";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
@@ -11,6 +12,8 @@ import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { useTasks } from "../../tasks/hooks/useTasks";
 
 const Calendar: React.FC = () => {
+  const navigate = useNavigate();
+
   // 🎣 HOOKS
   const {
     currentMonth,
@@ -53,9 +56,13 @@ const Calendar: React.FC = () => {
   };
 
   const handleCreateTask = () => {
-    setEditingEvent(null);
-    setModalType("task");
-    setIsEventModalOpen(true);
+    // Navigation vers la page CreateTask avec paramètres de retour
+    const params = new URLSearchParams();
+    if (selectedDate) {
+      params.append("date", selectedDate);
+    }
+    params.append("returnTo", "calendar");
+    navigate(`/dashboard/tasks/new?${params.toString()}`);
   };
 
   const handleEditEvent = (event: EventDto) => {
