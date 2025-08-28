@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Calculator } from "./Calculator";
 import { Timer } from "./Timer";
 import { Converter } from "./Converter";
+import { Weather } from "./Weather/Weather";
 
 interface ToolsManagerProps {
   className?: string;
@@ -26,7 +27,7 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
       icon: "🌤️",
       description: "Prévisions météorologiques locales",
       color: "bg-sky-50 border-sky-200 text-sky-800",
-      available: false,
+      available: true,
     },
     {
       key: "timer",
@@ -104,6 +105,8 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
             <Timer />
           ) : activeTool === "converter" ? (
             <Converter />
+          ) : activeTool === "weather" ? (
+            <Weather />
           ) : (
             <ToolPlaceholder toolName={selectedTool?.name || ""} />
           )}

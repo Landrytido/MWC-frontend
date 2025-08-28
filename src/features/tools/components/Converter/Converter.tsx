@@ -109,7 +109,12 @@ export const Converter: React.FC = () => {
         {/* Boutons d'action */}
         <div className="flex flex-col items-center justify-center space-y-2">
           <button
-            onClick={swapUnits}
+            onClick={() => {
+              // debug: trace le clic avant d'appeler la fonction swap
+              // retirez ce console.log après debug
+              console.log("Converter: swapUnits clicked");
+              swapUnits();
+            }}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
             title="Inverser les unités"
           >
