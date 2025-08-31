@@ -28,6 +28,22 @@ export function useWeather() {
     }
   }, []);
 
+  const fetchCurrentByCoordinates = useCallback(
+    async (lat: number, lon: number) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await WeatherService.getCurrentByCoordinates(lat, lon);
+        setCurrent(res);
+      } catch {
+        setError("Erreur lors de la récupération des données météo");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   const fetchForecast = useCallback(async (location: string, days = 3) => {
     setIsLoading(true);
     setError(null);
@@ -40,6 +56,26 @@ export function useWeather() {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchForecastByCoordinates = useCallback(
+    async (lat: number, lon: number, days = 3) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await WeatherService.getForecastByCoordinates(
+          lat,
+          lon,
+          days
+        );
+        setForecast(res);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const search = useCallback(async (q: string) => {
     if (!q) return;
@@ -64,6 +100,10 @@ export function useWeather() {
     }
   }, []);
 
+  const clearSearchResults = useCallback(() => {
+    setSearchResults([]);
+  }, []);
+
   return {
     isLoading,
     error,
@@ -72,8 +112,11 @@ export function useWeather() {
     searchResults,
     status,
     fetchCurrent,
+    fetchCurrentByCoordinates,
     fetchForecast,
+    fetchForecastByCoordinates,
     search,
     getStatus,
+    clearSearchResults,
   };
 }

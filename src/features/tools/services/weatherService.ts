@@ -35,10 +35,27 @@ export const WeatherService = {
     return fetchJson<CurrentWeatherResponse>(url);
   },
 
+  async getCurrentByCoordinates(
+    lat: number,
+    lon: number
+  ): Promise<CurrentWeatherResponse> {
+    const url = `${BASE}/current/coordinates?lat=${lat}&lon=${lon}`;
+    return fetchJson<CurrentWeatherResponse>(url);
+  },
+
   async getForecast(location: string, days = 3): Promise<ForecastResponse> {
     const url = `${BASE}/forecast?location=${encodeURIComponent(
       location
     )}&days=${days}`;
+    return fetchJson<ForecastResponse>(url);
+  },
+
+  async getForecastByCoordinates(
+    lat: number,
+    lon: number,
+    days = 3
+  ): Promise<ForecastResponse> {
+    const url = `${BASE}/forecast/coordinates?lat=${lat}&lon=${lon}&days=${days}`;
     return fetchJson<ForecastResponse>(url);
   },
 
