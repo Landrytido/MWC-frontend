@@ -45,18 +45,31 @@ export const Weather: React.FC = () => {
           const lon = position.coords.longitude;
           // Try to convert coordinates to a city name (reverse geocoding)
           try {
-            const city = await (async function reverseGeocode(latNum: number, lonNum: number) {
+            const city = await (async function reverseGeocode(
+              latNum: number,
+              lonNum: number
+            ) {
               try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latNum)}&lon=${encodeURIComponent(lonNum)}`;
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(
+                  latNum
+                )}&lon=${encodeURIComponent(lonNum)}`;
                 const res = await fetch(url, {
                   headers: {
-                    Accept: 'application/json'
-                  }
+                    Accept: "application/json",
+                  },
                 });
                 if (!res.ok) return null;
                 const data = await res.json();
                 const addr = data?.address ?? {};
-                return addr.city || addr.town || addr.village || addr.hamlet || addr.county || data?.display_name || null;
+                return (
+                  addr.city ||
+                  addr.town ||
+                  addr.village ||
+                  addr.hamlet ||
+                  addr.county ||
+                  data?.display_name ||
+                  null
+                );
               } catch {
                 return null;
               }

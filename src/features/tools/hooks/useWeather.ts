@@ -59,8 +59,8 @@ export function useWeather() {
     try {
       const s = await WeatherService.getStatus();
       setStatus(s);
-    } catch (e) {
-      // ignore for status
+    } catch {
+      /* empty */
     }
   }, []);
 

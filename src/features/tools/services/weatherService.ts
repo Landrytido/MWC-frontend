@@ -5,7 +5,6 @@ import {
   ServiceStatus,
 } from "../types/weather";
 
-// Pointer explicitement vers le backend Spring Boot en dev
 const BASE = "http://localhost:8080/api/weather";
 
 async function fetchJson<T>(url: string): Promise<T> {
