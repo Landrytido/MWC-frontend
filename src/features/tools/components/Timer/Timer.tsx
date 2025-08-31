@@ -83,81 +83,98 @@ export const Timer: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg shadow-md p-4 max-w-2xl mx-auto border border-gray-200">
       {/* En-tête avec switch de mode */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-800">
-          ⏱️ Timer {mode === "stopwatch" ? "Chronomètre" : "Minuteur"}
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="bg-teal-100 p-2 rounded-lg">
+            <svg
+              className="w-5 h-5 text-teal-600"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Timer {mode === "stopwatch" ? "Chronomètre" : "Minuteur"}
+          </h3>
+        </div>
 
         <div className="flex bg-gray-100 rounded-lg p-1">
           <button
             onClick={() => switchMode("stopwatch")}
             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
               mode === "stopwatch"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:text-blue-600"
+                ? "bg-teal-600 text-white"
+                : "text-gray-600 hover:text-teal-600"
             }`}
           >
-            ⏱️ Chrono
+            Chrono
           </button>
           <button
             onClick={() => switchMode("countdown")}
             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
               mode === "countdown"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:text-blue-600"
+                ? "bg-teal-600 text-white"
+                : "text-gray-600 hover:text-teal-600"
             }`}
           >
-            ⏲️ Minuteur
+            Minuteur
           </button>
         </div>
       </div>
 
       {/* Affichage principal du temps */}
-      <div className="text-center mb-8">
-        <div
-          className={`text-6xl font-mono font-bold mb-4 ${
-            isFinished
-              ? "text-red-600"
-              : isRunning
-              ? "text-green-600"
-              : isPaused
-              ? "text-orange-600"
-              : "text-gray-800"
-          }`}
-        >
-          {formatTime(time)}
-        </div>
-
-        {/* Barre de progression pour le minuteur */}
-        {mode === "countdown" && targetTime > 0 && (
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <div
-              className={`h-2 rounded-full transition-all duration-100 ${
-                isFinished ? "bg-red-500" : "bg-blue-600"
-              }`}
-              style={{ width: `${getProgressPercentage()}%` }}
-            />
+      <div className="text-center mb-6">
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div
+            className={`text-4xl font-mono font-bold mb-3 ${
+              isFinished
+                ? "text-red-600"
+                : isRunning
+                ? "text-green-600"
+                : isPaused
+                ? "text-orange-600"
+                : "text-gray-800"
+            }`}
+          >
+            {formatTime(time)}
           </div>
-        )}
 
-        {/* État actuel */}
-        <div className="text-sm text-gray-600">
-          {isFinished
-            ? "🎉 Terminé !"
-            : isRunning
-            ? "▶️ En cours"
-            : isPaused
-            ? "⏸️ En pause"
-            : "⏹️ Arrêté"}
+          {/* Barre de progression pour le minuteur */}
+          {mode === "countdown" && targetTime > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+              <div
+                className={`h-2 rounded-full transition-all duration-100 ${
+                  isFinished ? "bg-red-500" : "bg-teal-600"
+                }`}
+                style={{ width: `${getProgressPercentage()}%` }}
+              />
+            </div>
+          )}
+
+          {/* État actuel */}
+          <div className="text-sm text-gray-600">
+            {isFinished
+              ? "🎉 Terminé !"
+              : isRunning
+              ? "▶️ En cours"
+              : isPaused
+              ? "⏸️ En pause"
+              : "⏹️ Arrêté"}
+          </div>
         </div>
       </div>
 
       {/* Configuration du minuteur */}
       {mode === "countdown" && !isRunning && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
             Régler le temps
           </h4>
           <div className="flex items-center gap-2 justify-center">
@@ -168,11 +185,11 @@ export const Timer: React.FC = () => {
                 max="99"
                 value={timeInputs.hours}
                 onChange={(e) => handleTimeInputChange("hours", e.target.value)}
-                className="w-16 text-center border rounded px-2 py-1 text-lg font-mono"
+                className="w-14 text-center border rounded px-2 py-1 text-lg font-mono"
               />
               <div className="text-xs text-gray-500 mt-1">h</div>
             </div>
-            <span className="text-2xl font-mono">:</span>
+            <span className="text-xl font-mono">:</span>
             <div className="text-center">
               <input
                 type="number"
@@ -182,11 +199,11 @@ export const Timer: React.FC = () => {
                 onChange={(e) =>
                   handleTimeInputChange("minutes", e.target.value)
                 }
-                className="w-16 text-center border rounded px-2 py-1 text-lg font-mono"
+                className="w-14 text-center border rounded px-2 py-1 text-lg font-mono"
               />
               <div className="text-xs text-gray-500 mt-1">m</div>
             </div>
-            <span className="text-2xl font-mono">:</span>
+            <span className="text-xl font-mono">:</span>
             <div className="text-center">
               <input
                 type="number"
@@ -196,7 +213,7 @@ export const Timer: React.FC = () => {
                 onChange={(e) =>
                   handleTimeInputChange("seconds", e.target.value)
                 }
-                className="w-16 text-center border rounded px-2 py-1 text-lg font-mono"
+                className="w-14 text-center border rounded px-2 py-1 text-lg font-mono"
               />
               <div className="text-xs text-gray-500 mt-1">s</div>
             </div>
@@ -205,11 +222,11 @@ export const Timer: React.FC = () => {
       )}
 
       {/* Boutons de contrôle */}
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex justify-center gap-2 mb-4">
         {canStart && (
           <button
             onClick={start}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
           >
             ▶️ {isPaused ? "Reprendre" : "Démarrer"}
           </button>
@@ -218,7 +235,7 @@ export const Timer: React.FC = () => {
         {canPause && (
           <button
             onClick={pause}
-            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm"
           >
             ⏸️ Pause
           </button>
@@ -227,7 +244,7 @@ export const Timer: React.FC = () => {
         {canReset && (
           <button
             onClick={reset}
-            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
           >
             ⏹️ Reset
           </button>
@@ -236,7 +253,7 @@ export const Timer: React.FC = () => {
         {canLap && (
           <button
             onClick={addLap}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
           >
             🏁 Tour
           </button>
@@ -245,14 +262,14 @@ export const Timer: React.FC = () => {
 
       {/* Préréglages pour le minuteur */}
       {mode === "countdown" && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-700">Préréglages</h4>
             <button
               onClick={() => setShowPresets(!showPresets)}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-xs text-teal-600 hover:text-teal-800"
             >
-              {showPresets ? "➖ Masquer" : "➕ Gérer"}
+              {showPresets ? "Masquer" : "Gérer"}
             </button>
           </div>
 
@@ -263,15 +280,14 @@ export const Timer: React.FC = () => {
                 <div key={preset.id} className="relative group">
                   <button
                     onClick={() => loadPreset(preset)}
-                    className="w-full p-2 bg-blue-50 text-blue-800 rounded border border-blue-200 hover:bg-blue-100 transition-colors text-sm"
+                    className="w-full p-2 bg-gray-50 text-gray-800 rounded border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
                   >
                     <div className="font-medium truncate">{preset.name}</div>
-                    <div className="text-xs opacity-75">
+                    <div className="text-xs text-gray-500">
                       {formatTimeCompact(preset.duration)}
                     </div>
                   </button>
 
-                  {/* Bouton de suppression seulement pour les préréglages personnalisés et en mode gérer */}
                   {showPresets && !preset.isDefault && (
                     <button
                       onClick={(e) => {
@@ -289,7 +305,7 @@ export const Timer: React.FC = () => {
           </div>
 
           {showPresets && (
-            <div className="mt-3 p-3 bg-gray-50 rounded">
+            <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
@@ -300,7 +316,7 @@ export const Timer: React.FC = () => {
                 />
                 <button
                   onClick={handleAddPreset}
-                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
                 >
                   Ajouter
                 </button>
@@ -316,19 +332,19 @@ export const Timer: React.FC = () => {
       {/* Tours (chronomètre uniquement) */}
       {mode === "stopwatch" && laps.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-700">
               Tours ({laps.length})
             </h4>
             <button
               onClick={clearLaps}
-              className="text-sm text-red-600 hover:text-red-800"
+              className="text-xs text-red-600 hover:text-red-800"
             >
-              🗑️ Effacer
+              Effacer
             </button>
           </div>
 
-          <div className="max-h-32 overflow-y-auto bg-gray-50 rounded border">
+          <div className="max-h-32 overflow-y-auto bg-gray-50 rounded border border-gray-200">
             {laps
               .slice()
               .reverse()
@@ -355,13 +371,12 @@ export const Timer: React.FC = () => {
       )}
 
       {/* Instructions */}
-      <div className="mt-6 text-xs text-gray-500 text-center">
+      <div className="mt-4 text-xs text-gray-500 text-center">
         {mode === "stopwatch"
           ? "Chronomètre : Mesurez le temps écoulé et enregistrez des tours"
           : "Minuteur : Compte à rebours avec alarme à la fin"}
       </div>
 
-      {/* Modal de confirmation */}
       <ConfirmationComponent />
     </div>
   );
