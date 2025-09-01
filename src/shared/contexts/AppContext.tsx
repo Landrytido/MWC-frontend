@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { UIState, LoadingState } from "../types/common";
+import { TimerState } from "../../features/tools/types/timer";
 
 interface AppState {
   ui: UIState & {
@@ -11,6 +12,8 @@ interface AppState {
     initializing: LoadingState;
     syncData: LoadingState;
   };
+
+  timer: TimerState;
 }
 
 type AppAction =
@@ -28,7 +31,9 @@ type AppAction =
         key: keyof AppState["globalLoadingStates"];
         loading: LoadingState;
       };
-    };
+    }
+  | { type: "UPDATE_TIMER"; payload: Partial<TimerState> }
+  | { type: "RESET_TIMER" };
 
 const initialState: AppState = {
   ui: {
@@ -43,6 +48,17 @@ const initialState: AppState = {
   globalLoadingStates: {
     initializing: { isLoading: false },
     syncData: { isLoading: false },
+  },
+
+  timer: {
+    mode: "stopwatch",
+    isRunning: false,
+    isPaused: false,
+    time: 0,
+    targetTime: 0,
+    startTime: null,
+    pausedTime: 0,
+    laps: [],
   },
 };
 
@@ -110,6 +126,30 @@ function appReducer(state: AppState, action: AppAction): AppState {
         globalLoadingStates: {
           ...state.globalLoadingStates,
           [action.payload.key]: action.payload.loading,
+        },
+      };
+
+    case "UPDATE_TIMER":
+      return {
+        ...state,
+        timer: {
+          ...state.timer,
+          ...action.payload,
+        },
+      };
+
+    case "RESET_TIMER":
+      return {
+        ...state,
+        timer: {
+          mode: "stopwatch",
+          isRunning: false,
+          isPaused: false,
+          time: 0,
+          targetTime: 0,
+          startTime: null,
+          pausedTime: 0,
+          laps: [],
         },
       };
 
@@ -212,6 +252,25 @@ export const useGlobalLoading = () => {
   return {
     loadingStates: state.globalLoadingStates,
     setGlobalLoading,
+  };
+};
+
+// Hook pour le timer global
+export const useGlobalTimer = () => {
+  const { state, dispatch } = useApp();
+
+  const updateTimer = (updates: Partial<TimerState>) => {
+    dispatch({ type: "UPDATE_TIMER", payload: updates });
+  };
+
+  const resetTimer = () => {
+    dispatch({ type: "RESET_TIMER" });
+  };
+
+  return {
+    timer: state.timer,
+    updateTimer,
+    resetTimer,
   };
 };
 

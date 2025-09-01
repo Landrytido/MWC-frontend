@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../features/auth";
+import { TimerIndicator } from "../TimerIndicator";
 const Header: React.FC = () => {
   const { state, logout } = useAuth();
   const navigate = useNavigate();
@@ -27,13 +28,14 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <Link
               to={state.isAuthenticated ? "/dashboard" : "/"}
               className="text-2xl font-script text-gray-800"
             >
               My Web Companion
             </Link>
+            {state.isAuthenticated && <TimerIndicator />}
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">

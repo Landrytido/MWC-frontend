@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTimer } from "../../hooks/useTimer";
+import { useGlobalTimerHook } from "../../hooks/useGlobalTimerHook";
 import { useConfirmation } from "../../../../shared/hooks/useConfirmation";
 
 export const Timer: React.FC = () => {
@@ -13,6 +13,7 @@ export const Timer: React.FC = () => {
     laps,
     presets,
     switchMode,
+    forceSwitchMode,
     start,
     pause,
     reset,
@@ -30,7 +31,7 @@ export const Timer: React.FC = () => {
     canReset,
     canLap,
     isFinished,
-  } = useTimer();
+  } = useGlobalTimerHook();
 
   const [showPresets, setShowPresets] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
@@ -75,6 +76,27 @@ export const Timer: React.FC = () => {
     }
   };
 
+  const handleSwitchMode = async (newMode: "stopwatch" | "countdown") => {
+    const success = switchMode(newMode);
+
+    // Si le changement n'a pas pu être effectué (timer actif)
+    if (!success) {
+      const confirmed = await confirm({
+        title: "Timer en cours",
+        message: `Un ${
+          mode === "stopwatch" ? "chronomètre" : "minuteur"
+        } est actuellement en cours. Voulez-vous l'arrêter et changer de mode ?`,
+        confirmText: "Oui, changer de mode",
+        cancelText: "Annuler",
+        variant: "warning",
+      });
+
+      if (confirmed) {
+        forceSwitchMode(newMode);
+      }
+    }
+  };
+
   const getProgressPercentage = () => {
     if (mode === "countdown" && targetTime > 0) {
       return ((targetTime - time) / targetTime) * 100;
@@ -107,21 +129,23 @@ export const Timer: React.FC = () => {
 
         <div className="flex bg-gray-100 rounded-lg p-1">
           <button
-            onClick={() => switchMode("stopwatch")}
+            onClick={() => handleSwitchMode("stopwatch")}
+            disabled={mode === "stopwatch"}
             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
               mode === "stopwatch"
                 ? "bg-teal-600 text-white"
-                : "text-gray-600 hover:text-teal-600"
+                : "text-gray-600 hover:text-teal-600 disabled:opacity-50"
             }`}
           >
             Chrono
           </button>
           <button
-            onClick={() => switchMode("countdown")}
+            onClick={() => handleSwitchMode("countdown")}
+            disabled={mode === "countdown"}
             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
               mode === "countdown"
                 ? "bg-teal-600 text-white"
-                : "text-gray-600 hover:text-teal-600"
+                : "text-gray-600 hover:text-teal-600 disabled:opacity-50"
             }`}
           >
             Minuteur
