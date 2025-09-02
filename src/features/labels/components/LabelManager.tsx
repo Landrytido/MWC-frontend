@@ -5,9 +5,17 @@ import { getLabelColor, getLabelColorClasses, Label } from "../types";
 
 interface LabelManagerProps {
   className?: string;
+  selectedLabelIds?: string[];
+  onLabelSelect?: (labelId: string) => void;
+  showFilterMode?: boolean;
 }
 
-const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
+const LabelManager: React.FC<LabelManagerProps> = ({
+  className = "",
+  selectedLabelIds = [],
+  onLabelSelect,
+  showFilterMode = false,
+}) => {
   const { labels, loading, createLabel, updateLabel, deleteLabel } =
     useLabels();
   const [isCreating, setIsCreating] = useState(false);
@@ -87,6 +95,13 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
 
   const LabelItem: React.FC<{ label: Label }> = ({ label }) => {
     const colorClasses = getLabelDisplayClasses(label.id);
+    const isSelected = selectedLabelIds.includes(label.id);
+
+    const handleLabelClick = () => {
+      if (showFilterMode && onLabelSelect) {
+        onLabelSelect(label.id);
+      }
+    };
 
     return (
       <div className="group relative flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50">
@@ -156,7 +171,17 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
           </form>
         ) : (
           <>
-            <div className="flex-1 flex items-center justify-between text-left text-sm py-1 px-2 rounded transition-colors min-w-0 text-gray-700">
+            <button
+              onClick={handleLabelClick}
+              className={`flex-1 flex items-center justify-between text-left text-sm py-1 px-2 rounded transition-colors min-w-0 ${
+                showFilterMode
+                  ? isSelected
+                    ? "bg-teal-50 text-teal-700 border border-teal-200"
+                    : "text-gray-700 hover:bg-gray-50"
+                  : "text-gray-700"
+              } ${showFilterMode ? "cursor-pointer" : ""}`}
+              disabled={!showFilterMode}
+            >
               <span className="flex items-center min-w-0 flex-1">
                 <span
                   className={`w-3 h-3 rounded-full ${colorClasses.dot} mr-2 flex-shrink-0`}
@@ -166,7 +191,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
               <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                 {label.noteCount || 0}
               </span>
-            </div>
+            </button>
 
             <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -221,7 +246,15 @@ const LabelManager: React.FC<LabelManagerProps> = ({ className = "" }) => {
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Labels</h3>
+        <h3 className="text-lg font-semibold text-gray-800">
+          🏷️ Labels
+          {showFilterMode && selectedLabelIds.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-teal-600">
+              ({selectedLabelIds.length} sélectionné
+              {selectedLabelIds.length > 1 ? "s" : ""})
+            </span>
+          )}
+        </h3>
         <button
           onClick={() => setIsCreating(!isCreating)}
           className="p-1 text-gray-500 hover:text-teal-500 rounded"

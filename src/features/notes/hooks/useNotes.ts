@@ -31,22 +31,27 @@ interface UseNotesReturn {
   getNoteById: (id: number) => Note | undefined;
 
   filteredNotes: Note[];
-  setCurrentNotebook: (notebookId: number | null) => void;
-  setSelectedLabels: (labelIds: string[]) => void;
-  setSearchTerm: (term: string) => void;
   currentNotebook: number | null;
   selectedLabels: string[];
   searchTerm: string;
 }
 
-export const useNotes = (): UseNotesReturn => {
+interface UseNotesFilters {
+  currentNotebook?: number | null;
+  selectedLabels?: string[];
+  searchTerm?: string;
+}
+
+export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentNotebook, setCurrentNotebook] = useState<number | null>(null);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    currentNotebook = null,
+    selectedLabels = [],
+    searchTerm = "",
+  } = filters;
 
   const filteredNotes = notes.filter((note) => {
     const matchesNotebook =
@@ -294,9 +299,6 @@ export const useNotes = (): UseNotesReturn => {
     getNoteById,
 
     filteredNotes,
-    setCurrentNotebook,
-    setSelectedLabels,
-    setSearchTerm,
     currentNotebook,
     selectedLabels,
     searchTerm,

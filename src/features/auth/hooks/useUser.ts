@@ -1,4 +1,3 @@
-// src/features/auth/hooks/useUser.ts
 import { useState, useCallback } from "react";
 import { User } from "../types";
 import { httpService } from "../../../shared/services/httpService";

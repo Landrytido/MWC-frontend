@@ -7,6 +7,8 @@ class AuthService {
   private token: string | null = null;
   private refreshToken: string | null = null;
   private user: User | null = null;
+  private tokenCheckInterval: number | null = null;
+  private tokenRefreshListeners: (() => void)[] = [];
 
   constructor() {
     this.token = localStorage.getItem("token");
@@ -20,6 +22,104 @@ class AuthService {
         this.clearStorage();
       }
     }
+
+    // Démarrer la vérification périodique des tokens
+    this.startTokenValidation();
+  }
+
+  private startTokenValidation() {
+    // Vérifier le token toutes les 5 minutes
+    this.tokenCheckInterval = window.setInterval(() => {
+      this.validateToken();
+    }, 5 * 60 * 1000);
+
+    // Vérification immédiate au démarrage
+    setTimeout(() => this.validateToken(), 1000);
+  }
+
+  private stopTokenValidation() {
+    if (this.tokenCheckInterval) {
+      window.clearInterval(this.tokenCheckInterval);
+      this.tokenCheckInterval = null;
+    }
+  }
+
+  private async validateToken() {
+    if (!this.token) return;
+
+    try {
+      // Décoder le payload du JWT pour vérifier l'expiration
+      const payload = this.decodeJWT(this.token);
+      if (!payload || !payload.exp) return;
+
+      const currentTime = Date.now() / 1000;
+      const timeUntilExpiry = payload.exp - currentTime;
+
+      // Si le token expire dans moins de 10 minutes, essayer de le rafraîchir
+      if (timeUntilExpiry < 600) {
+        // 10 minutes
+        console.log("Token expirant bientôt, tentative de rafraîchissement...");
+        try {
+          await this.refreshAccessToken();
+          // Notifier les composants du rafraîchissement
+          this.notifyTokenRefresh();
+        } catch (error) {
+          console.error("Impossible de rafraîchir le token:", error);
+          this.handleTokenExpiration();
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la validation du token:", error);
+    }
+  }
+
+  private decodeJWT(
+    token: string
+  ): { exp?: number; [key: string]: unknown } | null {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return null;
+
+      const payload = parts[1];
+      const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.error("Erreur lors du décodage du JWT:", error);
+      return null;
+    }
+  }
+
+  private handleTokenExpiration() {
+    console.log("Token expiré, déconnexion automatique");
+    this.clearStorage();
+    this.stopTokenValidation();
+
+    // Rediriger vers la page de connexion
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  }
+
+  private notifyTokenRefresh() {
+    this.tokenRefreshListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.error("Erreur dans le listener de rafraîchissement:", error);
+      }
+    });
+  }
+
+  public onTokenRefresh(listener: () => void) {
+    this.tokenRefreshListeners.push(listener);
+
+    // Retourner une fonction de nettoyage
+    return () => {
+      const index = this.tokenRefreshListeners.indexOf(listener);
+      if (index > -1) {
+        this.tokenRefreshListeners.splice(index, 1);
+      }
+    };
   }
 
   private clearStorage() {
@@ -29,6 +129,7 @@ class AuthService {
     this.token = null;
     this.refreshToken = null;
     this.user = null;
+    this.stopTokenValidation();
   }
 
   private saveAuthData(authResponse: AuthResponse) {
@@ -39,6 +140,9 @@ class AuthService {
     localStorage.setItem("token", authResponse.token);
     localStorage.setItem("refreshToken", authResponse.refreshToken);
     localStorage.setItem("user", JSON.stringify(authResponse.user));
+
+    // Redémarrer la validation des tokens après une nouvelle connexion
+    this.startTokenValidation();
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {

@@ -24,7 +24,11 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { state: authState } = useAuth();
   const ui = useUI();
-  const { notes, filteredNotes, loading, deleteNote } = useNotes();
+  const { notes, filteredNotes, loading, deleteNote } = useNotes({
+    currentNotebook: ui.currentNotebook,
+    selectedLabels: ui.selectedLabels,
+    searchTerm: ui.searchTerm,
+  });
 
   const { links } = useLinks();
   const { notebooks } = useNotebooks();
@@ -92,6 +96,22 @@ const Dashboard: React.FC = () => {
     [confirm, deleteNote]
   );
 
+  const handleLabelSelect = useCallback(
+    (labelId: string) => {
+      const currentLabels = ui.selectedLabels;
+      const isSelected = currentLabels.includes(labelId);
+
+      if (isSelected) {
+        // Désélectionner le label
+        ui.setSelectedLabels(currentLabels.filter((id) => id !== labelId));
+      } else {
+        // Sélectionner le label
+        ui.setSelectedLabels([...currentLabels, labelId]);
+      }
+    },
+    [ui]
+  );
+
   const handleClearFilters = useCallback(() => {
     ui.clearAllSearchTerms();
     clearAllSearches();
@@ -121,7 +141,11 @@ const Dashboard: React.FC = () => {
               onNotebookSelect={(id) => ui.setCurrentNotebook(id)}
               totalNotes={notes.length}
             />
-            <LabelManager />
+            <LabelManager
+              selectedLabelIds={ui.selectedLabels}
+              onLabelSelect={handleLabelSelect}
+              showFilterMode={true}
+            />
             <BlocNoteWidget />
           </div>
 

@@ -10,15 +10,12 @@ const Home: React.FC = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section */}
         <div className="container mx-auto px-4 py-12 md:py-20 flex flex-col lg:flex-row items-center">
-          {/* Left content */}
           <div className="lg:w-1/2 lg:pr-12">
             <h1 className="text-4xl font-script text-teal-500 mb-6">
               My Web Companion : Votre compagnon numérique
             </h1>
 
-            {/* Feature 1 */}
             <div className="mb-12">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">
                 Accessible partout

@@ -1,14 +1,31 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useTokenRefresh } from "../hooks/useTokenRefresh";
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { state } = useAuth();
+  const { state, checkTokenValidity } = useAuth();
+  const { checkTokenStatus } = useTokenRefresh();
   const location = useLocation();
+
+  // Vérification périodique du token pour les routes protégées
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      const interval = setInterval(async () => {
+        const isValid = await checkTokenStatus();
+        if (!isValid) {
+          console.warn("Token invalide détecté, vérification approfondie...");
+          await checkTokenValidity();
+        }
+      }, 2 * 60 * 1000); // Vérification toutes les 2 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [state.isAuthenticated, checkTokenStatus, checkTokenValidity]);
 
   if (state.isLoading) {
     return (
