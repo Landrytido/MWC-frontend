@@ -35,7 +35,4 @@ export const calendarApi = {
 
   searchEvents: (query: string): Promise<EventDto[]> =>
     httpService.get("/calendar/events/search", { query }),
-
-  testEmail: (): Promise<{ message: string; success: boolean }> =>
-    httpService.post("/calendar/test-email"),
 };

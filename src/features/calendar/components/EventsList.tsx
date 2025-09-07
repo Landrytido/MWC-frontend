@@ -238,26 +238,6 @@ const EventsList: React.FC<EventsListProps> = ({
                         <span className="truncate">Lien de réunion</span>
                       </div>
                     )}
-
-                    {/* Rappels */}
-                    {event.reminders.length > 0 && (
-                      <div className="text-xs text-gray-500 flex items-center mt-1">
-                        <svg
-                          className="w-3 h-3 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15 17h5l-5 5v-5zM4 19h6v-6h6V7H4v12z"
-                          />
-                        </svg>
-                        <span>{event.reminders.length} rappel(s)</span>
-                      </div>
-                    )}
                   </div>
 
                   {/* Actions */}

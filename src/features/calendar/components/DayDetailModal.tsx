@@ -116,7 +116,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       startDate: task.dueDate || date,
       endDate: task.dueDate || date,
       type: "TASK_BASED" as const,
-      reminders: [],
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
       location: undefined,
@@ -300,24 +299,6 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                                       />
                                     </svg>
                                     Lien réunion
-                                  </span>
-                                )}
-                                {event.reminders.length > 0 && (
-                                  <span className="flex items-center">
-                                    <svg
-                                      className="w-3 h-3 mr-1"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M15 17h5l-5 5v-5zM4 19h6v-6h6V7H4v12z"
-                                      />
-                                    </svg>
-                                    {event.reminders.length} rappel(s)
                                   </span>
                                 )}
                               </div>

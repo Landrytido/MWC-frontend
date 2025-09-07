@@ -3,7 +3,6 @@ import {
   EventDto,
   CreateEventRequest,
   EventMode,
-  REMINDER_OPTIONS,
   EVENT_MODE_LABELS,
 } from "../types";
 import { TaskPriority, PRIORITY_LABELS, CreateTaskForm } from "../../tasks";
@@ -37,7 +36,6 @@ const EventModal: React.FC<EventModalProps> = ({
     mode: "PRESENTIEL",
     meetingLink: "",
     type: modalType === "event" ? "EVENT" : "TASK_BASED",
-    reminders: [],
   });
   const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [dueDate, setDueDate] = useState<string>("");
@@ -45,7 +43,6 @@ const EventModal: React.FC<EventModalProps> = ({
     "none" | "today" | "tomorrow"
   >("none");
 
-  const [selectedReminders, setSelectedReminders] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -80,12 +77,7 @@ const EventModal: React.FC<EventModalProps> = ({
           mode: event.mode || "PRESENTIEL",
           meetingLink: event.meetingLink || "",
           type: event.type,
-          reminders: event.reminders.map((r) => ({
-            type: r.type,
-            minutesBefore: r.minutesBefore,
-          })),
         });
-        setSelectedReminders(event.reminders.map((r) => r.minutesBefore));
         if (event.type === "TASK_BASED" && event.relatedTaskId) {
           if (
             "taskPriority" in event &&
@@ -108,7 +100,6 @@ const EventModal: React.FC<EventModalProps> = ({
         setPriority(TaskPriority.MEDIUM);
         setDueDate("");
         setScheduleType("none");
-        setSelectedReminders([]);
 
         const now = new Date();
         const defaultStart = selectedDate
@@ -134,7 +125,6 @@ const EventModal: React.FC<EventModalProps> = ({
           mode: "PRESENTIEL",
           meetingLink: "",
           type: modalType === "event" ? "EVENT" : "TASK_BASED",
-          reminders: [],
         });
         if (selectedDate && modalType === "task") {
           setDueDate(selectedDate);
@@ -183,12 +173,10 @@ const EventModal: React.FC<EventModalProps> = ({
         mode: "PRESENTIEL",
         meetingLink: "",
         type: modalType === "event" ? "EVENT" : "TASK_BASED",
-        reminders: [],
       });
       setPriority(TaskPriority.MEDIUM);
       setDueDate("");
       setScheduleType("none");
-      setSelectedReminders([]);
       setError("");
     }
 
@@ -268,11 +256,6 @@ const EventModal: React.FC<EventModalProps> = ({
 
         await onSubmit(taskData as CreateEventRequest);
       } else {
-        const reminders = selectedReminders.map((minutes) => ({
-          type: "EMAIL" as const,
-          minutesBefore: minutes,
-        }));
-
         const eventData: CreateEventRequest = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
@@ -282,7 +265,6 @@ const EventModal: React.FC<EventModalProps> = ({
           mode: formData.mode,
           meetingLink: formData.meetingLink?.trim() || undefined,
           type: "EVENT",
-          reminders,
         };
 
         await onSubmit(eventData);
@@ -294,14 +276,6 @@ const EventModal: React.FC<EventModalProps> = ({
       );
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleReminderChange = (minutes: number, checked: boolean) => {
-    if (checked) {
-      setSelectedReminders((prev) => [...prev, minutes]);
-    } else {
-      setSelectedReminders((prev) => prev.filter((m) => m !== minutes));
     }
   };
 
@@ -667,29 +641,6 @@ const EventModal: React.FC<EventModalProps> = ({
                 disabled={isSubmitting}
               />
             </div>
-            {modalType === "event" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rappels par email
-                </label>
-                <div className="space-y-2">
-                  {REMINDER_OPTIONS.map(({ label, minutes }) => (
-                    <label key={minutes} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedReminders.includes(minutes)}
-                        onChange={(e) =>
-                          handleReminderChange(minutes, e.target.checked)
-                        }
-                        className="mr-2 text-teal-500 focus:ring-teal-500 rounded"
-                        disabled={isSubmitting}
-                      />
-                      <span className="text-sm text-gray-700">{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button

@@ -2,13 +2,6 @@ import { TaskPriority } from "../tasks";
 
 export type EventMode = "PRESENTIEL" | "DISTANCIEL";
 export type EventType = "EVENT" | "TASK_BASED";
-export type ReminderType = "EMAIL" | "IN_APP_NOTIFICATION";
-
-export const REMINDER_OPTIONS = [
-  { label: "15 minutes avant", minutes: 15 },
-  { label: "1 heure avant", minutes: 60 },
-  { label: "1 jour avant", minutes: 1440 },
-] as const;
 
 export const EVENT_MODE_LABELS = {
   PRESENTIEL: "Présentiel",
@@ -19,15 +12,6 @@ export const EVENT_TYPE_LABELS = {
   EVENT: "Événement",
   TASK_BASED: "Basé sur une tâche",
 } as const;
-
-export interface EventReminderDto {
-  id: number;
-  type: ReminderType;
-  minutesBefore: number;
-  sent: boolean;
-  scheduledFor: string;
-  createdAt: string;
-}
 
 export interface EventDto {
   id: number;
@@ -41,7 +25,6 @@ export interface EventDto {
   type: EventType;
   relatedTaskId?: number;
   relatedTaskTitle?: string;
-  reminders: EventReminderDto[];
   createdAt: string;
   updatedAt: string;
 
@@ -68,11 +51,6 @@ export interface CalendarViewDto {
   totalItems: number;
 }
 
-export interface CreateReminderRequest {
-  type: ReminderType;
-  minutesBefore: number;
-}
-
 export interface CreateEventRequest {
   title: string;
   description?: string;
@@ -83,7 +61,6 @@ export interface CreateEventRequest {
   meetingLink?: string;
   type?: EventType;
   relatedTaskId?: number;
-  reminders?: CreateReminderRequest[];
   dueDate?: string; // Pour les tâches - Unifié avec backend
   priority?: TaskPriority; // Pour les tâches
 }
