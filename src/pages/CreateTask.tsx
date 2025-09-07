@@ -15,11 +15,9 @@ const CreateTask: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Récupérer les paramètres d'URL
   const defaultDate = searchParams.get("date");
   const returnTo = searchParams.get("returnTo");
 
-  // Fonction de navigation intelligente
   const getReturnUrl = () => {
     switch (returnTo) {
       case "calendar":

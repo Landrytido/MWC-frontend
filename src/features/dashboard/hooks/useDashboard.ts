@@ -52,23 +52,18 @@ export const useDashboard = () => {
     calendar: "",
   });
 
-  // Mode développement pour les logs
   const isDev = import.meta.env.DEV;
 
-  // ✅ Logique de recherche simplifiée - API only
   const performSearch = useMemo(
     () =>
       debounce(async (tab: TabType, term: string) => {
-        // Reset des erreurs
         setSearchErrors((prev) => ({ ...prev, [tab]: "" }));
 
-        // Si le terme est vide, vider les résultats
         if (!term.trim()) {
           setSearchResults((prev) => ({ ...prev, [tab]: [] }));
           return;
         }
 
-        // Vérifier la longueur minimale
         if (term.length < SEARCH_CONFIG.MIN_QUERY_LENGTH) {
           setSearchResults((prev) => ({ ...prev, [tab]: [] }));
           return;
@@ -83,7 +78,6 @@ export const useDashboard = () => {
             case "notes": {
               if (isDev) console.log(`🔍 Recherche notes: "${term}"`);
 
-              // ✅ Utilisation du nouveau endpoint backend
               const response = await notesApi.search({ query: term });
               results = Array.isArray(response)
                 ? response
@@ -112,7 +106,6 @@ export const useDashboard = () => {
         } catch (error) {
           console.error(`❌ Erreur recherche ${tab}:`, error);
 
-          // ✅ Gestion d'erreur simple sans fallback
           const errorMessage =
             error instanceof Error ? error.message : "Erreur de recherche";
 
@@ -217,7 +210,6 @@ export const useDashboard = () => {
     [searchResults]
   );
 
-  // Fonctions typées spécifiques
   const getNotesSearchResults = useCallback((): Note[] => {
     return (searchResults.notes || []) as Note[];
   }, [searchResults.notes]);

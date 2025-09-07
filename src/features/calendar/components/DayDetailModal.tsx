@@ -15,7 +15,8 @@ interface DayDetailModalProps {
   onEventDelete: (eventId: number) => void;
   onCreateEvent: () => void;
   onCreateTask: () => void;
-  loadDayData: (date: string) => Promise<CalendarViewDto>; // ✅ Passé depuis le composant parent
+  loadDayData: (date: string) => Promise<CalendarViewDto>;
+  refreshTrigger?: number;
 }
 
 const DayDetailModal: React.FC<DayDetailModalProps> = ({
@@ -26,7 +27,8 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onEventDelete,
   onCreateEvent,
   onCreateTask,
-  loadDayData, // ✅ Reçu en prop
+  loadDayData,
+  refreshTrigger,
 }) => {
   const [dayData, setDayData] = useState<CalendarViewDto | null>(null);
   const [error, setError] = useState("");
@@ -54,6 +56,12 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       loadDay();
     }
   }, [isOpen, date, loadDay]);
+
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0 && isOpen && date) {
+      loadDay();
+    }
+  }, [refreshTrigger, isOpen, date, loadDay]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

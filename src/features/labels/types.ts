@@ -31,7 +31,6 @@ export interface LabelUsageStats {
   unusedLabels: Label[];
 }
 
-// Configuration des couleurs
 export const LABEL_COLORS: Record<LabelColorName, LabelColorConfig> = {
   teal: {
     default: "bg-teal-50 text-teal-700 border border-teal-200",
@@ -66,7 +65,6 @@ export const AVAILABLE_LABEL_COLORS: LabelColorName[] = [
   "violet",
 ];
 
-// Utilitaires
 export const getLabelColor = (labelId: string): LabelColorName => {
   let hash = 0;
   for (let i = 0; i < labelId.length; i++) {

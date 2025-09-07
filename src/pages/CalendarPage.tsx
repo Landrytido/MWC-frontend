@@ -8,12 +8,10 @@ const CalendarPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "notes"; // notes par défaut
 
-  // Fonction de navigation intelligente
   const getReturnUrl = () => {
     return `/dashboard?tab=${returnTo}`;
   };
 
-  // Fonction pour obtenir le nom de la section
   const getSectionName = () => {
     switch (returnTo) {
       case "tasks":

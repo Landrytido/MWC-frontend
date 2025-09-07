@@ -43,7 +43,6 @@ export const useCalendar = (): UseCalendarReturn => {
     new Date().getFullYear()
   );
 
-  // 📊 DONNÉES
   const [events, setEvents] = useState<EventDto[]>([]);
   const [currentMonthData, setCurrentMonthData] = useState<CalendarViewDto[]>(
     []
@@ -142,15 +141,13 @@ export const useCalendar = (): UseCalendarReturn => {
     []
   );
 
-  // 📝 ACTIONS CRUD - Pattern identique à useNotes/useTasks
   const createEvent = useCallback(
     async (eventData: CreateEventRequest): Promise<EventDto> => {
       try {
         const newEvent = await calendarApi.createEvent(eventData);
         setEvents((prev) => [newEvent, ...prev]);
 
-        // ♻️ Recharger les données du mois courant
-        setLastLoadedMonth(null); // Force le rechargement
+        setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
         return newEvent;
@@ -172,7 +169,6 @@ export const useCalendar = (): UseCalendarReturn => {
           prev.map((event) => (event.id === id ? updatedEvent : event))
         );
 
-        // ♻️ Recharger les données du mois courant
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
@@ -193,7 +189,6 @@ export const useCalendar = (): UseCalendarReturn => {
         await calendarApi.deleteEvent(id);
         setEvents((prev) => prev.filter((event) => event.id !== id));
 
-        // ♻️ Recharger les données du mois courant
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
       } catch (err) {
@@ -227,18 +222,15 @@ export const useCalendar = (): UseCalendarReturn => {
     [currentMonth, currentYear, loadMonthData]
   );
 
-  // 🔄 RECHARGEMENT COMPLET
   const refreshCalendarData = useCallback(async () => {
     setLastLoadedMonth(null);
     await loadMonthData(currentMonth, currentYear);
   }, [currentMonth, currentYear, loadMonthData]);
 
-  // 🎣 EFFETS - Charger automatiquement quand le mois change
   useEffect(() => {
     loadMonthData(currentMonth, currentYear);
   }, [currentMonth, currentYear, loadMonthData]);
 
-  // 🎣 EFFET - Charger les événements au début
   useEffect(() => {
     const loadAllEvents = async () => {
       setLoadingStates((prev) => ({ ...prev, events: true }));
@@ -256,31 +248,25 @@ export const useCalendar = (): UseCalendarReturn => {
   }, []);
 
   return {
-    // 📊 DONNÉES
     events,
     currentMonthData,
 
-    // 📅 NAVIGATION
     currentMonth,
     currentYear,
 
-    // ⚡ ÉTATS DE CHARGEMENT - ✅ Suppression de loading global
     error,
     loadingStates,
 
-    // 🧭 NAVIGATION
     navigateToPreviousMonth,
     navigateToNextMonth,
     navigateToToday,
     navigateToMonth,
 
-    // 📝 ACTIONS
     createEvent,
     updateEvent,
     deleteEvent,
     createTaskFromCalendar,
 
-    // 🔍 UTILITAIRES
     loadDayData,
     refreshCalendarData,
   };

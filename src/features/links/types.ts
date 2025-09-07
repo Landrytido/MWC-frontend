@@ -37,7 +37,6 @@ export interface CreateLinkGroupForm {
   description?: string;
 }
 
-// Utilitaires
 export function formatUrl(url: string): string {
   try {
     const urlObj = new URL(url);

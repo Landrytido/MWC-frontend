@@ -135,7 +135,6 @@ const EventModal: React.FC<EventModalProps> = ({
   }, [isOpen, editingEvent, modalType, selectedDate]);
   useEffect(() => {
     if (modalType === "task" && isOpen) {
-      // Pour les tâches, gérer la date via dueDate directement
       if (selectedDate) {
         setDueDate(`${selectedDate}T09:00`);
         return;
@@ -217,14 +216,12 @@ const EventModal: React.FC<EventModalProps> = ({
 
     try {
       if (modalType === "task") {
-        // Pour les tâches, on n'envoie que dueDate (concept unifié)
         const taskDueDate = dueDate
           ? formatDateTimeForBackend(dueDate)
           : selectedDate
           ? `${selectedDate}T09:00:00` // 9h par défaut si seulement la date est sélectionnée
           : undefined;
 
-        // ✅ VALIDATION : Vérifier si la date est dans le passé
         if (taskDueDate) {
           const selectedDateTime = new Date(taskDueDate);
           const now = new Date();
@@ -241,7 +238,6 @@ const EventModal: React.FC<EventModalProps> = ({
 
             if (!confirmed) {
               setIsSubmitting(false);
-              // L'utilisateur a annulé - on lance une exception spéciale
               throw new Error("OPERATION_CANCELLED");
             }
           }
@@ -618,7 +614,6 @@ const EventModal: React.FC<EventModalProps> = ({
               </div>
             )}
 
-            {/* Description - COMMUN */}
             <div>
               <label
                 htmlFor="description"

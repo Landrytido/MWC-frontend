@@ -230,7 +230,6 @@ export const useGlobalTimerHook = () => {
     updateTimer({ laps: [] });
   }, [updateTimer]);
 
-  // Formatage
   const formatTime = useCallback((ms: number) => {
     return TimerService.formatTime(ms);
   }, []);
@@ -274,7 +273,6 @@ export const useGlobalTimerHook = () => {
     deletePreset,
     clearLaps,
 
-    // Utilitaires
     formatTime,
     formatTimeCompact,
     timeToInputs,

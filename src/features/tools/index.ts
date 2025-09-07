@@ -1,20 +1,16 @@
-// Components
 export { Calculator } from "./components/Calculator";
 export { Timer } from "./components/Timer";
 export { Converter } from "./components/Converter";
 export { default as ToolsManager } from "./components/ToolsManager";
 
-// Hooks
 export { useCalculator } from "./hooks/useCalculator";
 export { useTimer } from "./hooks/useTimer";
 export { useConverter } from "./hooks/useConverter";
 
-// Services
 export { CalculatorService } from "./services/calculatorService";
 export { TimerService } from "./services/timerService";
 export { ConverterService } from "./services/converterService";
 
-// Types
 export type {
   CalculatorState,
   CalculationHistory,

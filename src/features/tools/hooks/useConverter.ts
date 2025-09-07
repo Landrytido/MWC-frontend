@@ -252,7 +252,6 @@ export function useConverter() {
     clearHistory,
     loadHistoryItem,
 
-    // Utilitaires
     getCurrentUnits,
     getFormattedInput,
     performConversion,

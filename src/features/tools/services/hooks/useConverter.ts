@@ -80,7 +80,6 @@ export function useConverter() {
         error: null,
       }));
 
-      // Sauvegarder dans l'historique
       ConverterService.saveToHistory(result);
       setHistory(ConverterService.getHistory());
     } catch (error) {
@@ -137,7 +136,6 @@ export function useConverter() {
         toUnit: prev.fromUnit,
       };
 
-      // Si on a un résultat, utiliser la valeur convertie comme nouvelle entrée
       if (prev.result) {
         newState.inputValue = prev.result.formattedResult;
       }
@@ -184,12 +182,10 @@ export function useConverter() {
   }, [state.inputValue, state.precision]);
 
   return {
-    // État
     ...state,
     history,
     categories,
 
-    // Actions
     changeCategory,
     setFromUnit,
     setToUnit,
@@ -200,7 +196,6 @@ export function useConverter() {
     clearHistory,
     useHistoryItem,
 
-    // Utilitaires
     getCurrentUnits,
     getFormattedInput,
     performConversion,

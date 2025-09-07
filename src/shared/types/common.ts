@@ -35,14 +35,12 @@ export interface SearchResponse<T> {
   query: string;
 }
 
-// Types pour les actions bulk (utilisé par plusieurs features)
 export interface BulkActionResult {
   successCount: number;
   failureCount: number;
   errors: string[];
 }
 
-// États UI globaux
 export interface UIState {
   sidebarCollapsed: boolean;
   searchTerm: string;
@@ -50,7 +48,6 @@ export interface UIState {
   theme: "light" | "dark" | "auto";
 }
 
-// Types d'erreur standardisés
 export interface ApiError {
   message: string;
   code?: string;
@@ -58,17 +55,12 @@ export interface ApiError {
   details?: Record<string, unknown>;
 }
 
-// Type pour les sélecteurs génériques
 export interface SelectOption<T = string> {
   value: T;
   label: string;
   disabled?: boolean;
   icon?: string;
 }
-
-// ==========================================
-// UTILITAIRES DE TYPES
-// ==========================================
 
 export type WithId<T> = T & { id: number | string };
 export type WithTimestamps<T> = T & {
@@ -77,10 +69,6 @@ export type WithTimestamps<T> = T & {
 };
 export type CreateForm<T> = Omit<T, "id" | "createdAt" | "updatedAt">;
 export type UpdateForm<T> = Partial<CreateForm<T>>;
-
-// ==========================================
-// CONSTANTES PARTAGÉES
-// ==========================================
 
 export const COMMON_CONSTANTS = {
   DEBOUNCE_DELAY: 300,

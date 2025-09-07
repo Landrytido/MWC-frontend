@@ -12,7 +12,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { checkTokenStatus } = useTokenRefresh();
   const location = useLocation();
 
-  // Vérification périodique du token pour les routes protégées
   useEffect(() => {
     if (state.isAuthenticated) {
       const interval = setInterval(async () => {

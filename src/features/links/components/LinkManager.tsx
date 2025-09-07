@@ -2,11 +2,11 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { useLinks } from "../hooks/useLinks";
-import type { SavedLink } from "../types"; // ✅ Ajout de l'import manquant
+import type { SavedLink } from "../types";
 
 interface LinkManagerProps {
   className?: string;
-  searchResults?: SavedLink[]; // ✅ Maintenant SavedLink est reconnu
+  searchResults?: SavedLink[];
   isSearching?: boolean;
 }
 
@@ -46,12 +46,10 @@ const LinkManager: React.FC<LinkManagerProps> = ({
     [confirm, deleteLink]
   );
 
-  // Pagination
   const startIndex = (currentPage - 1) * LINKS_PER_PAGE;
   const endIndex = startIndex + LINKS_PER_PAGE;
   const currentLinks = displayedLinks.slice(startIndex, endIndex);
 
-  // Ajustement de la pagination
   React.useEffect(() => {
     const maxPages = Math.ceil(displayedLinks.length / LINKS_PER_PAGE);
     if (currentPage > maxPages && maxPages > 0) {

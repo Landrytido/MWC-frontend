@@ -1,4 +1,3 @@
-// Types pour le convertisseur d'unités
 export type UnitCategory =
   | "length"
   | "weight"

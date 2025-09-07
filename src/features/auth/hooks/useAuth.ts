@@ -131,7 +131,6 @@ export const useAuth = (): UseAuthReturn => {
       const token = authService.getToken();
       if (!token) return false;
 
-      // Effectuer une requête de test pour vérifier la validité du token
       await authService.authenticatedFetch(
         `${
           import.meta.env.VITE_API_URL || "http://localhost:8080/api"
@@ -145,7 +144,6 @@ export const useAuth = (): UseAuthReturn => {
     } catch (error) {
       console.error("Token invalide:", error);
 
-      // Si le token est invalide, mettre à jour l'état
       setState((prev) => ({
         ...prev,
         isAuthenticated: false,
@@ -157,10 +155,8 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, []);
 
-  // Écouter les événements de rafraîchissement de token
   useEffect(() => {
     const handleTokenRefreshed = () => {
-      // Revérifier l'authentification après un rafraîchissement
       const user = authService.getUser();
       const isAuthenticated = authService.isAuthenticated();
 

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../shared/components/layout/Layout";
-import { useLinks } from "../features/links"; // ✅ Nouveau
+import { useLinks } from "../features/links";
 import { useConfirmation } from "../shared/hooks/useConfirmation";
 
 const EditLink: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { links, updateLink, deleteLink } = useLinks(); // ✅ Remplace useApiService
+  const { links, updateLink, deleteLink } = useLinks();
 
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -16,7 +16,6 @@ const EditLink: React.FC = () => {
   const [error, setError] = useState("");
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  // ✅ Trouve le lien dans le state au lieu d'un appel API
   const link = links.find((l) => l.id === parseInt(id || "0"));
 
   useEffect(() => {
@@ -25,7 +24,6 @@ const EditLink: React.FC = () => {
       setTitle(link.title);
       setDescription(link.description || "");
     } else if (id) {
-      // Si le lien n'est pas en cache, rediriger ou afficher erreur
       setError("Impossible de récupérer le lien demandé");
     }
   }, [link, id]);
@@ -58,7 +56,6 @@ const EditLink: React.FC = () => {
     setError("");
 
     try {
-      // ✅ Utilise le hook de la feature
       await updateLink(parseInt(id), {
         url,
         title: title || new URL(url).hostname,
@@ -88,7 +85,6 @@ const EditLink: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      // ✅ Utilise le hook de la feature
       await deleteLink(parseInt(id));
       navigate("/dashboard?tab=links");
     } catch (error) {

@@ -102,10 +102,8 @@ const Dashboard: React.FC = () => {
       const isSelected = currentLabels.includes(labelId);
 
       if (isSelected) {
-        // Désélectionner le label
         ui.setSelectedLabels(currentLabels.filter((id) => id !== labelId));
       } else {
-        // Sélectionner le label
         ui.setSelectedLabels([...currentLabels, labelId]);
       }
     },
@@ -117,7 +115,6 @@ const Dashboard: React.FC = () => {
     clearAllSearches();
   }, [ui, clearAllSearches]);
 
-  // Obtenir les résultats de recherche typés pour l'onglet actuel
   const currentNotesResults = getNotesSearchResults();
   const currentLinksResults = getLinksSearchResults();
   const currentTasksResults = getTasksSearchResults();
@@ -202,7 +199,6 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* Indicateur d'erreur/fallback - Seulement en mode développement */}
                 {import.meta.env.DEV &&
                   searchConfig.hasError &&
                   searchConfig.errorMessage && (

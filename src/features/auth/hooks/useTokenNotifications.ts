@@ -30,18 +30,15 @@ export const useTokenNotifications = () => {
   }, []);
 
   useEffect(() => {
-    // Écouter les rafraîchissements de token
     const handleTokenRefreshed = () => {
       showNotification("Session rafraîchie automatiquement", "success");
     };
 
-    // Écouter les événements de navigation/focus pour vérifier le token
     const handleVisibilityChange = async () => {
       if (!document.hidden && authService.isAuthenticated()) {
         try {
           const token = authService.getToken();
           if (token) {
-            // Vérifier si le token est encore valide
             await authService.authenticatedFetch("/auth/verify");
           }
         } catch {
@@ -59,7 +56,6 @@ export const useTokenNotifications = () => {
       }
     };
 
-    // Écouter les événements
     window.addEventListener("tokenRefreshed", handleTokenRefreshed);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);

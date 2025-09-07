@@ -6,15 +6,12 @@ import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
-import { CreateEventRequest, EventDto } from "../types";
-import { CreateTaskForm } from "../../tasks/types";
+import { EventDto } from "../types";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
-import { useTasks } from "../../tasks/hooks/useTasks";
 
 const Calendar: React.FC = () => {
   const navigate = useNavigate();
 
-  // 🎣 HOOKS
   const {
     currentMonth,
     currentYear,
@@ -29,26 +26,21 @@ const Calendar: React.FC = () => {
     updateEvent,
     deleteEvent,
     loadDayData,
-    refreshCalendarData,
   } = useCalendar();
-
-  const { createTask, updateTask, refetch: refetchTasks } = useTasks();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
-  // 🗄️ ÉTAT LOCAL DU COMPOSANT
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalType, setModalType] = useState<"event" | "task">("event");
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
-  // ✅ AJOUT : État pour le filtre du calendrier
   const [filterType, setFilterType] = useState<"all" | "events" | "tasks">(
     "all"
   );
 
-  // 📝 HANDLERS
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
@@ -56,7 +48,6 @@ const Calendar: React.FC = () => {
   };
 
   const handleCreateTask = () => {
-    // Navigation vers la page CreateTask avec paramètres de retour
     const params = new URLSearchParams();
     if (selectedDate) {
       params.append("date", selectedDate);
@@ -68,7 +59,6 @@ const Calendar: React.FC = () => {
   const handleEditEvent = (event: EventDto) => {
     setEditingEvent(event);
     setModalType(event.type === "TASK_BASED" ? "task" : "event");
-    setSelectedDate("");
     setIsEventModalOpen(true);
   };
 
@@ -95,50 +85,19 @@ const Calendar: React.FC = () => {
     setIsDayDetailModalOpen(true);
   };
 
-  // ✅ CORRECTION : Gestion des types corrigée
-  const handleEventSubmit = async (
-    data: CreateEventRequest | CreateTaskForm
-  ) => {
+  const handleEventSubmit = async (data: any) => {
     try {
       if (editingEvent) {
-        // Pour la modification, vérifier le type de l'événement
-        if (modalType === "task" || editingEvent.type === "TASK_BASED") {
-          // Pour les tâches, utiliser l'API tasks
-          const taskData = data as CreateTaskForm;
-          await updateTask(editingEvent.relatedTaskId!, {
-            title: taskData.title,
-            description: taskData.description,
-            dueDate: taskData.dueDate,
-            priority: taskData.priority,
-          });
-          // Rafraîchir le calendrier après modification de tâche
-          await refetchTasks();
-          await refreshCalendarData();
-        } else {
-          await updateEvent(editingEvent.id, data as CreateEventRequest);
-        }
+        await updateEvent(editingEvent.id, data);
+        setEditingEvent(null);
       } else {
-        // Pour la création, différencier selon le modalType
-        if (modalType === "task") {
-          const taskData = data as CreateTaskForm;
-          // ✅ UTILISER L'API TASKS DIRECTEMENT au lieu de createTaskFromCalendar
-          await createTask(taskData);
-          // Rafraîchir le calendrier après création de tâche
-          await refetchTasks();
-          await refreshCalendarData();
-        } else {
-          await createEvent(data as CreateEventRequest);
-        }
+        await createEvent(data);
       }
+
+      setRefreshTrigger((prev) => prev + 1);
       setIsEventModalOpen(false);
-      setEditingEvent(null);
     } catch (error) {
-      // Si l'opération a été annulée par l'utilisateur, on ne fait rien
-      if (error instanceof Error && error.message === "OPERATION_CANCELLED") {
-        return;
-      }
-      console.error("Erreur lors de la sauvegarde:", error);
-      throw error;
+      console.error("Error submitting event:", error);
     }
   };
 
@@ -156,7 +115,7 @@ const Calendar: React.FC = () => {
       />
 
       <div className="p-6">
-        {/* ✅ AJOUT : Filtres pour le calendrier */}
+        {/* Filtres pour le calendrier */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex space-x-2">
             <button
@@ -241,7 +200,7 @@ const Calendar: React.FC = () => {
               monthData={currentMonthData}
               onDayClick={handleDayClick}
               onEventClick={handleEditEvent}
-              filterType={filterType} // ✅ CORRECTION : Prop ajoutée
+              filterType={filterType}
             />
           </div>
 
@@ -286,6 +245,7 @@ const Calendar: React.FC = () => {
           handleCreateTask();
         }}
         loadDayData={loadDayData}
+        refreshTrigger={refreshTrigger}
       />
 
       <ConfirmationComponent />

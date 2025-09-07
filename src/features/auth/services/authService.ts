@@ -23,17 +23,14 @@ class AuthService {
       }
     }
 
-    // Démarrer la vérification périodique des tokens
     this.startTokenValidation();
   }
 
   private startTokenValidation() {
-    // Vérifier le token toutes les 5 minutes
     this.tokenCheckInterval = window.setInterval(() => {
       this.validateToken();
     }, 5 * 60 * 1000);
 
-    // Vérification immédiate au démarrage
     setTimeout(() => this.validateToken(), 1000);
   }
 
@@ -48,20 +45,16 @@ class AuthService {
     if (!this.token) return;
 
     try {
-      // Décoder le payload du JWT pour vérifier l'expiration
       const payload = this.decodeJWT(this.token);
       if (!payload || !payload.exp) return;
 
       const currentTime = Date.now() / 1000;
       const timeUntilExpiry = payload.exp - currentTime;
 
-      // Si le token expire dans moins de 10 minutes, essayer de le rafraîchir
       if (timeUntilExpiry < 600) {
-        // 10 minutes
         console.log("Token expirant bientôt, tentative de rafraîchissement...");
         try {
           await this.refreshAccessToken();
-          // Notifier les composants du rafraîchissement
           this.notifyTokenRefresh();
         } catch (error) {
           console.error("Impossible de rafraîchir le token:", error);
@@ -94,7 +87,6 @@ class AuthService {
     this.clearStorage();
     this.stopTokenValidation();
 
-    // Rediriger vers la page de connexion
     if (window.location.pathname !== "/login") {
       window.location.href = "/login";
     }
@@ -113,7 +105,6 @@ class AuthService {
   public onTokenRefresh(listener: () => void) {
     this.tokenRefreshListeners.push(listener);
 
-    // Retourner une fonction de nettoyage
     return () => {
       const index = this.tokenRefreshListeners.indexOf(listener);
       if (index > -1) {
@@ -141,7 +132,6 @@ class AuthService {
     localStorage.setItem("refreshToken", authResponse.refreshToken);
     localStorage.setItem("user", JSON.stringify(authResponse.user));
 
-    // Redémarrer la validation des tokens après une nouvelle connexion
     this.startTokenValidation();
   }
 
@@ -253,7 +243,6 @@ class AuthService {
         Authorization: `Bearer ${this.token}`,
       },
     });
-
     if (response.status === 401 && this.refreshToken) {
       try {
         await this.refreshAccessToken();

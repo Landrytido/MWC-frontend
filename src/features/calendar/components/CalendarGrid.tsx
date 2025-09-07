@@ -48,12 +48,15 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     const days = [];
 
     for (let i = adjustedStartDay - 1; i >= 0; i--) {
-      const date = new Date(year, month, -i);
+      const lastDayOfPrevMonth = new Date(year, month, 0).getDate();
+      const dayNumber = lastDayOfPrevMonth - i;
+
+      const date = new Date(year, month - 1, dayNumber);
       const dateString = date.toISOString().split("T")[0];
       days.push({
         date: dateString,
         isCurrentMonth: false,
-        dayNumber: date.getDate(),
+        dayNumber: dayNumber,
       });
     }
 
@@ -69,8 +72,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     const totalCells = 42;
     const remainingCells = totalCells - days.length;
     for (let day = 1; day <= remainingCells; day++) {
-      const date = new Date(year, month + 1, day);
-      const dateString = date.toISOString().split("T")[0];
+      const dateString = createLocalDate(year, month + 1, day);
       days.push({
         date: dateString,
         isCurrentMonth: false,
@@ -118,7 +120,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         meetingLink: undefined,
       }));
 
-      items.push(...taskItems);
+      const filteredTaskItems = taskItems.filter(
+        (taskItem) =>
+          !items.some(
+            (existingItem) =>
+              existingItem.title === taskItem.title &&
+              existingItem.startDate === taskItem.startDate
+          )
+      );
+
+      items.push(...filteredTaskItems);
     }
 
     return items;
@@ -169,7 +180,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
             <div
               key={`${day.date}-${index}`}
               className={`
-                min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 
+                relative min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 
                 cursor-pointer transition-all duration-200 
                 hover:bg-gray-50 hover:shadow-inner
                 ${

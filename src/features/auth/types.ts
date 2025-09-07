@@ -46,7 +46,6 @@ export type AuthAction =
   | { type: "CLEAR_ERROR" }
   | { type: "UPDATE_USER"; payload: User };
 
-// Utilitaires
 export const getInitials = (firstName?: string, lastName?: string): string => {
   const first = firstName?.charAt(0) || "";
   const last = lastName?.charAt(0) || "";

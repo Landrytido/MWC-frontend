@@ -5,7 +5,6 @@ export class TimerService {
   private static readonly PRESETS_KEY = "timer-presets";
   private static readonly LAPS_KEY = "timer-laps";
 
-  // Formatage du temps (HH:MM:SS ou MM:SS.cc)
   static formatTime(milliseconds: number): string {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -24,7 +23,6 @@ export class TimerService {
       .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
   }
 
-  // Format compact (ex: 25m 0s)
   static formatTimeCompact(milliseconds: number): string {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -36,7 +34,6 @@ export class TimerService {
     return `${seconds}s`;
   }
 
-  // Conversion depuis les inputs utilisateur
   static parseTimeInput(
     hours: number,
     minutes: number,
@@ -45,7 +42,6 @@ export class TimerService {
     return (hours * 3600 + minutes * 60 + seconds) * 1000;
   }
 
-  // Conversion vers inputs
   static timeToInputs(milliseconds: number): {
     hours: number;
     minutes: number;
@@ -58,7 +54,6 @@ export class TimerService {
     return { hours, minutes, seconds };
   }
 
-  // Préréglages par défaut (libellés originaux)
   static getDefaultPresets(): TimerPreset[] {
     return [
       {
@@ -152,7 +147,6 @@ export class TimerService {
     this.savePresets(merged);
   }
 
-  // Laps (chronomètre)
   static saveLap(lap: TimerLap): void {
     try {
       const stored = localStorage.getItem(this.LAPS_KEY);
@@ -182,7 +176,6 @@ export class TimerService {
     }
   }
 
-  // Settings
   static getSettings(): TimerSettings {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
@@ -214,7 +207,6 @@ export class TimerService {
     }
   }
 
-  // Notifications et son
   static async requestNotificationPermission(): Promise<boolean> {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;

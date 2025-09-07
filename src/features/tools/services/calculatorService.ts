@@ -1,7 +1,6 @@
 import { CalculationHistory } from "../types/calculator";
 
 export class CalculatorService {
-  // Effectuer un calcul
   static calculate(first: number, second: number, operation: string): number {
     switch (operation) {
       case "add":
@@ -22,7 +21,6 @@ export class CalculatorService {
     }
   }
 
-  // Opérations unaires
   static unaryOperation(value: number, operation: string): number {
     switch (operation) {
       case "square":
@@ -47,18 +45,15 @@ export class CalculatorService {
     }
   }
 
-  // Formater le nombre pour l'affichage
   static formatDisplay(value: number): string {
     if (isNaN(value) || !isFinite(value)) {
       return "Erreur";
     }
 
-    // Gérer les très grands et très petits nombres
     if (Math.abs(value) >= 1e15 || (Math.abs(value) < 1e-6 && value !== 0)) {
       return value.toExponential(6);
     }
 
-    // Limiter à 12 chiffres significatifs
     const str = value.toString();
     if (str.length > 12) {
       if (str.includes(".")) {
@@ -71,7 +66,6 @@ export class CalculatorService {
     return str;
   }
 
-  // Construire l'expression d'affichage en temps réel
   static buildDisplayExpression(
     previousValue: number | null,
     operation: string | null,
@@ -93,7 +87,6 @@ export class CalculatorService {
     }
   }
 
-  // Convertir l'opération en symbole d'affichage
   static getOperatorSymbol(operation: string): string {
     switch (operation) {
       case "add":
@@ -109,7 +102,6 @@ export class CalculatorService {
     }
   }
 
-  // Gérer l'historique dans localStorage
   static saveToHistory(expression: string, result: string): void {
     const history = this.getHistory();
     const newEntry: CalculationHistory = {
@@ -119,7 +111,7 @@ export class CalculatorService {
       timestamp: new Date(),
     };
 
-    const updatedHistory = [newEntry, ...history.slice(0, 19)]; // Garder 20 entrées max
+    const updatedHistory = [newEntry, ...history.slice(0, 19)];
     localStorage.setItem("calculator-history", JSON.stringify(updatedHistory));
   }
 
@@ -143,12 +135,10 @@ export class CalculatorService {
     localStorage.removeItem("calculator-history");
   }
 
-  // Validation des entrées
   static isValidNumber(input: string): boolean {
     return !isNaN(parseFloat(input)) && isFinite(parseFloat(input));
   }
 
-  // Construire l'expression pour l'historique
   static buildExpression(
     previousValue: number | null,
     operation: string | null,

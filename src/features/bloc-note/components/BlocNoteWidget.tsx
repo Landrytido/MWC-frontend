@@ -33,14 +33,12 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync content with blocNote
   useEffect(() => {
     if (blocNote) {
       setContent(blocNote.content);
     }
   }, [blocNote]);
 
-  // Focus management for expanded mode
   useEffect(() => {
     if (isExpanded && expandedTextareaRef.current) {
       expandedTextareaRef.current.focus();
@@ -54,7 +52,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
 
-    // Sauvegarder la position du curseur
     const textarea = isExpanded
       ? expandedTextareaRef.current
       : textareaRef.current;
@@ -68,7 +65,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   };
 
   const handleExpandToggle = () => {
-    // Sauvegarder la position du curseur avant de changer de mode
     const currentTextarea = isExpanded
       ? expandedTextareaRef.current
       : textareaRef.current;
@@ -101,13 +97,11 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     setLocalError("");
   }, [blocNote]);
 
-  // Fonction pour démarrer l'édition avec tracking du mode
   const startEditing = useCallback((mode: "click" | "button") => {
     setIsEditing(true);
     setEditingMode(mode);
   }, []);
 
-  // Fonction pour arrêter l'édition automatiquement (seulement si mode "click")
   const stopEditingAuto = useCallback(() => {
     if (editingMode === "click") {
       setIsEditing(false);
@@ -115,7 +109,6 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     }
   }, [editingMode]);
 
-  // Gestion du clic en dehors et de la touche Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (

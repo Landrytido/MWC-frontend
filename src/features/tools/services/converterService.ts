@@ -62,7 +62,6 @@ export class ConverterService {
     ];
   }
 
-  // Définition des unités par catégorie
   static getUnits(): Record<UnitCategory, Unit[]> {
     return {
       length: [
@@ -425,23 +424,19 @@ export class ConverterService {
     };
   }
 
-  // Conversion entre unités
   static convert(value: number, fromUnit: Unit, toUnit: Unit): number {
     if (fromUnit.category !== toUnit.category) {
       throw new Error("Les unités doivent être de la même catégorie");
     }
 
-    // Cas spécial des températures
     if (fromUnit.category === "temperature") {
       return this.convertTemperature(value, fromUnit, toUnit);
     }
 
-    // Conversion standard : valeur -> unité de base -> unité cible
     const baseValue = value * fromUnit.toBase;
     return baseValue / toUnit.toBase;
   }
 
-  // Conversion spéciale pour les températures
   private static convertTemperature(
     value: number,
     fromUnit: Unit,
@@ -449,7 +444,6 @@ export class ConverterService {
   ): number {
     let celsius: number;
 
-    // Convertir vers Celsius
     switch (fromUnit.id) {
       case "c":
         celsius = value;
@@ -464,14 +458,12 @@ export class ConverterService {
         throw new Error(`Unité de température inconnue: ${fromUnit.id}`);
     }
 
-    // Convertir depuis Celsius vers l'unité cible
     if (toUnit.fromBase) {
       return toUnit.fromBase(celsius);
     }
-    return celsius; // Si pas de fonction fromBase, c'est du Celsius
+    return celsius;
   }
 
-  // Formatage des résultats
   static formatResult(value: number, precision: number = 6): string {
     if (
       Math.abs(value) >= 1000000 ||
@@ -485,12 +477,10 @@ export class ConverterService {
     return rounded.toString();
   }
 
-  // Gestion de l'historique
   static saveToHistory(result: ConversionResult): void {
     const history = this.getHistory();
     history.unshift(result);
 
-    // Garder seulement les 20 dernières conversions
     if (history.length > 20) {
       history.splice(20);
     }
@@ -511,7 +501,6 @@ export class ConverterService {
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
-  // Utilitaires
   static getUnitsByCategory(category: UnitCategory): Unit[] {
     return this.getUnits()[category] || [];
   }
@@ -527,7 +516,6 @@ export class ConverterService {
       throw new Error(`Pas assez d'unités pour la catégorie ${category}`);
     }
 
-    // Retourner l'unité de base et une autre unité populaire
     const baseUnit = units.find((unit) => unit.toBase === 1) || units[0];
     const secondUnit =
       units.find((unit) => unit.id !== baseUnit.id) || units[1];

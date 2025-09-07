@@ -20,7 +20,6 @@ export const useTimer = () => {
     TimerService.getPresets()
   );
 
-  // Fonction pour mettre à jour le temps
   const updateTime = useCallback(() => {
     setState((prev) => {
       if (!prev.isRunning || !prev.startTime) return prev;
@@ -31,12 +30,9 @@ export const useTimer = () => {
       if (prev.mode === "stopwatch") {
         return { ...prev, time: elapsed };
       } else {
-        // Mode countdown
         const remaining = Math.max(0, prev.targetTime - elapsed);
 
-        // Vérifier si le temps est écoulé
         if (remaining === 0 && prev.time > 0) {
-          // Timer terminé !
           const settings = TimerService.getSettings();
 
           if (settings.soundEnabled) {
@@ -66,10 +62,9 @@ export const useTimer = () => {
     });
   }, []);
 
-  // Démarrer l'interval quand le timer est en marche
   useEffect(() => {
     if (state.isRunning) {
-      intervalRef.current = setInterval(updateTime, 10); // Mise à jour toutes les 10ms pour la précision
+      intervalRef.current = setInterval(updateTime, 10);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -84,20 +79,17 @@ export const useTimer = () => {
     };
   }, [state.isRunning, updateTime]);
 
-  // Changer de mode
   const switchMode = useCallback((mode: TimerMode) => {
     setState({
       ...initialState,
       mode,
-      targetTime: mode === "countdown" ? 5 * 60 * 1000 : 0, // 5 minutes par défaut
+      targetTime: mode === "countdown" ? 5 * 60 * 1000 : 0,
     });
   }, []);
 
-  // Démarrer/Reprendre
   const start = useCallback(() => {
     setState((prev) => {
       if (prev.isPaused) {
-        // Reprendre après pause
         return {
           ...prev,
           isRunning: true,
@@ -105,7 +97,6 @@ export const useTimer = () => {
           startTime: Date.now() - prev.pausedTime,
         };
       } else {
-        // Nouveau démarrage
         return {
           ...prev,
           isRunning: true,
@@ -117,7 +108,6 @@ export const useTimer = () => {
     });
   }, []);
 
-  // Pause
   const pause = useCallback(() => {
     setState((prev) => {
       if (!prev.isRunning) return prev;
@@ -136,7 +126,6 @@ export const useTimer = () => {
     });
   }, []);
 
-  // Reset
   const reset = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -149,7 +138,6 @@ export const useTimer = () => {
     }));
   }, []);
 
-  // Ajouter un tour (chronomètre uniquement)
   const addLap = useCallback(() => {
     setState((prev) => {
       if (prev.mode !== "stopwatch" || !prev.isRunning) return prev;
@@ -175,7 +163,6 @@ export const useTimer = () => {
     });
   }, []);
 
-  // Définir le temps cible (minuteur)
   const setTargetTime = useCallback(
     (hours: number, minutes: number, seconds: number) => {
       const targetTime = TimerService.parseTimeInput(hours, minutes, seconds);
@@ -188,7 +175,6 @@ export const useTimer = () => {
     []
   );
 
-  // Charger un préréglage
   const loadPreset = useCallback((preset: TimerPreset) => {
     setState((prev) => ({
       ...prev,
@@ -202,14 +188,12 @@ export const useTimer = () => {
     }));
   }, []);
 
-  // Ajouter un nouveau préréglage
   const addPreset = useCallback((name: string, duration: number) => {
     const newPreset = TimerService.addPreset(name, duration);
     setPresets(TimerService.getPresets());
     return newPreset;
   }, []);
 
-  // Supprimer un préréglage
   const deletePreset = useCallback((id: string): boolean => {
     const success = TimerService.deletePreset(id);
     if (success) {
@@ -218,14 +202,12 @@ export const useTimer = () => {
     return success;
   }, []);
 
-  // Effacer les tours
   const clearLaps = useCallback(() => {
     TimerService.clearLaps();
     setState((prev) => ({ ...prev, laps: [] }));
   }, []);
 
   return {
-    // État
     mode: state.mode,
     isRunning: state.isRunning,
     isPaused: state.isPaused,
@@ -234,7 +216,6 @@ export const useTimer = () => {
     laps: state.laps,
     presets,
 
-    // Actions
     switchMode,
     start,
     pause,
@@ -246,12 +227,10 @@ export const useTimer = () => {
     deletePreset,
     clearLaps,
 
-    // Utilitaires
     formatTime: TimerService.formatTime,
     formatTimeCompact: TimerService.formatTimeCompact,
     timeToInputs: TimerService.timeToInputs,
 
-    // État dérivé
     canStart:
       !state.isRunning && (state.mode === "stopwatch" || state.targetTime > 0),
     canPause: state.isRunning,

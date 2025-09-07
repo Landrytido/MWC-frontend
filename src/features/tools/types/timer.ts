@@ -1,12 +1,11 @@
-// Types pour le Timer unifié (chrono + minuteur)
 export type TimerMode = "stopwatch" | "countdown";
 
 export interface TimerState {
   mode: TimerMode;
   isRunning: boolean;
   isPaused: boolean;
-  time: number; // en millisecondes
-  targetTime: number; // pour le minuteur (en millisecondes)
+  time: number;
+  targetTime: number;
   startTime: number | null;
   pausedTime: number;
   laps: TimerLap[];
@@ -14,15 +13,15 @@ export interface TimerState {
 
 export interface TimerLap {
   id: string;
-  lapTime: number; // temps du tour
-  totalTime: number; // temps total au moment du tour
+  lapTime: number;
+  totalTime: number;
   timestamp: Date;
 }
 
 export interface TimerPreset {
   id: string;
   name: string;
-  duration: number; // en millisecondes
+  duration: number;
   isDefault: boolean;
 }
 
