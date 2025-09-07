@@ -212,7 +212,6 @@ export const useUI = () => {
   };
 };
 
-// Hook pour les filtres globaux (utilisé dans Dashboard principalement)
 export const useGlobalFilters = () => {
   const {
     ui,
@@ -238,7 +237,6 @@ export const useGlobalFilters = () => {
   };
 };
 
-// Hook pour les états de chargement globaux
 export const useGlobalLoading = () => {
   const { state, dispatch } = useApp();
 
@@ -255,7 +253,6 @@ export const useGlobalLoading = () => {
   };
 };
 
-// Hook pour le timer global
 export const useGlobalTimer = () => {
   const { state, dispatch } = useApp();
 
@@ -273,9 +270,5 @@ export const useGlobalTimer = () => {
     resetTimer,
   };
 };
-
-// ==========================================
-// TYPES EXPORTS
-// ==========================================
 
 export type { AppState };

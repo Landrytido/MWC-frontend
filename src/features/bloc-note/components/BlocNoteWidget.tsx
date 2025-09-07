@@ -24,8 +24,14 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [localError, setLocalError] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [editingMode, setEditingMode] = useState<"click" | "button" | null>(
+    null
+  );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Sync content with blocNote
   useEffect(() => {
@@ -34,11 +40,43 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     }
   }, [blocNote]);
 
+  // Focus management for expanded mode
+  useEffect(() => {
+    if (isExpanded && expandedTextareaRef.current) {
+      expandedTextareaRef.current.focus();
+      expandedTextareaRef.current.setSelectionRange(
+        cursorPosition,
+        cursorPosition
+      );
+    }
+  }, [isExpanded, cursorPosition]);
+
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
-    if (isEditing) {
+
+    // Sauvegarder la position du curseur
+    const textarea = isExpanded
+      ? expandedTextareaRef.current
+      : textareaRef.current;
+    if (textarea) {
+      setCursorPosition(textarea.selectionStart);
+    }
+
+    if (isEditing || isExpanded) {
       autoSave(newContent);
     }
+  };
+
+  const handleExpandToggle = () => {
+    // Sauvegarder la position du curseur avant de changer de mode
+    const currentTextarea = isExpanded
+      ? expandedTextareaRef.current
+      : textareaRef.current;
+    if (currentTextarea) {
+      setCursorPosition(currentTextarea.selectionStart);
+    }
+
+    setIsExpanded(!isExpanded);
   };
 
   const handleSave = useCallback(async () => {
@@ -48,6 +86,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
     try {
       await updateBlocNote(content);
       setIsEditing(false);
+      setEditingMode(null);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
@@ -58,8 +97,53 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   const handleCancel = useCallback(() => {
     setContent(blocNote?.content || "");
     setIsEditing(false);
+    setEditingMode(null);
     setLocalError("");
   }, [blocNote]);
+
+  // Fonction pour démarrer l'édition avec tracking du mode
+  const startEditing = useCallback((mode: "click" | "button") => {
+    setIsEditing(true);
+    setEditingMode(mode);
+  }, []);
+
+  // Fonction pour arrêter l'édition automatiquement (seulement si mode "click")
+  const stopEditingAuto = useCallback(() => {
+    if (editingMode === "click") {
+      setIsEditing(false);
+      setEditingMode(null);
+    }
+  }, [editingMode]);
+
+  // Gestion du clic en dehors et de la touche Escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node) &&
+        isEditing &&
+        editingMode === "click"
+      ) {
+        stopEditingAuto();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isEditing && editingMode === "click") {
+        stopEditingAuto();
+      }
+    };
+
+    if (isEditing && editingMode === "click") {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isEditing, editingMode, stopEditingAuto]);
 
   const handleDelete = useCallback(async () => {
     const confirmed = await confirm({
@@ -112,7 +196,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
       <>
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsExpanded(false)}
+          onClick={handleExpandToggle}
         />
 
         <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
@@ -149,7 +233,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
                 )}
 
                 <button
-                  onClick={() => setIsExpanded(false)}
+                  onClick={handleExpandToggle}
                   className="p-2 text-gray-400 hover:text-gray-600 rounded"
                   title="Fermer"
                 >
@@ -178,7 +262,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
 
             <div className="flex-1 p-4 overflow-hidden">
               <textarea
-                ref={textareaRef}
+                ref={expandedTextareaRef}
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
                 placeholder="Prenez des notes rapides ici..."
@@ -188,18 +272,54 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
             </div>
 
             <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-              {blocNote?.updatedAt && (
-                <div className="text-xs text-gray-400 text-center">
-                  Dernière modification :{" "}
-                  {new Date(blocNote.updatedAt).toLocaleString("fr-FR", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="px-3 py-1 bg-teal-500 text-white text-sm rounded hover:bg-teal-600 disabled:opacity-50 flex items-center"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Sauvegarde...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Sauvegarder
+                      </>
+                    )}
+                  </button>
+
+                  <SaveIndicator />
                 </div>
-              )}
+
+                {blocNote?.updatedAt && (
+                  <div className="text-xs text-gray-400">
+                    Dernière modification :{" "}
+                    {new Date(blocNote.updatedAt).toLocaleString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -228,6 +348,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
   return (
     <>
       <div
+        ref={containerRef}
         className={`bg-yellow-50 rounded-lg shadow-md p-4 border border-yellow-200 ${className}`}
       >
         <div className="flex items-center justify-between mb-3">
@@ -262,7 +383,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
             )}
 
             <button
-              onClick={() => setIsExpanded(true)}
+              onClick={handleExpandToggle}
               className="p-1 text-gray-400 hover:text-blue-500 rounded"
               title="Mode étendu"
             >
@@ -330,7 +451,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
               </div>
             ) : (
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={() => startEditing("button")}
                 className="p-1 text-gray-500 hover:text-teal-500 rounded"
                 title="Modifier"
               >
@@ -369,7 +490,7 @@ const BlocNoteWidget: React.FC<BlocNoteWidgetProps> = ({ className = "" }) => {
             />
           ) : (
             <div
-              onClick={() => setIsEditing(true)}
+              onClick={() => startEditing("click")}
               className="h-40 p-3 text-sm text-gray-700 bg-gray-50 rounded-md cursor-text hover:bg-gray-100 transition-colors overflow-y-auto"
             >
               {isEmpty ? (

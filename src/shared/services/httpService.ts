@@ -23,17 +23,6 @@ class HttpService {
     return headers;
   }
 
-  private getMultipartHeaders(): Record<string, string> {
-    const token = authService.getToken();
-    const headers: Record<string, string> = {};
-
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    return headers;
-  }
-
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       let errorData: ApiError;
@@ -158,38 +147,6 @@ class HttpService {
     });
 
     return this.handleResponse<T>(response);
-  }
-
-  async upload<T>(endpoint: string, formData: FormData): Promise<T> {
-    const controller = this.createAbortController();
-
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: "POST",
-      headers: this.getMultipartHeaders(),
-      body: formData,
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
-  }
-
-  async download(endpoint: string): Promise<Blob> {
-    const controller = this.createAbortController();
-
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      headers: this.getAuthHeaders(),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error("Erreur lors du téléchargement");
-    }
-
-    return response.blob();
-  }
-
-  getDownloadUrl(endpoint: string): string {
-    return `${this.baseURL}${endpoint}`;
   }
 
   setBaseURL(url: string): void {

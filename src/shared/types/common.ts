@@ -23,31 +23,6 @@ export interface PaginationResponse<T> {
   hasMore: boolean;
 }
 
-export interface FileInfo {
-  id: number;
-  filename: string;
-  initialFilename: string;
-  uri: string;
-  contentType: string;
-  fileSize: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FileUploadResponse {
-  id: number;
-  filename: string;
-  uri: string;
-  message: string;
-}
-
-export interface FileStatistics {
-  totalFiles: number;
-  totalSizeMB: number;
-  filesByType: Record<string, number>;
-}
-
-// Types pour la recherche (utilisé par plusieurs features)
 export interface SearchParams {
   query?: string;
   limit?: number;
@@ -80,7 +55,7 @@ export interface ApiError {
   message: string;
   code?: string;
   field?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Type pour les sélecteurs génériques
@@ -111,6 +86,4 @@ export const COMMON_CONSTANTS = {
   DEBOUNCE_DELAY: 300,
   AUTO_SAVE_DELAY: 2000,
   NOTIFICATION_TIMEOUT: 3000,
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  SUPPORTED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/gif", "image/webp"],
 } as const;

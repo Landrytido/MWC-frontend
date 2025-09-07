@@ -26,7 +26,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const [newComment, setNewComment] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   useEffect(() => {
     loadCommentsForNote(noteId);
@@ -177,6 +177,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
           </div>
         )}
       </div>
+
+      <ConfirmationComponent />
     </div>
   );
 };

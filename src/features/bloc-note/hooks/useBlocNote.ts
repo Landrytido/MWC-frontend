@@ -92,13 +92,25 @@ export const useBlocNote = () => {
         if (content.trim() === "" && !state.blocNote?.content) return;
 
         try {
-          await updateBlocNote(content);
+          setSaveStatus("saving");
+          const updated = await blocNoteApi.update({ content });
+          setState((prev) => ({ ...prev, blocNote: updated }));
+          setSaveStatus("saved");
+          setTimeout(() => setSaveStatus(null), 2000);
         } catch (error) {
+          setSaveStatus(null);
+          setState((prev) => ({
+            ...prev,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Erreur d'auto-sauvegarde",
+          }));
           console.error("Auto-save failed:", error);
         }
       }, 2000);
     },
-    [state.blocNote?.content, updateBlocNote, setSaveStatus]
+    [state.blocNote?.content, setSaveStatus]
   );
 
   useEffect(() => {
