@@ -5,7 +5,9 @@ import {
   ServiceStatus,
 } from "../types/weather";
 
-const BASE = "http://localhost:8080/api/weather";
+const BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/weather`
+  : "http://localhost:8080/api/weather";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
