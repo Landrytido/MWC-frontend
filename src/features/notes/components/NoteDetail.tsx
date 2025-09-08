@@ -11,7 +11,7 @@ const NoteDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const { notes, deleteNote, getNoteById } = useNotes();
-  const { confirm } = useConfirmation();
+  const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [note, setNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -257,6 +257,7 @@ const NoteDetail: React.FC = () => {
           </div>
         </div>
       </div>
+      <ConfirmationComponent />
     </Layout>
   );
 };

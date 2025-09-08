@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { state: authState } = useAuth();
   const ui = useUI();
-  const { notes, filteredNotes, loading, deleteNote } = useNotes({
+  const { notes, filteredNotes, loading, deleteNote, refetch } = useNotes({
     currentNotebook: ui.currentNotebook,
     selectedLabels: ui.selectedLabels,
     searchTerm: ui.searchTerm,
@@ -73,6 +73,10 @@ const Dashboard: React.FC = () => {
     },
     [navigate]
   );
+
+  const handleNoteUpdate = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const handleDeleteNote = useCallback(
     async (id: number) => {
@@ -441,6 +445,7 @@ const Dashboard: React.FC = () => {
                         onEdit={handleEditNote}
                         onDelete={() => handleDeleteNote(note.id)}
                         onView={handleViewNote}
+                        onUpdate={handleNoteUpdate}
                       />
                     ))}
                   </div>

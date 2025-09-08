@@ -12,6 +12,7 @@ interface NoteCardProps {
   onEdit: (note: Note) => void;
   onDelete: (id: number) => void;
   onView?: (note: Note) => void;
+  onUpdate?: () => void;
   showActions?: boolean;
   variant?: "default" | "compact" | "detailed";
 }
@@ -21,6 +22,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onEdit,
   onDelete,
   onView,
+  onUpdate,
   showActions = true,
   variant = "default",
 }) => {
@@ -44,6 +46,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
     try {
       await moveToNotebook(note.id, notebookId);
       setIsEditingNotebook(false);
+      onUpdate?.();
     } catch (error) {
       console.error("Erreur lors du déplacement de la note:", error);
     } finally {
@@ -61,6 +64,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
         await addLabel(note.id, labelId);
       }
       setIsEditingLabels(false);
+      onUpdate?.();
     } catch (error) {
       console.error("Erreur lors de l'ajout des labels:", error);
     } finally {
@@ -82,10 +86,24 @@ const NoteCard: React.FC<NoteCardProps> = ({
     setIsLoading(true);
     try {
       await removeLabel(note.id, labelId);
+      onUpdate?.();
     } catch (error) {
       console.error("Erreur lors de la suppression du label:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const isButton = target.tagName === "BUTTON" || target.closest("button");
+    const isInput =
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.tagName === "SELECT";
+
+    if (!isButton && !isInput && onView) {
+      onView(note);
     }
   };
 
@@ -94,7 +112,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
   );
 
   const renderDefaultCard = () => (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow group relative">
+    <div
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow group relative cursor-pointer"
+      onClick={handleCardClick}
+    >
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
           <div
@@ -108,17 +129,17 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <h3
-            className="font-semibold text-gray-800 cursor-pointer hover:text-teal-500 transition-colors flex-1 pr-2"
-            onClick={() => onView?.(note)}
-          >
+          <h3 className="font-semibold text-gray-800 flex-1 pr-2">
             {note.title}
           </h3>
 
           {showActions && (
             <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                onClick={() => onEdit(note)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(note);
+                }}
                 className="p-2 text-gray-400 hover:text-teal-500 rounded-md transition-colors"
                 title="Modifier la note"
               >
@@ -137,7 +158,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 </svg>
               </button>
               <button
-                onClick={() => onDelete(note.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(note.id);
+                }}
                 className="p-2 text-gray-400 hover:text-red-500 rounded-md transition-colors"
                 title="Supprimer la note"
               >
@@ -161,13 +185,15 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
         <div className="mb-3">
           {isEditingNotebook ? (
-            <NotebookSelector
-              selectedNotebookId={note.notebookId}
-              onNotebookChange={handleNotebookChange}
-              includeNone
-              size="sm"
-              placeholder="Choisir un carnet..."
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <NotebookSelector
+                selectedNotebookId={note.notebookId}
+                onNotebookChange={handleNotebookChange}
+                includeNone
+                size="sm"
+                placeholder="Choisir un carnet..."
+              />
+            </div>
           ) : (
             <div className="flex items-center justify-between">
               {note.notebookTitle ? (
@@ -183,7 +209,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 </span>
               )}
               <button
-                onClick={() => setIsEditingNotebook(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingNotebook(true);
+                }}
                 className="p-1 text-gray-400 hover:text-blue-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 title={
                   note.notebookTitle
@@ -211,7 +240,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
         <div className="mb-3">
           {isEditingLabels ? (
-            <div className="space-y-2">
+            <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
               <LabelSelector
                 selectedLabelIds={note.labels?.map((l) => l.id) || []}
                 onLabelsChange={handleLabelAdd}
@@ -222,7 +251,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
               />
               <div className="flex justify-end space-x-2">
                 <button
-                  onClick={() => setIsEditingLabels(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditingLabels(false);
+                  }}
                   className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
                 >
                   Annuler
@@ -245,7 +277,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 </span>
               )}
               <button
-                onClick={() => setIsEditingLabels(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingLabels(true);
+                }}
                 className="p-1 text-gray-400 hover:text-teal-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Gérer les labels"
               >

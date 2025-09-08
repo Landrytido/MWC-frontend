@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../shared/components/layout/Layout";
 import { useNotes } from "../features/notes";
 import { useConfirmation } from "../shared/hooks/useConfirmation";
+import CommentsSection from "../features/notes/components/CommentsSection";
 
 const EditNote: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -150,6 +151,12 @@ const EditNote: React.FC = () => {
               </div>
             </form>
           </div>
+
+          {note && (
+            <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+              <CommentsSection noteId={note.id} />
+            </div>
+          )}
         </div>
       </div>
       <ConfirmationComponent />

@@ -15,10 +15,10 @@ export const labelsApi = {
     httpService.get("/labels/search", { keyword }),
 
   create: (label: CreateLabelForm): Promise<Label> =>
-    httpService.post("/labels", label),
+    httpService.post(`/labels?name=${encodeURIComponent(label.name)}`),
 
   update: (id: string, label: { name: string }): Promise<Label> =>
-    httpService.put(`/labels/${id}`, label),
+    httpService.put(`/labels/${id}?name=${encodeURIComponent(label.name)}`),
 
   delete: (id: string, forceDelete = false): Promise<void> =>
     httpService.delete(`/labels/${id}?forceDelete=${forceDelete}`),

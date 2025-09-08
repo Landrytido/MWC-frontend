@@ -32,6 +32,7 @@ export const useLabels = (): UseLabelsReturn => {
 
   const createLabel = useCallback(async (name: string): Promise<Label> => {
     try {
+      setError(null);
       const newLabel = await labelsApi.create({ name });
       setLabels((prev) => [newLabel, ...prev]);
       return newLabel;
@@ -46,6 +47,7 @@ export const useLabels = (): UseLabelsReturn => {
   const updateLabel = useCallback(
     async (id: string, name: string): Promise<Label> => {
       try {
+        setError(null); // Réinitialiser l'erreur avant la tentative
         const updatedLabel = await labelsApi.update(id, { name });
         setLabels((prev) =>
           prev.map((label) => (label.id === id ? updatedLabel : label))
@@ -64,6 +66,7 @@ export const useLabels = (): UseLabelsReturn => {
   const deleteLabel = useCallback(
     async (id: string, forceDelete = false): Promise<void> => {
       try {
+        setError(null);
         await labelsApi.delete(id, forceDelete);
         setLabels((prev) => prev.filter((label) => label.id !== id));
       } catch (err) {
