@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Task, CreateTaskForm, UpdateTaskForm } from "../types";
 import { tasksApi } from "../api";
+import {
+  extractDateOnly,
+  getTodayDateString,
+  getTomorrowDateString,
+} from "../utils";
 
 interface UseTasksReturn {
   tasks: Task[];
@@ -34,16 +39,14 @@ export const useTasks = (): UseTasksReturn => {
 
   const todayTasks = tasks.filter((task) => {
     if (task.completed) return false;
-    const today = new Date().toISOString().split("T")[0];
-    return task.dueDate && task.dueDate.split("T")[0] === today;
+    const today = getTodayDateString();
+    return task.dueDate && extractDateOnly(task.dueDate) === today;
   });
 
   const tomorrowTasks = tasks.filter((task) => {
     if (task.completed) return false;
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
-    return task.dueDate && task.dueDate.split("T")[0] === tomorrow;
+    const tomorrow = getTomorrowDateString();
+    return task.dueDate && extractDateOnly(task.dueDate) === tomorrow;
   });
 
   const fetchTasks = useCallback(async () => {

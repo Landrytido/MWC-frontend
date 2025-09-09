@@ -150,6 +150,8 @@ export const useCalendar = (): UseCalendarReturn => {
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
+        // Réinitialiser l'erreur après succès
+        setError(null);
         return newEvent;
       } catch (err) {
         const errorMsg =
@@ -172,6 +174,8 @@ export const useCalendar = (): UseCalendarReturn => {
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
+        // Réinitialiser l'erreur après succès
+        setError(null);
         return updatedEvent;
       } catch (err) {
         const errorMsg =
@@ -191,6 +195,9 @@ export const useCalendar = (): UseCalendarReturn => {
 
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
+
+        // Réinitialiser l'erreur après succès
+        setError(null);
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Erreur lors de la suppression";

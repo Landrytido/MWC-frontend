@@ -1,17 +1,16 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useCalendar } from "../hooks/useCalendar";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
-import { EventDto } from "../types";
+import { EventDto, CreateEventRequest } from "../types";
+import { CreateTaskForm, UpdateTaskForm } from "../../tasks/types";
+import { useTasks } from "../../tasks/hooks/useTasks";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 const Calendar: React.FC = () => {
-  const navigate = useNavigate();
-
   const {
     currentMonth,
     currentYear,
@@ -26,7 +25,11 @@ const Calendar: React.FC = () => {
     updateEvent,
     deleteEvent,
     loadDayData,
+    createTaskFromCalendar,
+    refreshCalendarData,
   } = useCalendar();
+
+  const { updateTask } = useTasks();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -44,16 +47,22 @@ const Calendar: React.FC = () => {
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
+    setSelectedDate(""); // Réinitialiser pour utiliser la date actuelle
     setIsEventModalOpen(true);
   };
 
   const handleCreateTask = () => {
-    const params = new URLSearchParams();
-    if (selectedDate) {
-      params.append("date", selectedDate);
-    }
-    params.append("returnTo", "calendar");
-    navigate(`/dashboard/tasks/new?${params.toString()}`);
+    setEditingEvent(null);
+    setModalType("task");
+    // selectedDate reste inchangé pour utiliser la date cliquée
+    setIsEventModalOpen(true);
+  };
+
+  const handleCreateTaskGeneral = () => {
+    setEditingEvent(null);
+    setModalType("task");
+    setSelectedDate(""); // Pas de date pré-sélectionnée
+    setIsEventModalOpen(true);
   };
 
   const handleEditEvent = (event: EventDto) => {
@@ -75,6 +84,7 @@ const Calendar: React.FC = () => {
 
     try {
       await deleteEvent(eventId);
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
@@ -85,20 +95,44 @@ const Calendar: React.FC = () => {
     setIsDayDetailModalOpen(true);
   };
 
-  const handleEventSubmit = async (data: any) => {
-    try {
-      if (editingEvent) {
-        await updateEvent(editingEvent.id, data);
-        setEditingEvent(null);
-      } else {
-        await createEvent(data);
-      }
+  const handleEventSubmit = async (
+    data: CreateEventRequest | CreateTaskForm
+  ) => {
+    const isTask = "dueDate" in data && "priority" in data;
 
-      setRefreshTrigger((prev) => prev + 1);
-      setIsEventModalOpen(false);
-    } catch (error) {
-      console.error("Error submitting event:", error);
+    if (editingEvent) {
+      if (isTask) {
+        // Modifier la tâche en utilisant l'API des tâches
+        if (!editingEvent.relatedTaskId) {
+          throw new Error("ID de tâche manquant pour la modification");
+        }
+
+        const taskData = data as CreateTaskForm;
+        const updateTaskData: UpdateTaskForm = {
+          title: taskData.title,
+          description: taskData.description,
+          priority: taskData.priority,
+          dueDate: taskData.dueDate,
+        };
+
+        await updateTask(editingEvent.relatedTaskId, updateTaskData);
+
+        // Rafraîchir le calendrier pour refléter les changements de la tâche
+        await refreshCalendarData();
+      } else {
+        await updateEvent(editingEvent.id, data as CreateEventRequest);
+      }
+      setEditingEvent(null);
+    } else {
+      if (isTask) {
+        await createTaskFromCalendar(data as CreateEventRequest);
+      } else {
+        await createEvent(data as CreateEventRequest);
+      }
     }
+
+    setRefreshTrigger((prev) => prev + 1);
+    setIsEventModalOpen(false);
   };
 
   return (
@@ -172,7 +206,7 @@ const Calendar: React.FC = () => {
               Événement
             </button>
             <button
-              onClick={handleCreateTask}
+              onClick={handleCreateTaskGeneral}
               className="flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
             >
               <svg

@@ -73,6 +73,9 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
       document.body.style.overflow = "hidden";
+    } else {
+      // Réinitialiser l'erreur quand la modal se ferme
+      setError("");
     }
 
     return () => {

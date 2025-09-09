@@ -6,6 +6,13 @@ import {
   Task,
   getPriorityConfig,
 } from "../types";
+import {
+  convertDateToEndOfDay,
+  extractDateOnly,
+  isDateInPast,
+  getTodayDateString,
+  getTomorrowDateString,
+} from "../utils";
 
 interface TaskCreationFormProps {
   onSubmit: (taskData: CreateTaskForm) => Promise<void>;
@@ -36,21 +43,17 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
     title: editingTask?.title || "",
     description: editingTask?.description || "",
     dueDate: editingTask?.dueDate
-      ? editingTask.dueDate.slice(0, 16)
-      : defaultDate
-      ? `${defaultDate}T09:00`
-      : "",
+      ? extractDateOnly(editingTask.dueDate)
+      : defaultDate || "",
     priority: editingTask?.priority || 2,
   });
 
   const [scheduleType, setScheduleType] = useState<ScheduleType>(() => {
     if (editingTask?.dueDate) {
-      const today = new Date().toISOString().split("T")[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
+      const today = getTodayDateString();
+      const tomorrow = getTomorrowDateString();
 
-      const taskDate = editingTask.dueDate.split("T")[0];
+      const taskDate = extractDateOnly(editingTask.dueDate);
       if (taskDate === today) return ScheduleType.TODAY;
       if (taskDate === tomorrow) return ScheduleType.TOMORROW;
     }
@@ -62,16 +65,11 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     let dueDate = "";
     if (type === ScheduleType.TODAY) {
-      // Définir à 9h par défaut (comme dans le backend)
-      const today = new Date();
-      today.setHours(9, 0, 0, 0);
-      dueDate = today.toISOString().slice(0, 16);
+      // Utiliser la date locale (pas UTC)
+      dueDate = getTodayDateString();
     } else if (type === ScheduleType.TOMORROW) {
-      // Définir à demain 9h par défaut
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(9, 0, 0, 0);
-      dueDate = tomorrow.toISOString().slice(0, 16);
+      // Utiliser la date locale de demain
+      dueDate = getTomorrowDateString();
     }
 
     setFormData((prev) => ({ ...prev, dueDate }));
@@ -82,22 +80,17 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
 
     if (!formData.title.trim()) return;
 
-    if (formData.dueDate && confirm) {
-      const selectedDateTime = new Date(formData.dueDate);
-      const now = new Date();
+    if (formData.dueDate && isDateInPast(formData.dueDate) && confirm) {
+      const confirmed = await confirm({
+        title: "Date passée",
+        message: "⚠️ Vous créez une tâche pour une date passée. Continuer ?",
+        confirmText: "Continuer",
+        cancelText: "Modifier",
+        variant: "warning",
+      });
 
-      if (selectedDateTime < now) {
-        const confirmed = await confirm({
-          title: "Date passée",
-          message: "⚠️ Vous créez une tâche pour une date passée. Continuer ?",
-          confirmText: "Continuer",
-          cancelText: "Modifier",
-          variant: "warning",
-        });
-
-        if (!confirmed) {
-          return;
-        }
+      if (!confirmed) {
+        return;
       }
     }
 
@@ -105,7 +98,10 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
       ...formData,
       title: formData.title.trim(),
       description: formData.description?.trim() || undefined,
-      dueDate: formData.dueDate || undefined,
+      // Convertir la date en fin de journée pour le backend
+      dueDate: formData.dueDate
+        ? convertDateToEndOfDay(formData.dueDate)
+        : undefined,
     };
 
     await onSubmit(taskData);
@@ -248,7 +244,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
             </label>
             <input
               id="dueDate"
-              type="datetime-local"
+              type="date"
               value={formData.dueDate || ""}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, dueDate: e.target.value }))
@@ -257,7 +253,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
               disabled={isLoading}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Laissez vide pour une tâche sans date de réalisation spécifique
+              Laissez vide pour une tâche sans date d'échéance spécifique
             </p>
           </div>
         )}

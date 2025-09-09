@@ -6,7 +6,6 @@ import {
   EVENT_MODE_LABELS,
 } from "../types";
 import { TaskPriority, PRIORITY_LABELS, CreateTaskForm } from "../../tasks";
-import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -25,8 +24,6 @@ const EventModal: React.FC<EventModalProps> = ({
   modalType,
   selectedDate,
 }) => {
-  const { confirm } = useConfirmation();
-
   const [formData, setFormData] = useState<CreateEventRequest>({
     title: "",
     description: "",
@@ -114,7 +111,7 @@ const EventModal: React.FC<EventModalProps> = ({
             )
           : new Date();
 
-        const defaultEnd = new Date(defaultStart.getTime() + 60 * 60 * 1000); // +1 heure
+        const defaultEnd = new Date(defaultStart.getTime() + 60 * 60 * 1000);
 
         setFormData({
           title: "",
@@ -177,6 +174,7 @@ const EventModal: React.FC<EventModalProps> = ({
       setDueDate("");
       setScheduleType("none");
       setError("");
+      setIsSubmitting(false);
     }
 
     return () => {
@@ -219,29 +217,8 @@ const EventModal: React.FC<EventModalProps> = ({
         const taskDueDate = dueDate
           ? formatDateTimeForBackend(dueDate)
           : selectedDate
-          ? `${selectedDate}T09:00:00` // 9h par défaut si seulement la date est sélectionnée
+          ? `${selectedDate}T09:00:00`
           : undefined;
-
-        if (taskDueDate) {
-          const selectedDateTime = new Date(taskDueDate);
-          const now = new Date();
-
-          if (selectedDateTime < now) {
-            const confirmed = await confirm({
-              title: "Date passée",
-              message:
-                "⚠️ Vous créez une tâche pour une date passée. Continuer ?",
-              confirmText: "Continuer",
-              cancelText: "Modifier",
-              variant: "warning",
-            });
-
-            if (!confirmed) {
-              setIsSubmitting(false);
-              throw new Error("OPERATION_CANCELLED");
-            }
-          }
-        }
 
         const taskData: CreateTaskForm = {
           title: formData.title.trim(),
@@ -267,9 +244,13 @@ const EventModal: React.FC<EventModalProps> = ({
       }
       onClose();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
-      );
+      if (err instanceof Error && err.message === "OPERATION_CANCELLED") {
+        // Ne pas afficher d'erreur pour les annulations volontaires
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }

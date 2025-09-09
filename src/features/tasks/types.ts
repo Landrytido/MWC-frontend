@@ -33,7 +33,7 @@ export interface Task {
   id: number;
   title: string;
   description?: string;
-  dueDate?: string; // DateTime unifié (align avec backend)
+  dueDate?: string; // Stocké en DateTime backend, affiché en date frontend
   priority: number;
   completed: boolean;
   completedAt?: string;
@@ -51,7 +51,7 @@ export interface Task {
 export interface CreateTaskForm {
   title: string;
   description?: string;
-  dueDate?: string; // DateTime unifié (align avec backend)
+  dueDate?: string; // Format date "YYYY-MM-DD", converti en fin de journée
   priority?: number;
   orderIndex?: number;
 }

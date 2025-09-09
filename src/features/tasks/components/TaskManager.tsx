@@ -6,6 +6,11 @@ import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
 import MonthlyTaskReport from "./MonthlyTaskReport";
 import { Task, CreateTaskForm } from "../types";
+import {
+  extractDateOnly,
+  getTodayDateString,
+  getTomorrowDateString,
+} from "../utils";
 
 interface TaskManagerProps {
   className?: string;
@@ -67,23 +72,21 @@ const TaskManager: React.FC<TaskManagerProps> = ({
             return new Date(task.dueDate) < new Date();
           });
         case "today": {
-          const today = new Date().toISOString().split("T")[0];
+          const today = getTodayDateString();
           return searchResults.filter(
             (task) =>
               !task.completed &&
               task.dueDate &&
-              task.dueDate.split("T")[0] === today
+              extractDateOnly(task.dueDate) === today
           );
         }
         case "tomorrow": {
-          const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0];
+          const tomorrow = getTomorrowDateString();
           return searchResults.filter(
             (task) =>
               !task.completed &&
               task.dueDate &&
-              task.dueDate.split("T")[0] === tomorrow
+              extractDateOnly(task.dueDate) === tomorrow
           );
         }
         case "all":

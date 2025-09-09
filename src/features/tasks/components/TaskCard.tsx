@@ -1,5 +1,6 @@
 import React from "react";
 import { Task, getPriorityConfig } from "../types";
+import { formatDateForDisplay } from "../utils";
 
 interface TaskCardProps {
   task: Task;
@@ -21,13 +22,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const status = task.status;
 
   const formattedDueDate = task.dueDate
-    ? new Date(task.dueDate).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? formatDateForDisplay(task.dueDate)
     : null;
 
   const getPriorityBadgeColor = () => {
