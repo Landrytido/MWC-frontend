@@ -54,14 +54,13 @@ const Calendar: React.FC = () => {
   const handleCreateTask = () => {
     setEditingEvent(null);
     setModalType("task");
-    // selectedDate reste inchangé pour utiliser la date cliquée
     setIsEventModalOpen(true);
   };
 
   const handleCreateTaskGeneral = () => {
     setEditingEvent(null);
     setModalType("task");
-    setSelectedDate(""); // Pas de date pré-sélectionnée
+    setSelectedDate("");
     setIsEventModalOpen(true);
   };
 
@@ -102,7 +101,6 @@ const Calendar: React.FC = () => {
 
     if (editingEvent) {
       if (isTask) {
-        // Modifier la tâche en utilisant l'API des tâches
         if (!editingEvent.relatedTaskId) {
           throw new Error("ID de tâche manquant pour la modification");
         }
@@ -117,7 +115,6 @@ const Calendar: React.FC = () => {
 
         await updateTask(editingEvent.relatedTaskId, updateTaskData);
 
-        // Rafraîchir le calendrier pour refléter les changements de la tâche
         await refreshCalendarData();
       } else {
         await updateEvent(editingEvent.id, data as CreateEventRequest);
@@ -137,7 +134,6 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md">
-      {/* Header avec navigation */}
       <CalendarHeader
         currentMonth={currentMonth}
         currentYear={currentYear}
@@ -149,7 +145,6 @@ const Calendar: React.FC = () => {
       />
 
       <div className="p-6">
-        {/* Filtres pour le calendrier */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex space-x-2">
             <button
@@ -184,7 +179,6 @@ const Calendar: React.FC = () => {
             </button>
           </div>
 
-          {/* Boutons de création */}
           <div className="flex space-x-2">
             <button
               onClick={handleCreateEvent}
@@ -228,7 +222,6 @@ const Calendar: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Grille du calendrier */}
           <div className="lg:col-span-3">
             <CalendarGrid
               monthData={currentMonthData}
@@ -238,7 +231,6 @@ const Calendar: React.FC = () => {
             />
           </div>
 
-          {/* Liste des événements */}
           <div className="lg:col-span-1">
             <EventsList
               events={events}
@@ -249,7 +241,6 @@ const Calendar: React.FC = () => {
         </div>
       </div>
 
-      {/* 🗂️ MODALES */}
       <EventModal
         isOpen={isEventModalOpen}
         onClose={() => {
