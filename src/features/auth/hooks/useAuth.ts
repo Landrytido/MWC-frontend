@@ -100,8 +100,8 @@ export const useAuth = (): UseAuthReturn => {
   const logout = useCallback(async (): Promise<void> => {
     try {
       await authService.logout();
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setState((prev) => ({
         ...prev,
@@ -141,9 +141,7 @@ export const useAuth = (): UseAuthReturn => {
       );
 
       return true;
-    } catch (error) {
-      console.error("Token invalide:", error);
-
+    } catch {
       setState((prev) => ({
         ...prev,
         isAuthenticated: false,

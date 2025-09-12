@@ -39,8 +39,8 @@ const LinkManager: React.FC<LinkManagerProps> = ({
 
       try {
         await deleteLink(parseInt(id));
-      } catch (error) {
-        console.error("Error deleting link:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [confirm, deleteLink]

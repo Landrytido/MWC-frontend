@@ -93,8 +93,8 @@ const Dashboard: React.FC = () => {
 
       try {
         await deleteNote(id);
-      } catch (error) {
-        console.error("Error deleting note:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [confirm, deleteNote]

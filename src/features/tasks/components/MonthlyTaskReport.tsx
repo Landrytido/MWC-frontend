@@ -41,9 +41,8 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
         selectedMonth.month
       );
       setMonthlyData(stats);
-    } catch (err) {
+    } catch {
       setError("Erreur lors du chargement des statistiques");
-      console.error("Erreur chargement stats mensuelles:", err);
     } finally {
       setLoading(false);
     }

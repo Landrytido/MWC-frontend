@@ -36,8 +36,7 @@ const UserSettings: React.FC = () => {
         type: "success",
         content: "Vos informations ont été mises à jour avec succès !",
       });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour :", error);
+    } catch {
       setMessage({
         type: "error",
         content:

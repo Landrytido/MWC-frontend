@@ -57,8 +57,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
     async (commentId: number, content: string) => {
       try {
         await updateComment(commentId, content);
-      } catch (error) {
-        console.error("Error updating comment:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [updateComment]
@@ -79,8 +79,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
 
       try {
         await deleteComment(commentId);
-      } catch (error) {
-        console.error("Error deleting comment:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [confirm, deleteComment]

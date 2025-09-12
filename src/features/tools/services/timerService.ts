@@ -109,8 +109,8 @@ export class TimerService {
   static savePresets(presets: TimerPreset[]): void {
     try {
       localStorage.setItem(this.PRESETS_KEY, JSON.stringify(presets));
-    } catch (e) {
-      console.warn("Impossible de sauvegarder les préréglages :", e);
+    } catch {
+      // Erreur silencieuse
     }
   }
 
@@ -154,8 +154,8 @@ export class TimerService {
       laps.unshift(lap);
       if (laps.length > 50) laps.splice(50);
       localStorage.setItem(this.LAPS_KEY, JSON.stringify(laps));
-    } catch (e) {
-      console.warn("Impossible de sauvegarder le tour :", e);
+    } catch {
+      // Erreur silencieuse
     }
   }
 
@@ -171,8 +171,8 @@ export class TimerService {
   static clearLaps(): void {
     try {
       localStorage.setItem(this.LAPS_KEY, JSON.stringify([]));
-    } catch (e) {
-      console.warn("Impossible d'effacer les tours :", e);
+    } catch {
+      // Erreur silencieuse
     }
   }
 
@@ -202,8 +202,8 @@ export class TimerService {
   static saveSettings(settings: TimerSettings): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
-    } catch (e) {
-      console.warn("Impossible de sauvegarder les réglages :", e);
+    } catch {
+      // Erreur silencieuse
     }
   }
 
@@ -224,8 +224,8 @@ export class TimerService {
           badge: "/favicon.ico",
         });
       }
-    } catch (e) {
-      console.warn("Impossible d'afficher la notification :", e);
+    } catch {
+      // Erreur silencieuse
     }
   }
 
@@ -253,8 +253,8 @@ export class TimerService {
       );
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (error) {
-      console.warn("Impossible de jouer le son:", error);
+    } catch {
+      // Erreur silencieuse
     }
   }
 }

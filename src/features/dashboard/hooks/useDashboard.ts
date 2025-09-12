@@ -52,8 +52,6 @@ export const useDashboard = () => {
     calendar: "",
   });
 
-  const isDev = import.meta.env.DEV;
-
   const performSearch = useMemo(
     () =>
       debounce(async (tab: TabType, term: string) => {
@@ -76,36 +74,26 @@ export const useDashboard = () => {
 
           switch (tab) {
             case "notes": {
-              if (isDev) console.log(`🔍 Recherche notes: "${term}"`);
-
               const response = await notesApi.search({ query: term });
               results = Array.isArray(response)
                 ? response
                 : response.notes || [];
-
-              if (isDev) console.log(`✅ ${results.length} notes trouvées`);
               break;
             }
 
             case "links": {
-              if (isDev) console.log(`🔍 Recherche liens: "${term}"`);
               results = await linksApi.search(term);
-              if (isDev) console.log(`✅ ${results.length} liens trouvés`);
               break;
             }
 
             case "tasks": {
-              if (isDev) console.log(`🔍 Recherche tâches: "${term}"`);
               results = await tasksApi.search(term);
-              if (isDev) console.log(`✅ ${results.length} tâches trouvées`);
               break;
             }
           }
 
           setSearchResults((prev) => ({ ...prev, [tab]: results }));
         } catch (error) {
-          console.error(`❌ Erreur recherche ${tab}:`, error);
-
           const errorMessage =
             error instanceof Error ? error.message : "Erreur de recherche";
 
@@ -115,7 +103,7 @@ export const useDashboard = () => {
           setIsSearching(false);
         }
       }, SEARCH_CONFIG.DEBOUNCE_DELAY),
-    [isDev]
+    []
   );
 
   const handleSearch = useCallback(

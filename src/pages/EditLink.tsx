@@ -62,8 +62,7 @@ const EditLink: React.FC = () => {
         description,
       });
       navigate("/dashboard?tab=links");
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour du lien:", err);
+    } catch {
       setError("Une erreur est survenue lors de la mise à jour du lien");
     } finally {
       setIsLoading(false);
@@ -87,8 +86,7 @@ const EditLink: React.FC = () => {
     try {
       await deleteLink(parseInt(id));
       navigate("/dashboard?tab=links");
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+    } catch {
       setError("Erreur lors de la suppression du lien");
     }
   };

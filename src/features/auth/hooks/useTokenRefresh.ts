@@ -3,8 +3,6 @@ import { authService } from "../services/authService";
 
 export const useTokenRefresh = () => {
   const handleTokenRefresh = useCallback(() => {
-    console.log("Token rafraîchi automatiquement");
-
     window.dispatchEvent(
       new CustomEvent("tokenRefreshed", {
         detail: { timestamp: Date.now() },
@@ -28,8 +26,7 @@ export const useTokenRefresh = () => {
       });
 
       return response.ok;
-    } catch (error) {
-      console.error("Erreur lors de la vérification du token:", error);
+    } catch {
       return false;
     }
   }, []);

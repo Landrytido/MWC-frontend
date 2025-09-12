@@ -17,7 +17,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       const interval = setInterval(async () => {
         const isValid = await checkTokenStatus();
         if (!isValid) {
-          console.warn("Token invalide détecté, vérification approfondie...");
           await checkTokenValidity();
         }
       }, 2 * 60 * 1000); // Vérification toutes les 2 minutes

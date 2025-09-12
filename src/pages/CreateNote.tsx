@@ -24,7 +24,6 @@ const CreateNote: React.FC = () => {
       await createNote(noteData);
       navigate("/dashboard");
     } catch (err) {
-      console.error("Erreur lors de la création de la note:", err);
       setError(
         err instanceof Error
           ? err.message

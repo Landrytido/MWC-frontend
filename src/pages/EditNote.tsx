@@ -35,8 +35,7 @@ const EditNote: React.FC = () => {
     try {
       await updateNote(parseInt(id), { title, content });
       navigate("/dashboard");
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour de la note:", err);
+    } catch {
       setError("Une erreur est survenue lors de la mise à jour de la note");
     } finally {
       setIsLoading(false);
@@ -58,8 +57,8 @@ const EditNote: React.FC = () => {
     try {
       await deleteNote(parseInt(id));
       navigate("/dashboard");
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+    } catch {
+      // Erreur silencieuse, navigation quand même
     }
   };
 

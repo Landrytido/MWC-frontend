@@ -125,9 +125,6 @@ export const Converter: React.FC = () => {
         <div className="flex flex-col items-center justify-center space-y-2">
           <button
             onClick={() => {
-              // debug: trace le clic avant d'appeler la fonction swap
-              // retirez ce console.log après debug
-              console.log("Converter: swapUnits clicked");
               swapUnits();
             }}
             className="p-2 bg-teal-100 hover:bg-teal-200 rounded-lg transition-colors duration-200"

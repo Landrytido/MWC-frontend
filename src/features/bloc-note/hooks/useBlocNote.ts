@@ -106,7 +106,6 @@ export const useBlocNote = () => {
                 ? error.message
                 : "Erreur d'auto-sauvegarde",
           }));
-          console.error("Auto-save failed:", error);
         }
       }, 2000);
     },

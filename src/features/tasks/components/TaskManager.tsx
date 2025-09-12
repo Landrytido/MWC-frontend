@@ -162,8 +162,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({
 
       try {
         await deleteTask(id);
-      } catch (error) {
-        console.error("Error deleting task:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [confirm, deleteTask]
@@ -173,8 +173,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     async (id: number) => {
       try {
         await toggleTask(id);
-      } catch (error) {
-        console.error("Error toggling task:", error);
+      } catch {
+        // Erreur silencieuse
       }
     },
     [toggleTask]

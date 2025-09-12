@@ -71,8 +71,8 @@ const NotebookSelector: React.FC<NotebookSelectorProps> = ({
       onNotebookChange(newNotebook.id);
       setIsOpen(false);
       setSearchTerm("");
-    } catch (error) {
-      console.error("Erreur lors de la création du carnet:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setIsCreating(false);
     }

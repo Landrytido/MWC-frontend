@@ -43,9 +43,8 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
     try {
       const data = await loadDayData(date);
       setDayData(data);
-    } catch (err) {
+    } catch {
       setError("Erreur lors du chargement des données du jour");
-      console.error("Erreur chargement jour:", err);
     } finally {
       setIsLoading(false);
     }

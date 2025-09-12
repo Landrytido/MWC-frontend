@@ -17,8 +17,7 @@ class AuthService {
     if (savedUser) {
       try {
         this.user = JSON.parse(savedUser) as User;
-      } catch (e) {
-        console.error("Error parsing saved user:", e);
+      } catch {
         this.clearStorage();
       }
     }
@@ -52,17 +51,15 @@ class AuthService {
       const timeUntilExpiry = payload.exp - currentTime;
 
       if (timeUntilExpiry < 600) {
-        console.log("Token expirant bientôt, tentative de rafraîchissement...");
         try {
           await this.refreshAccessToken();
           this.notifyTokenRefresh();
-        } catch (error) {
-          console.error("Impossible de rafraîchir le token:", error);
+        } catch {
           this.handleTokenExpiration();
         }
       }
-    } catch (error) {
-      console.error("Erreur lors de la validation du token:", error);
+    } catch {
+      // Erreur silencieuse lors de la validation du token
     }
   }
 
@@ -76,14 +73,12 @@ class AuthService {
       const payload = parts[1];
       const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
       return JSON.parse(decoded);
-    } catch (error) {
-      console.error("Erreur lors du décodage du JWT:", error);
+    } catch {
       return null;
     }
   }
 
   private handleTokenExpiration() {
-    console.log("Token expiré, déconnexion automatique");
     this.clearStorage();
     this.stopTokenValidation();
 
@@ -96,8 +91,8 @@ class AuthService {
     this.tokenRefreshListeners.forEach((listener) => {
       try {
         listener();
-      } catch (error) {
-        console.error("Erreur dans le listener de rafraîchissement:", error);
+      } catch {
+        // Erreur silencieuse dans le listener
       }
     });
   }
@@ -209,8 +204,8 @@ class AuthService {
             Authorization: `Bearer ${this.token}`,
           },
         });
-      } catch (error) {
-        console.error("Error during logout:", error);
+      } catch {
+        // Erreur silencieuse lors du logout
       }
     }
     this.clearStorage();

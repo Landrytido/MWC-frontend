@@ -46,12 +46,6 @@ class HttpService {
         };
       }
 
-      console.error("❌ HTTP Error:", {
-        status: response.status,
-        url: response.url,
-        error: errorData,
-      });
-
       if (response.status === 401) {
         try {
           await authService.refreshAccessToken();

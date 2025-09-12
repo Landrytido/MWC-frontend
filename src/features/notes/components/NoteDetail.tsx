@@ -60,8 +60,8 @@ const NoteDetail: React.FC = () => {
     try {
       await deleteNote(note.id);
       navigate("/dashboard");
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 

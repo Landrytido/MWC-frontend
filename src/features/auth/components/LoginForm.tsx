@@ -57,8 +57,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
 
     try {
       await login({ email: emailAddress, password });
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 

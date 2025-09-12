@@ -47,8 +47,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
       await moveToNotebook(note.id, notebookId);
       setIsEditingNotebook(false);
       onUpdate?.();
-    } catch (error) {
-      console.error("Erreur lors du déplacement de la note:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setIsLoading(false);
     }
@@ -65,8 +65,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
       }
       setIsEditingLabels(false);
       onUpdate?.();
-    } catch (error) {
-      console.error("Erreur lors de l'ajout des labels:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setIsLoading(false);
     }
@@ -87,8 +87,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
     try {
       await removeLabel(note.id, labelId);
       onUpdate?.();
-    } catch (error) {
-      console.error("Erreur lors de la suppression du label:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setIsLoading(false);
     }

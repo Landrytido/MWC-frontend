@@ -75,8 +75,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ className = "" }) => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 

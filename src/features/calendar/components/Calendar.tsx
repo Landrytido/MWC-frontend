@@ -96,8 +96,8 @@ const Calendar: React.FC = () => {
     try {
       await deleteEvent(eventId);
       setRefreshTrigger((prev) => prev + 1);
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 
@@ -183,7 +183,6 @@ const Calendar: React.FC = () => {
       setRefreshTrigger((prev) => prev + 1);
       setIsEventModalOpen(false);
     } catch (error) {
-      console.error("❌ Erreur lors de la soumission:", error);
       // L'erreur sera gérée par le hook useCalendar qui mettra à jour l'état d'erreur
       throw error;
     }

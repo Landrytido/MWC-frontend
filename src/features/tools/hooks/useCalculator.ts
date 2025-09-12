@@ -292,23 +292,19 @@ export const useCalculator = () => {
 
   // Opérations unaires
   const performUnaryOperation = useCallback((operation: string) => {
-    console.log("performUnaryOperation called with:", operation);
     setState((prev) => {
       if (prev.hasError) {
         return prev;
       }
 
       const currentValue = parseFloat(prev.display);
-      console.log("Current value:", currentValue, "Operation:", operation);
 
       try {
         const result = CalculatorService.unaryOperation(
           currentValue,
           operation
         );
-        console.log("Result:", result);
         const formattedResult = CalculatorService.formatDisplay(result);
-        console.log("Formatted result:", formattedResult);
 
         // Sauvegarder dans l'historique pour certaines opérations
         if (["square", "squareRoot"].includes(operation)) {

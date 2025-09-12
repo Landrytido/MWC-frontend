@@ -114,7 +114,6 @@ export const useCalendar = (): UseCalendarReturn => {
             ? err.message
             : "Erreur lors du chargement du mois";
         setError(errorMsg);
-        console.error("❌ Erreur chargement mois:", err);
       } finally {
         setLoadingStates((prev) => ({ ...prev, monthView: false }));
       }
@@ -249,8 +248,8 @@ export const useCalendar = (): UseCalendarReturn => {
       try {
         const eventsData = await calendarApi.getAllEvents();
         setEvents(eventsData);
-      } catch (err) {
-        console.error("❌ Erreur chargement événements:", err);
+      } catch {
+        // Erreur silencieuse
       } finally {
         setLoadingStates((prev) => ({ ...prev, events: false }));
       }

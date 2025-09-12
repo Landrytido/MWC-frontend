@@ -82,8 +82,8 @@ const LabelSelector: React.FC<LabelSelectorProps> = ({
       onLabelsChange([...selectedLabelIds, newLabel.id]);
       setSearchTerm("");
       setIsOpen(false);
-    } catch (error) {
-      console.error("Erreur lors de la création du label:", error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setIsCreating(false);
     }

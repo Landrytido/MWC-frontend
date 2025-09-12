@@ -45,8 +45,7 @@ const CreateLink: React.FC = () => {
         description,
       });
       navigate("/dashboard?tab=links");
-    } catch (err) {
-      console.error("Erreur lors de la création du lien:", err);
+    } catch {
       setError("Une erreur est survenue lors de la création du lien");
     } finally {
       setIsLoading(false);
@@ -61,8 +60,8 @@ const CreateLink: React.FC = () => {
       setTimeout(() => {
         setTitle(new URL(url).hostname);
       }, 1000);
-    } catch (err) {
-      console.error("Erreur lors de la récupération du titre:", err);
+    } catch {
+      // Erreur silencieuse lors de la récupération du titre
     }
   };
 

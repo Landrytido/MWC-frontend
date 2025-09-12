@@ -78,8 +78,7 @@ export const notesApi = {
         notes: Array.isArray(notes) ? notes : [],
         total: Array.isArray(notes) ? notes.length : 0,
       };
-    } catch (error) {
-      console.error("Erreur lors de la recherche de notes:", error);
+    } catch {
       // Fallback : retourner un tableau vide au lieu de lancer l'erreur
       return { notes: [], total: 0 };
     }
