@@ -185,37 +185,6 @@ const ToolsManager: React.FC<ToolsManagerProps> = ({ className = "" }) => {
               </div>
             ))}
           </div>
-
-          {/* Footer avec suggestion */}
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start space-x-3">
-              <div className="text-blue-500 mt-1">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-blue-800 mb-1">
-                  Suggestion d'outils
-                </h4>
-                <p className="text-sm text-blue-700">
-                  Vous avez une idée d'outil utile ? Les outils seront ajoutés
-                  progressivement pour améliorer votre expérience de
-                  productivité.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>
