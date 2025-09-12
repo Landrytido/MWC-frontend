@@ -3,6 +3,7 @@ import type {
   CalendarViewDto,
   EventDto,
   CreateEventRequest,
+  CreateCalendarTaskRequest,
   TaskDto,
 } from "./types";
 
@@ -27,8 +28,9 @@ export const calendarApi = {
   deleteEvent: (id: number): Promise<void> =>
     httpService.delete(`/calendar/events/${id}`),
 
-  createTaskFromCalendar: (taskData: CreateEventRequest): Promise<TaskDto> =>
-    httpService.post("/calendar/create-task", taskData),
+  createTaskFromCalendar: (
+    taskData: CreateCalendarTaskRequest
+  ): Promise<TaskDto> => httpService.post("/calendar/create-task", taskData),
 
   getEventsInRange: (startDate: string, endDate: string): Promise<EventDto[]> =>
     httpService.get("/calendar/events/range", { startDate, endDate }),

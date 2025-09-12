@@ -28,13 +28,29 @@ class HttpService {
       let errorData: ApiError;
 
       try {
-        errorData = await response.json();
+        const errorText = await response.text();
+
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = {
+            message:
+              errorText || `Erreur ${response.status}: ${response.statusText}`,
+            code: response.status.toString(),
+          };
+        }
       } catch {
         errorData = {
           message: `Erreur ${response.status}: ${response.statusText}`,
           code: response.status.toString(),
         };
       }
+
+      console.error("❌ HTTP Error:", {
+        status: response.status,
+        url: response.url,
+        error: errorData,
+      });
 
       if (response.status === 401) {
         try {
@@ -47,16 +63,35 @@ class HttpService {
         }
       }
 
-      throw new Error(errorData.message || "Une erreur est survenue");
+      // Améliorer le message d'erreur pour les erreurs 500
+      let errorMessage = errorData.message || "Une erreur est survenue";
+
+      if (response.status >= 500) {
+        const serverError = errorData as unknown as Record<string, unknown>;
+        errorMessage = `Erreur serveur (${response.status}): ${
+          serverError.error || errorData.message || "Erreur interne du serveur"
+        }`;
+
+        // Si c'est une erreur de validation ou de données spécifique
+        if (serverError.details || serverError.validation) {
+          errorMessage += `\nDétails: ${JSON.stringify(
+            serverError.details || serverError.validation
+          )}`;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     const text = await response.text();
+
     if (!text || text.trim() === "") {
       return null as T;
     }
 
     try {
-      return JSON.parse(text);
+      const result = JSON.parse(text);
+      return result;
     } catch {
       return text as T;
     }

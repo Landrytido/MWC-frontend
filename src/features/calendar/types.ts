@@ -1,5 +1,3 @@
-import { TaskPriority } from "../tasks";
-
 export type EventMode = "PRESENTIEL" | "DISTANCIEL";
 export type EventType = "EVENT" | "TASK_BASED";
 
@@ -61,8 +59,14 @@ export interface CreateEventRequest {
   meetingLink?: string;
   type?: EventType;
   relatedTaskId?: number;
-  dueDate?: string; // Pour les tâches - Unifié avec backend
-  priority?: TaskPriority; // Pour les tâches
+}
+
+export interface CreateCalendarTaskRequest {
+  title: string;
+  description?: string;
+  dueDate?: string;
+  priority?: number;
+  orderIndex?: number;
 }
 
 export interface CalendarState {

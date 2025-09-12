@@ -4,6 +4,7 @@ import {
   EventDto,
   CalendarViewDto,
   CreateEventRequest,
+  CreateCalendarTaskRequest,
   TaskDto,
 } from "../types";
 
@@ -29,7 +30,9 @@ interface UseCalendarReturn {
   createEvent: (eventData: CreateEventRequest) => Promise<EventDto>;
   updateEvent: (id: number, eventData: CreateEventRequest) => Promise<EventDto>;
   deleteEvent: (id: number) => Promise<void>;
-  createTaskFromCalendar: (taskData: CreateEventRequest) => Promise<TaskDto>;
+  createTaskFromCalendar: (
+    taskData: CreateCalendarTaskRequest
+  ) => Promise<TaskDto>;
 
   loadDayData: (date: string) => Promise<CalendarViewDto>;
   refreshCalendarData: () => Promise<void>;
@@ -209,13 +212,15 @@ export const useCalendar = (): UseCalendarReturn => {
   );
 
   const createTaskFromCalendar = useCallback(
-    async (taskData: CreateEventRequest): Promise<TaskDto> => {
+    async (taskData: CreateCalendarTaskRequest): Promise<TaskDto> => {
       try {
         const newTask = await calendarApi.createTaskFromCalendar(taskData);
 
         setLastLoadedMonth(null);
         await loadMonthData(currentMonth, currentYear);
 
+        // Réinitialiser l'erreur après succès
+        setError(null);
         return newTask;
       } catch (err) {
         const errorMsg =

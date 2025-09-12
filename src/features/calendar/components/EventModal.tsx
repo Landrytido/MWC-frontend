@@ -98,26 +98,21 @@ const EventModal: React.FC<EventModalProps> = ({
         setDueDate("");
         setScheduleType("none");
 
-        const now = new Date();
-        const defaultStart = selectedDate
-          ? new Date(
-              `${selectedDate}T${now
-                .getHours()
-                .toString()
-                .padStart(2, "0")}:${now
-                .getMinutes()
-                .toString()
-                .padStart(2, "0")}`
-            )
-          : new Date();
+        let defaultStart = "";
+        let defaultEnd = "";
 
-        const defaultEnd = new Date(defaultStart.getTime() + 60 * 60 * 1000);
+        if (selectedDate) {
+          const selected = new Date(`${selectedDate}T09:00:00`);
+          const endTime = new Date(selected.getTime() + 60 * 60 * 1000);
+          defaultStart = selected.toISOString().slice(0, 16);
+          defaultEnd = endTime.toISOString().slice(0, 16);
+        }
 
         setFormData({
           title: "",
           description: "",
-          startDate: defaultStart.toISOString().slice(0, 16),
-          endDate: defaultEnd.toISOString().slice(0, 16),
+          startDate: defaultStart,
+          endDate: defaultEnd,
           location: "",
           mode: "PRESENTIEL",
           meetingLink: "",
@@ -202,9 +197,7 @@ const EventModal: React.FC<EventModalProps> = ({
       }
 
       if (formData.mode === "DISTANCIEL" && !formData.meetingLink?.trim()) {
-        setError(
-          "Le lien de réunion est requis pour les événements distanciels"
-        );
+        setError("Le lien de réunion est requis pour les événements virtuels");
         return;
       }
     }
@@ -227,25 +220,53 @@ const EventModal: React.FC<EventModalProps> = ({
           priority: priority,
         };
 
-        await onSubmit(taskData as CreateEventRequest);
+        await onSubmit(taskData);
       } else {
+        // Validation supplémentaire pour les événements
+        if (!formData.startDate || !formData.endDate) {
+          setError("Les dates de début et fin sont requises");
+          return;
+        }
+
+        const formatDate = (dateStr: string): string => {
+          if (!dateStr) return "";
+          if (dateStr.includes("T")) {
+            return dateStr.length === 16 ? dateStr + ":00" : dateStr;
+          }
+          return dateStr + "T09:00:00";
+        };
+
         const eventData: CreateEventRequest = {
           title: formData.title.trim(),
           description: formData.description?.trim() || undefined,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
+          startDate: formatDate(formData.startDate),
+          endDate: formatDate(formData.endDate),
           location: formData.location?.trim() || undefined,
           mode: formData.mode,
           meetingLink: formData.meetingLink?.trim() || undefined,
           type: "EVENT",
         };
 
+        const startTime = new Date(eventData.startDate);
+        const endTime = new Date(eventData.endDate);
+
+        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+          setError("Format de date invalide");
+          return;
+        }
+
+        if (startTime >= endTime) {
+          setError("La date de fin doit être postérieure à la date de début");
+          return;
+        }
+
         await onSubmit(eventData);
       }
+
       onClose();
     } catch (err) {
       if (err instanceof Error && err.message === "OPERATION_CANCELLED") {
-        // Ne pas afficher d'erreur pour les annulations volontaires
+        return;
       } else {
         setError(
           err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
@@ -463,7 +484,7 @@ const EventModal: React.FC<EventModalProps> = ({
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { key: "none", label: "Pas de planification" },
+                        { key: "none", label: "Choisir une date" },
                         { key: "today", label: "Pour aujourd'hui" },
                         { key: "tomorrow", label: "Pour demain" },
                       ].map(({ key, label }) => (
@@ -568,7 +589,7 @@ const EventModal: React.FC<EventModalProps> = ({
               </div>
             )}
 
-            {/* Lien de réunion - SEULEMENT pour événements distanciels */}
+            {/* Lien de réunion - SEULEMENT pour événements virtuels */}
             {modalType === "event" && formData.mode === "DISTANCIEL" && (
               <div>
                 <label

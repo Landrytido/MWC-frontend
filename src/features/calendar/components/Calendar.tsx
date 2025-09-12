@@ -5,7 +5,11 @@ import CalendarGrid from "./CalendarGrid";
 import EventModal from "./EventModal";
 import DayDetailModal from "./DayDetailModal";
 import EventsList from "./EventsList";
-import { EventDto, CreateEventRequest } from "../types";
+import {
+  EventDto,
+  CreateEventRequest,
+  CreateCalendarTaskRequest,
+} from "../types";
 import { CreateTaskForm, UpdateTaskForm } from "../../tasks/types";
 import { useTasks } from "../../tasks/hooks/useTasks";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
@@ -29,7 +33,7 @@ const Calendar: React.FC = () => {
     refreshCalendarData,
   } = useCalendar();
 
-  const { updateTask } = useTasks();
+  const { updateTask, createTask } = useTasks();
 
   const { confirm, ConfirmationComponent } = useConfirmation();
 
@@ -47,7 +51,15 @@ const Calendar: React.FC = () => {
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setModalType("event");
-    setSelectedDate(""); // Réinitialiser pour utiliser la date actuelle
+    // Réinitialiser pour utiliser la date actuelle quand on clique sur le bouton de l'en-tête
+    setSelectedDate("");
+    setIsEventModalOpen(true);
+  };
+
+  const handleCreateEventOnDate = (date: string) => {
+    setEditingEvent(null);
+    setModalType("event");
+    setSelectedDate(date); // Utiliser la date spécifique de la cellule
     setIsEventModalOpen(true);
   };
 
@@ -97,39 +109,84 @@ const Calendar: React.FC = () => {
   const handleEventSubmit = async (
     data: CreateEventRequest | CreateTaskForm
   ) => {
-    const isTask = "dueDate" in data && "priority" in data;
+    try {
+      // Vérifier si c'est une tâche basée sur la présence de 'priority' et 'dueDate'
+      const isTask = "priority" in data && data.priority !== undefined;
 
-    if (editingEvent) {
-      if (isTask) {
-        if (!editingEvent.relatedTaskId) {
-          throw new Error("ID de tâche manquant pour la modification");
+      if (editingEvent) {
+        if (isTask) {
+          if (!editingEvent.relatedTaskId) {
+            throw new Error("ID de tâche manquant pour la modification");
+          }
+
+          const taskData = data as CreateTaskForm;
+          const updateTaskData: UpdateTaskForm = {
+            title: taskData.title,
+            description: taskData.description,
+            priority: taskData.priority,
+            dueDate: taskData.dueDate,
+          };
+
+          await updateTask(editingEvent.relatedTaskId, updateTaskData);
+          await refreshCalendarData();
+        } else {
+          await updateEvent(editingEvent.id, data as CreateEventRequest);
         }
-
-        const taskData = data as CreateTaskForm;
-        const updateTaskData: UpdateTaskForm = {
-          title: taskData.title,
-          description: taskData.description,
-          priority: taskData.priority,
-          dueDate: taskData.dueDate,
-        };
-
-        await updateTask(editingEvent.relatedTaskId, updateTaskData);
-
-        await refreshCalendarData();
+        setEditingEvent(null);
       } else {
-        await updateEvent(editingEvent.id, data as CreateEventRequest);
+        if (isTask) {
+          const taskData = data as CreateTaskForm;
+
+          // Essayer d'abord de créer via l'API des tâches directement
+          try {
+            await createTask(taskData);
+          } catch {
+            // Fallback vers l'API calendrier - Format correct pour le backend
+            const calendarTaskData: CreateCalendarTaskRequest = {
+              title: taskData.title,
+              description: taskData.description,
+              dueDate: taskData.dueDate,
+              priority: taskData.priority || 2,
+              orderIndex: taskData.orderIndex || 0,
+            };
+
+            await createTaskFromCalendar(calendarTaskData);
+          }
+        } else {
+          // Améliorer le format des données pour les événements
+          const eventData = data as CreateEventRequest;
+          const improvedEventData: CreateEventRequest = {
+            ...eventData,
+            // S'assurer que les dates sont au bon format
+            startDate: eventData.startDate.includes("T")
+              ? eventData.startDate.length === 16
+                ? eventData.startDate + ":00"
+                : eventData.startDate
+              : eventData.startDate + "T09:00:00",
+            endDate: eventData.endDate.includes("T")
+              ? eventData.endDate.length === 16
+                ? eventData.endDate + ":00"
+                : eventData.endDate
+              : eventData.endDate + "T10:00:00",
+            // S'assurer que le type est correct
+            type: "EVENT",
+            // Nettoyer les champs optionnels vides
+            description: eventData.description?.trim() || undefined,
+            location: eventData.location?.trim() || undefined,
+            meetingLink: eventData.meetingLink?.trim() || undefined,
+          };
+
+          await createEvent(improvedEventData);
+        }
       }
-      setEditingEvent(null);
-    } else {
-      if (isTask) {
-        await createTaskFromCalendar(data as CreateEventRequest);
-      } else {
-        await createEvent(data as CreateEventRequest);
-      }
+
+      setRefreshTrigger((prev) => prev + 1);
+      setIsEventModalOpen(false);
+    } catch (error) {
+      console.error("❌ Erreur lors de la soumission:", error);
+      // L'erreur sera gérée par le hook useCalendar qui mettra à jour l'état d'erreur
+      throw error;
     }
-
-    setRefreshTrigger((prev) => prev + 1);
-    setIsEventModalOpen(false);
   };
 
   return (
@@ -261,8 +318,7 @@ const Calendar: React.FC = () => {
         onEventDelete={handleDeleteEvent}
         onCreateEvent={() => {
           setIsDayDetailModalOpen(false);
-          setSelectedDate(selectedDate);
-          handleCreateEvent();
+          handleCreateEventOnDate(selectedDate);
         }}
         onCreateTask={() => {
           setIsDayDetailModalOpen(false);
