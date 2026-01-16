@@ -5,7 +5,7 @@
 ```mermaid
 classDiagram
     class User {
-        +string id
+        +number id
         +string email
         +string username
         +boolean emailVerified
@@ -14,25 +14,27 @@ classDiagram
     }
 
     class Task {
-        +string id
+        +number id
         +string title
-        +string description
+        +string? description
         +TaskStatus status
-        +TaskPriority priority
-        +Date? dueDate
-        +Date? completedAt
-        +string userId
+        +number priority
+        +string? dueDate
+        +boolean completed
+        +string? completedAt
         +Date createdAt
         +Date updatedAt
+        +boolean carriedOver
+        +string? originalDate
+        +number orderIndex
+        +boolean overdue
+        +boolean scheduledForToday
+        +boolean scheduledForTomorrow
     }
 
     class TaskStatus {
-        <<enumeration>>
-        UPCOMING
-        TODAY
-        TOMORROW
-        OVERDUE
-        COMPLETED
+        <<type>>
+        "upcoming" | "today" | "tomorrow" | "overdue" | "completed"
     }
 
     class TaskPriority {
@@ -43,33 +45,33 @@ classDiagram
     }
 
     class Note {
-        +string id
+        +number id
         +string title
         +string content
-        +string userId
-        +string? notebookId
-        +string[] labelIds
-        +boolean isPinned
         +Date createdAt
         +Date updatedAt
+        +number? commentCount
+        +number? taskCount
+        +number? completedTaskCount
+        +number? notebookId
+        +string? notebookTitle
+        +Label[]? labels
+        +Comment[]? comments
     }
 
     class Notebook {
-        +string id
+        +number id
         +string name
         +string? description
         +string? color
-        +string userId
-        +number notesCount
         +Date createdAt
         +Date updatedAt
     }
 
     class Label {
-        +string id
+        +number id
         +string name
         +LabelColorName color
-        +string userId
         +Date createdAt
         +Date updatedAt
     }
@@ -97,20 +99,16 @@ classDiagram
     }
 
     class SavedLink {
-        +string id
+        +number id
         +string url
         +string title
         +string? description
-        +string? favicon
-        +string? category
-        +string[] tags
-        +string userId
         +Date createdAt
         +Date updatedAt
     }
 
-    class EventDto {
-        +string id
+    class Event {
+        +number id
         +string title
         +string? description
         +Date startTime
@@ -118,8 +116,7 @@ classDiagram
         +EventMode mode
         +EventType type
         +string? location
-        +string? taskId
-        +string userId
+        +number? taskId
         +Date createdAt
         +Date updatedAt
     }
@@ -137,19 +134,17 @@ classDiagram
     }
 
     class Comment {
-        +string id
+        +number id
         +string content
-        +string noteId
-        +string userId
-        +string? parentId
+        +number noteId
+        +object author
         +Date createdAt
-        +Date updatedAt
+        +Date? updatedAt
     }
 
     class BlocNote {
-        +string id
+        +number id
         +string content
-        +string userId
         +Date lastModified
     }
 
@@ -158,7 +153,7 @@ classDiagram
     User "1" --> "*" Notebook : owns
     User "1" --> "*" Label : creates
     User "1" --> "*" SavedLink : saves
-    User "1" --> "*" EventDto : schedules
+    User "1" --> "*" Event : schedules
     User "1" --> "*" Comment : writes
     User "1" --> "1" BlocNote : has
 
@@ -169,9 +164,9 @@ classDiagram
     Note "*" --> "*" Label : tagged with
     Note "1" --> "*" Comment : has
 
-    EventDto --> EventMode
-    EventDto --> EventType
-    EventDto "0..1" --> "0..1" Task : based on
+    Event --> EventMode
+    Event --> EventType
+    Event "0..1" --> "0..1" Task : based on
 
     Label --> LabelColorName
 ```
@@ -446,9 +441,8 @@ classDiagram
     class CreateNoteForm {
         +string title
         +string content
-        +string? notebookId
-        +string[] labelIds
-        +boolean isPinned
+        +number? notebookId
+        +string[]? labelIds
     }
 
     class CreateNotebookForm {
@@ -478,7 +472,7 @@ classDiagram
         +EventMode mode
         +EventType type
         +string? location
-        +string? taskId
+        +number? taskId
     }
 
     CreateTaskForm --> Task : creates
@@ -486,5 +480,5 @@ classDiagram
     CreateNotebookForm --> Notebook : creates
     CreateLabelForm --> Label : creates
     CreateLinkForm --> SavedLink : creates
-    CreateEventForm --> EventDto : creates
+    CreateEventForm --> Event : creates
 ```

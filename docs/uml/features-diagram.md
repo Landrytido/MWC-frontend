@@ -113,7 +113,7 @@ classDiagram
     }
 
     class CalendarFeature {
-        +types.ts: EventDto, TaskDto
+        +types.ts: Event, TaskDto
         +api.ts: calendarApi
         +hooks/useCalendar.ts
         +components/CalendarView
@@ -150,13 +150,13 @@ sequenceDiagram
 
 ## Hooks personnalisés par Feature
 
-| Feature | Hook Principal | Fonctionnalités |
-|---------|---------------|-----------------|
-| **Tasks** | `useTasks()` | fetchTasks, createTask, updateTask, deleteTask, getTaskStats |
-| **Notes** | `useNotes()` | fetchNotes, createNote, updateNote, deleteNote, searchNotes |
-| **Notebooks** | `useNotebooks()` | fetchNotebooks, createNotebook, updateNotebook, deleteNotebook |
-| **Labels** | `useLabels()` | fetchLabels, createLabel, updateLabel, deleteLabel |
-| **Links** | `useLinks()` | fetchLinks, createLink, updateLink, deleteLink, groupLinks |
-| **Calendar** | `useCalendar()` | fetchEvents, createEvent, updateEvent, deleteEvent, getMonthView |
-| **BlocNote** | `useBlocNote()` | fetchBlocNote, saveBlocNote, autoSave |
-| **Auth** | `useAuth()` | login, signup, logout, refreshToken, getCurrentUser |
+| Feature       | Hook Principal   | Fonctionnalités                                                  |
+| ------------- | ---------------- | ---------------------------------------------------------------- |
+| **Tasks**     | `useTasks()`     | fetchTasks, createTask, updateTask, deleteTask, getTaskStats     |
+| **Notes**     | `useNotes()`     | fetchNotes, createNote, updateNote, deleteNote, searchNotes      |
+| **Notebooks** | `useNotebooks()` | fetchNotebooks, createNotebook, updateNotebook, deleteNotebook   |
+| **Labels**    | `useLabels()`    | fetchLabels, createLabel, updateLabel, deleteLabel               |
+| **Links**     | `useLinks()`     | fetchLinks, createLink, updateLink, deleteLink, groupLinks       |
+| **Calendar**  | `useCalendar()`  | fetchEvents, createEvent, updateEvent, deleteEvent, getMonthView |
+| **BlocNote**  | `useBlocNote()`  | fetchBlocNote, saveBlocNote, autoSave                            |
+| **Auth**      | `useAuth()`      | login, signup, logout, refreshToken, getCurrentUser              |

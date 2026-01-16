@@ -7,6 +7,7 @@ graph TD
     Root["/"]
     Login["/login"]
     Signup["/signup"]
+    VerifyEmail["/verify-email"]
     About["/about"]
     Privacy["/privacy"]
 
@@ -26,6 +27,7 @@ graph TD
 
     Root --> Login
     Root --> Signup
+    Root --> VerifyEmail
     Root --> About
     Root --> Privacy
     Root --> Dashboard
@@ -43,7 +45,7 @@ graph TD
     classDef protected fill:#fff3e0,stroke:#e65100
     classDef nested fill:#f3e5f5,stroke:#4a148c
 
-    class Root,Login,Signup,About,Privacy public
+    class Root,Login,Signup,VerifyEmail,About,Privacy public
     class Dashboard,Settings protected
     class NotesNew,NotesEdit,NotesView,LinksNew,LinksEdit,TasksNew,Calendar nested
 ```
@@ -56,6 +58,7 @@ graph LR
         Home[Home<br/>/]
         LoginPage[Sign In<br/>/login]
         SignupPage[Sign Up<br/>/signup]
+        VerifyEmailPage[Verify Email<br/>/verify-email]
         AboutPage[About<br/>/about]
         PrivacyPage[Privacy<br/>/privacy]
     end
@@ -183,22 +186,23 @@ sequenceDiagram
 
 ## Carte des routes détaillée
 
-| Route | Type | Composant | Description | Authentification |
-|-------|------|-----------|-------------|------------------|
-| `/` | Public | Home | Page d'accueil avec présentation | Non |
-| `/login` | Public | SignIn | Formulaire de connexion | Non |
-| `/signup` | Public | SignUp | Formulaire d'inscription | Non |
-| `/about` | Public | About | À propos de l'application | Non |
-| `/privacy` | Public | Privacy | Politique de confidentialité | Non |
-| `/dashboard` | Protected | Dashboard | Vue d'ensemble principale | Oui |
-| `/dashboard/settings` | Protected | UserSettings | Paramètres utilisateur | Oui |
-| `/dashboard/notes/new` | Protected | CreateNote | Créer une nouvelle note | Oui |
-| `/dashboard/notes/:id` | Protected | EditNote | Éditer une note existante | Oui |
-| `/dashboard/notes/:id/view` | Protected | ViewNote | Visualiser une note | Oui |
-| `/dashboard/links/new` | Protected | CreateLink | Ajouter un nouveau lien | Oui |
-| `/dashboard/links/:id` | Protected | EditLink | Éditer un lien existant | Oui |
-| `/dashboard/tasks/new` | Protected | CreateTask | Créer une nouvelle tâche | Oui |
-| `/dashboard/calendar` | Protected | Calendar | Vue calendrier | Oui |
+| Route                       | Type      | Composant    | Description                      | Authentification |
+| --------------------------- | --------- | ------------ | -------------------------------- | ---------------- |
+| `/`                         | Public    | Home         | Page d'accueil avec présentation | Non              |
+| `/login`                    | Public    | SignIn       | Formulaire de connexion          | Non              |
+| `/signup`                   | Public    | SignUp       | Formulaire d'inscription         | Non              |
+| `/verify-email`             | Public    | VerifyEmail  | Vérification d'email             | Non              |
+| `/about`                    | Public    | About        | À propos de l'application        | Non              |
+| `/privacy`                  | Public    | Privacy      | Politique de confidentialité     | Non              |
+| `/dashboard`                | Protected | Dashboard    | Vue d'ensemble principale        | Oui              |
+| `/dashboard/settings`       | Protected | UserSettings | Paramètres utilisateur           | Oui              |
+| `/dashboard/notes/new`      | Protected | CreateNote   | Créer une nouvelle note          | Oui              |
+| `/dashboard/notes/:id`      | Protected | EditNote     | Éditer une note existante        | Oui              |
+| `/dashboard/notes/:id/view` | Protected | ViewNote     | Visualiser une note              | Oui              |
+| `/dashboard/links/new`      | Protected | CreateLink   | Ajouter un nouveau lien          | Oui              |
+| `/dashboard/links/:id`      | Protected | EditLink     | Éditer un lien existant          | Oui              |
+| `/dashboard/tasks/new`      | Protected | CreateTask   | Créer une nouvelle tâche         | Oui              |
+| `/dashboard/calendar`       | Protected | Calendar     | Vue calendrier                   | Oui              |
 
 ## Navigation dans le Dashboard
 
@@ -318,22 +322,22 @@ graph TD
 
 ## Paramètres de routes dynamiques
 
-| Route | Paramètre | Type | Exemple | Utilisation |
-|-------|-----------|------|---------|-------------|
-| `/dashboard/notes/:id` | `:id` | string | `/dashboard/notes/abc123` | Identifiant unique de la note |
-| `/dashboard/notes/:id/view` | `:id` | string | `/dashboard/notes/abc123/view` | Identifiant pour vue lecture seule |
-| `/dashboard/links/:id` | `:id` | string | `/dashboard/links/xyz789` | Identifiant unique du lien |
+| Route                       | Paramètre | Type   | Exemple                        | Utilisation                        |
+| --------------------------- | --------- | ------ | ------------------------------ | ---------------------------------- |
+| `/dashboard/notes/:id`      | `:id`     | string | `/dashboard/notes/abc123`      | Identifiant unique de la note      |
+| `/dashboard/notes/:id/view` | `:id`     | string | `/dashboard/notes/abc123/view` | Identifiant pour vue lecture seule |
+| `/dashboard/links/:id`      | `:id`     | string | `/dashboard/links/xyz789`      | Identifiant unique du lien         |
 
 ## Query parameters supportés
 
-| Route | Query Param | Type | Exemple | Description |
-|-------|-------------|------|---------|-------------|
-| `/dashboard` | `view` | string | `?view=grid` | Mode d'affichage (grid/list/compact) |
-| `/dashboard` | `notebook` | string | `?notebook=abc123` | Filtre par carnet |
-| `/dashboard` | `label` | string | `?label=xyz789` | Filtre par étiquette |
-| `/dashboard` | `search` | string | `?search=react` | Terme de recherche |
-| `/dashboard/calendar` | `date` | string | `?date=2026-01-12` | Date sélectionnée |
-| `/dashboard/calendar` | `view` | string | `?view=month` | Vue du calendrier (month/week/day) |
+| Route                 | Query Param | Type   | Exemple            | Description                          |
+| --------------------- | ----------- | ------ | ------------------ | ------------------------------------ |
+| `/dashboard`          | `view`      | string | `?view=grid`       | Mode d'affichage (grid/list/compact) |
+| `/dashboard`          | `notebook`  | string | `?notebook=abc123` | Filtre par carnet                    |
+| `/dashboard`          | `label`     | string | `?label=xyz789`    | Filtre par étiquette                 |
+| `/dashboard`          | `search`    | string | `?search=react`    | Terme de recherche                   |
+| `/dashboard/calendar` | `date`      | string | `?date=2026-01-12` | Date sélectionnée                    |
+| `/dashboard/calendar` | `view`      | string | `?view=month`      | Vue du calendrier (month/week/day)   |
 
 ## Breadcrumbs et navigation contextuelle
 
@@ -351,6 +355,7 @@ graph LR
 ```
 
 Exemple de breadcrumbs :
+
 - **Home** > **Dashboard** > **Notes** > **Edit Note**
 - **Home** > **Dashboard** > **Tasks** > **Create Task**
 - **Home** > **Dashboard** > **Calendar** > **January 2026**
