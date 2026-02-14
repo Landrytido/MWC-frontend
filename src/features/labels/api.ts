@@ -1,5 +1,5 @@
 import { httpService } from "../../shared/services/httpService";
-import { Label, CreateLabelForm, LabelUsageStats } from "./types";
+import { Label, CreateLabelForm } from "./types";
 import { Note } from "../notes/types";
 
 export const labelsApi = {
@@ -22,7 +22,4 @@ export const labelsApi = {
 
   delete: (id: string, forceDelete = false): Promise<void> =>
     httpService.delete(`/labels/${id}?forceDelete=${forceDelete}`),
-
-  getUsageStats: (): Promise<LabelUsageStats> =>
-    httpService.get("/labels/stats"),
 };

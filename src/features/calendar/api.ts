@@ -29,12 +29,6 @@ export const calendarApi = {
     httpService.delete(`/calendar/events/${id}`),
 
   createTaskFromCalendar: (
-    taskData: CreateCalendarTaskRequest
+    taskData: CreateCalendarTaskRequest,
   ): Promise<TaskDto> => httpService.post("/calendar/create-task", taskData),
-
-  getEventsInRange: (startDate: string, endDate: string): Promise<EventDto[]> =>
-    httpService.get("/calendar/events/range", { startDate, endDate }),
-
-  searchEvents: (query: string): Promise<EventDto[]> =>
-    httpService.get("/calendar/events/search", { query }),
 };

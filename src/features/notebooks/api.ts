@@ -1,10 +1,5 @@
 import { httpService } from "../../shared/services/httpService";
-import type {
-  Notebook,
-  CreateNotebookForm,
-  NotebookUsageStats,
-  NotebookWithNotes,
-} from "./types";
+import type { Notebook, CreateNotebookForm, NotebookWithNotes } from "./types";
 
 export const notebooksApi = {
   getAll: (): Promise<Notebook[]> => httpService.get("/notebooks"),
@@ -14,7 +9,7 @@ export const notebooksApi = {
 
   getNotes: (
     notebookId: number,
-    params?: { limit?: number; offset?: number }
+    params?: { limit?: number; offset?: number },
   ): Promise<NotebookWithNotes> =>
     httpService.get(`/notebooks/${notebookId}/notes`, params),
 
@@ -26,7 +21,4 @@ export const notebooksApi = {
 
   delete: (id: number, forceDelete: boolean = true): Promise<void> =>
     httpService.delete(`/notebooks/${id}?forceDelete=${forceDelete}`),
-
-  getUsageStats: (): Promise<NotebookUsageStats> =>
-    httpService.get("/notebooks/stats"),
 };

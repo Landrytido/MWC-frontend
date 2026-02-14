@@ -25,7 +25,7 @@ export const notesApi = {
 
   createInNotebook: (
     notebookId: number,
-    note: Omit<CreateNoteForm, "notebookId">
+    note: Omit<CreateNoteForm, "notebookId">,
   ): Promise<Note> => {
     const noteData = { ...note, notebookId };
     return httpService.post("/notes", noteData);
@@ -49,18 +49,8 @@ export const notesApi = {
   getByLabel: (labelId: string): Promise<Note[]> =>
     httpService.get(`/labels/${labelId}/notes`),
 
-  batchAddLabels: (noteId: number, labelIds: string[]): Promise<Note> =>
-    httpService.post(`/notes/${noteId}/labels`, { labelIds }),
-
-  batchRemoveLabels: (noteId: number, labelIds: string[]): Promise<Note> => {
-    const labelIdsParam = labelIds
-      .map((id) => `labelIds=${encodeURIComponent(id)}`)
-      .join("&");
-    return httpService.delete(`/notes/${noteId}/labels?${labelIdsParam}`);
-  },
-
   search: async (
-    params: NotesSearchParams
+    params: NotesSearchParams,
   ): Promise<{ notes: Note[]; total?: number }> => {
     // Si pas de terme de recherche, retourner toutes les notes
     if (!params.query?.trim()) {
@@ -83,14 +73,6 @@ export const notesApi = {
       return { notes: [], total: 0 };
     }
   },
-
-  getRecentNotes: (limit: number = 10): Promise<Note[]> =>
-    httpService.get("/notes/recent", { limit }),
-
-  getFavoriteNotes: (): Promise<Note[]> => httpService.get("/notes/favorites"),
-
-  toggleFavorite: (noteId: number): Promise<Note> =>
-    httpService.post(`/notes/${noteId}/favorite`),
 };
 
 // ==========================================

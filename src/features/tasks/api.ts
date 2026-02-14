@@ -64,9 +64,4 @@ export const tasksApi = {
     taskIdsToCarryOver?: number[];
     markDayAsCompleted?: boolean;
   }): Promise<Task[]> => httpService.post("/tasks/end-day", data),
-
-  reorderTasks: (data: {
-    taskIds: number[];
-    dueDate?: string;
-  }): Promise<Task[]> => httpService.post("/tasks/reorder", data),
 };

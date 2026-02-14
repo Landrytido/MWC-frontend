@@ -22,15 +22,6 @@ export interface CreateLabelForm {
   color?: string;
 }
 
-export interface LabelUsageStats {
-  totalLabels: number;
-  mostUsedLabels: Array<{
-    label: Label;
-    noteCount: number;
-  }>;
-  unusedLabels: Label[];
-}
-
 export const LABEL_COLORS: Record<LabelColorName, LabelColorConfig> = {
   teal: {
     default: "bg-teal-50 text-teal-700 border border-teal-200",
@@ -75,7 +66,7 @@ export const getLabelColor = (labelId: string): LabelColorName => {
 };
 
 export const getLabelColorClasses = (
-  colorName: LabelColorName
+  colorName: LabelColorName,
 ): LabelColorConfig => {
   return LABEL_COLORS[colorName];
 };

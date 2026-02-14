@@ -20,14 +20,10 @@ interface UseNotesReturn {
   moveToNotebook: (id: number, notebookId: number | null) => Promise<Note>;
   addLabel: (noteId: number, labelId: string) => Promise<Note>;
   removeLabel: (noteId: number, labelId: string) => Promise<Note>;
-  batchAddLabels: (noteId: number, labelIds: string[]) => Promise<Note>;
-  batchRemoveLabels: (noteId: number, labelIds: string[]) => Promise<Note>;
 
   searchNotes: (
-    params: NotesSearchParams
+    params: NotesSearchParams,
   ) => Promise<{ notes: Note[]; total?: number }>;
-  getRecentNotes: (limit?: number) => Promise<Note[]>;
-  toggleFavorite: (noteId: number) => Promise<Note>;
   getNoteById: (id: number) => Note | undefined;
 
   filteredNotes: Note[];
@@ -65,7 +61,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
     const matchesLabels =
       selectedLabels.length === 0 ||
       selectedLabels.some((labelId) =>
-        note.labels?.some((label) => label.id === labelId)
+        note.labels?.some((label) => label.id === labelId),
       );
 
     return matchesNotebook && matchesSearch && matchesLabels;
@@ -97,7 +93,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
+    [],
   );
 
   const updateNote = useCallback(
@@ -113,7 +109,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
+    [],
   );
 
   const deleteNote = useCallback(async (id: number): Promise<void> => {
@@ -141,7 +137,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
+    [],
   );
 
   const addLabel = useCallback(
@@ -149,7 +145,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
       try {
         const updatedNote = await notesApi.addLabel(noteId, labelId);
         setNotes((prev) =>
-          prev.map((n) => (n.id === noteId ? updatedNote : n))
+          prev.map((n) => (n.id === noteId ? updatedNote : n)),
         );
         return updatedNote;
       } catch (err) {
@@ -161,7 +157,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
+    [],
   );
 
   const removeLabel = useCallback(
@@ -169,7 +165,7 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
       try {
         const updatedNote = await notesApi.removeLabel(noteId, labelId);
         setNotes((prev) =>
-          prev.map((n) => (n.id === noteId ? updatedNote : n))
+          prev.map((n) => (n.id === noteId ? updatedNote : n)),
         );
         return updatedNote;
       } catch (err) {
@@ -181,52 +177,12 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
-  );
-
-  const batchAddLabels = useCallback(
-    async (noteId: number, labelIds: string[]): Promise<Note> => {
-      try {
-        const updatedNote = await notesApi.batchAddLabels(noteId, labelIds);
-        setNotes((prev) =>
-          prev.map((n) => (n.id === noteId ? updatedNote : n))
-        );
-        return updatedNote;
-      } catch (err) {
-        const errorMsg =
-          err instanceof Error
-            ? err.message
-            : "Erreur lors de l'ajout des labels";
-        setError(errorMsg);
-        throw err;
-      }
-    },
-    []
-  );
-
-  const batchRemoveLabels = useCallback(
-    async (noteId: number, labelIds: string[]): Promise<Note> => {
-      try {
-        const updatedNote = await notesApi.batchRemoveLabels(noteId, labelIds);
-        setNotes((prev) =>
-          prev.map((n) => (n.id === noteId ? updatedNote : n))
-        );
-        return updatedNote;
-      } catch (err) {
-        const errorMsg =
-          err instanceof Error
-            ? err.message
-            : "Erreur lors de la suppression des labels";
-        setError(errorMsg);
-        throw err;
-      }
-    },
-    []
+    [],
   );
 
   const searchNotes = useCallback(
     async (
-      params: NotesSearchParams
+      params: NotesSearchParams,
     ): Promise<{ notes: Note[]; total?: number }> => {
       try {
         const results = await notesApi.search(params);
@@ -238,39 +194,14 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
         throw err;
       }
     },
-    []
+    [],
   );
-
-  const getRecentNotes = useCallback(async (limit = 10): Promise<Note[]> => {
-    try {
-      const results = await notesApi.getRecentNotes(limit);
-      return results;
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Erreur lors de la récupération";
-      setError(errorMsg);
-      throw err;
-    }
-  }, []);
-
-  const toggleFavorite = useCallback(async (noteId: number): Promise<Note> => {
-    try {
-      const updatedNote = await notesApi.toggleFavorite(noteId);
-      setNotes((prev) => prev.map((n) => (n.id === noteId ? updatedNote : n)));
-      return updatedNote;
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Erreur lors du toggle favori";
-      setError(errorMsg);
-      throw err;
-    }
-  }, []);
 
   const getNoteById = useCallback(
     (id: number): Note | undefined => {
       return notes.find((note) => note.id === id);
     },
-    [notes]
+    [notes],
   );
 
   useEffect(() => {
@@ -290,12 +221,8 @@ export const useNotes = (filters: UseNotesFilters = {}): UseNotesReturn => {
     moveToNotebook,
     addLabel,
     removeLabel,
-    batchAddLabels,
-    batchRemoveLabels,
 
     searchNotes,
-    getRecentNotes,
-    toggleFavorite,
     getNoteById,
 
     filteredNotes,
