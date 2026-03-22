@@ -64,14 +64,14 @@ const Dashboard: React.FC = () => {
     (note: Note) => {
       navigate(`/dashboard/notes/${note.id}`);
     },
-    [navigate]
+    [navigate],
   );
 
   const handleViewNote = useCallback(
     (note: Note) => {
       navigate(`/dashboard/notes/${note.id}/view`);
     },
-    [navigate]
+    [navigate],
   );
 
   const handleNoteUpdate = useCallback(() => {
@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
         // Erreur silencieuse
       }
     },
-    [confirm, deleteNote]
+    [confirm, deleteNote],
   );
 
   const handleLabelSelect = useCallback(
@@ -111,7 +111,7 @@ const Dashboard: React.FC = () => {
         ui.setSelectedLabels([...currentLabels, labelId]);
       }
     },
-    [ui]
+    [ui],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -125,12 +125,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">
+      <div className="container mx-auto px-4 py-8 md:py-10">
+        <div className="mb-8 rounded-2xl border border-slate-200/70 bg-white/70 p-5 shadow-sm backdrop-blur-sm">
+          <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
             Bonjour, {authState.user?.firstName || "utilisateur"} 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="mt-2 text-slate-600">
             Bienvenue sur votre tableau de bord My Web Companion
           </p>
         </div>
@@ -159,10 +159,10 @@ const Dashboard: React.FC = () => {
                     placeholder={searchConfig.placeholder}
                     value={searchConfig.value}
                     onChange={(e) => searchConfig.onChange?.(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
+                    className={`w-full rounded-xl border py-3 pl-11 pr-4 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:border-transparent ${
                       searchConfig.hasError
-                        ? "border-orange-300 focus:ring-orange-500 bg-orange-50"
-                        : "border-gray-300 focus:ring-teal-500"
+                        ? "border-orange-300 bg-orange-50 focus:ring-orange-500"
+                        : "border-slate-200 bg-white/85 focus:ring-teal-500"
                     }`}
                   />
                   <svg
@@ -274,7 +274,7 @@ const Dashboard: React.FC = () => {
                           <button
                             onClick={() => {
                               const updatedLabels = ui.selectedLabels.filter(
-                                (id) => id !== labelId
+                                (id) => id !== labelId,
                               );
                               ui.setSelectedLabels(updatedLabels);
                             }}
@@ -326,12 +326,12 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            <div className="flex border-b border-gray-200 mb-6">
+            <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-slate-200/80 bg-white/75 p-2 backdrop-blur-sm">
               <button
-                className={`px-4 py-2 font-medium text-sm ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                   activeTab === "notes"
-                    ? "text-teal-500 border-b-2 border-teal-500"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("notes")}
               >
@@ -342,10 +342,10 @@ const Dashboard: React.FC = () => {
                 )
               </button>
               <button
-                className={`px-4 py-2 font-medium text-sm ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                   activeTab === "links"
-                    ? "text-teal-500 border-b-2 border-teal-500"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("links")}
               >
@@ -356,10 +356,10 @@ const Dashboard: React.FC = () => {
                 )
               </button>
               <button
-                className={`px-4 py-2 font-medium text-sm ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                   activeTab === "tasks"
-                    ? "text-teal-500 border-b-2 border-teal-500"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("tasks")}
               >
@@ -369,10 +369,10 @@ const Dashboard: React.FC = () => {
                   : ""}
               </button>
               <button
-                className={`px-4 py-2 font-medium text-sm ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                   activeTab === "calendar"
-                    ? "text-teal-500 border-b-2 border-teal-500"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() =>
                   navigate(`/dashboard/calendar?returnTo=${activeTab}`)
@@ -381,10 +381,10 @@ const Dashboard: React.FC = () => {
                 📅 Calendrier
               </button>
               <button
-                className={`px-4 py-2 font-medium text-sm ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                   activeTab === "tools"
-                    ? "text-teal-500 border-b-2 border-teal-500"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("tools")}
               >
@@ -409,7 +409,7 @@ const Dashboard: React.FC = () => {
                   </h2>
                   <button
                     onClick={() => navigate("/dashboard/notes/new")}
-                    className="flex items-center text-sm font-medium text-teal-500 hover:text-teal-600"
+                    className="btn btn-primary px-4 py-2"
                   >
                     <svg
                       className="w-5 h-5 mr-1"
@@ -450,12 +450,12 @@ const Dashboard: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="rounded-2xl border border-dashed border-slate-300/80 bg-white/60 py-10 text-center text-slate-500">
                     {notes.length === 0
                       ? "Vous n'avez pas encore de notes. Commencez par en créer une !"
                       : hasActiveSearch
-                      ? "Aucun résultat trouvé pour votre recherche."
-                      : "Aucune note ne correspond aux filtres sélectionnés."}
+                        ? "Aucun résultat trouvé pour votre recherche."
+                        : "Aucune note ne correspond aux filtres sélectionnés."}
                   </div>
                 )}
               </div>

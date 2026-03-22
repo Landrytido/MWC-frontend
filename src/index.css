@@ -1,31 +1,37 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Styles personnalisés */
 :root {
-  --primary: #38b2ac;
-  /* teal-500 */
-  --secondary: #1e40af;
-  /* blue-800 */
-  --accent: #f59e0b;
-  /* amber-500 */
-  --dark: #1f2937;
-  /* gray-800 */
-  --light: #f9fafb;
-  /* gray-50 */
+  --bg-0: #f4f7f8;
+  --bg-1: #e8eff2;
+  --ink-900: #10212b;
+  --ink-700: #334a57;
+  --muted-600: #5f7482;
+  --line-200: #d7e3e8;
+  --brand-600: #0f766e;
+  --brand-500: #14b8a6;
+  --accent-500: #ea580c;
+  --surface: rgba(255, 255, 255, 0.72);
+  --shadow-soft: 0 14px 40px -24px rgba(11, 34, 51, 0.45);
 }
 
 @layer base {
   html {
-    @apply text-gray-800;
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    color: var(--ink-900);
+    font-family: "Manrope", "Segoe UI", sans-serif;
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-gray-50;
     min-height: 100vh;
+    overflow-x: hidden;
+    background:
+      radial-gradient(60rem 32rem at -10% -15%, rgba(20, 184, 166, 0.2), transparent 65%),
+      radial-gradient(52rem 28rem at 105% 8%, rgba(14, 116, 144, 0.15), transparent 62%),
+      linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 100%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -36,59 +42,110 @@
   h4,
   h5,
   h6 {
-    @apply font-medium tracking-tight;
+    color: var(--ink-900);
+    font-family: "Fraunces", "Georgia", serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-md transition-colors;
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300;
   }
 
   .btn-primary {
-    @apply bg-teal-500 text-white hover:bg-teal-600;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
+    box-shadow: 0 12px 24px -14px rgba(15, 118, 110, 0.9);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 28px -16px rgba(15, 118, 110, 0.95);
   }
 
   .btn-secondary {
-    @apply bg-blue-800 text-white hover:bg-blue-900;
+    color: #ffffff;
+    background: linear-gradient(135deg, #1f3a4a, #2f556a);
+    box-shadow: 0 12px 24px -14px rgba(17, 37, 52, 0.7);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-1px);
   }
 
   .btn-outline {
-    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+    color: var(--ink-700);
+    border: 1px solid var(--line-200);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(20, 184, 166, 0.35);
   }
 
   .card {
-    @apply bg-white p-6 rounded-lg shadow-md;
+    border: 1px solid rgba(215, 227, 232, 0.8);
+    background: var(--surface);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(8px);
+    @apply rounded-2xl p-6;
   }
 
   .form-input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+    color: var(--ink-900);
+    border: 1px solid var(--line-200);
+    background: rgba(255, 255, 255, 0.9);
+    @apply w-full rounded-xl px-4 py-2.5 focus:outline-none;
+  }
+
+  .form-input:focus {
+    border-color: rgba(20, 184, 166, 0.5);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
   }
 }
 
-@font-face {
-  font-family: 'ScriptFont';
-  src: url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
-  font-weight: normal;
-  font-style: normal;
+@layer utilities {
+  .font-script {
+    font-family: "Fraunces", "Georgia", serif;
+  }
+
+  .glass-panel {
+    background: var(--surface);
+    border: 1px solid rgba(215, 227, 232, 0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.55s ease-out both;
+  }
+
+  .animate-blob {
+    animation: drift 14s ease-in-out infinite;
+  }
 }
 
-.font-script {
-  font-family: 'Dancing Script', cursive;
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
+@keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -14px, 0) scale(1.04);
   }
 }
