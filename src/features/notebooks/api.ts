@@ -1,5 +1,6 @@
 import { httpService } from "../../shared/services/httpService";
-import type { Notebook, CreateNotebookForm, NotebookWithNotes } from "./types";
+import type { Notebook, CreateNotebookForm } from "./types";
+import type { Note } from "../notes/types";
 
 export const notebooksApi = {
   getAll: (): Promise<Notebook[]> => httpService.get("/notebooks"),
@@ -10,7 +11,7 @@ export const notebooksApi = {
   getNotes: (
     notebookId: number,
     params?: { limit?: number; offset?: number },
-  ): Promise<NotebookWithNotes> =>
+  ): Promise<Note[]> =>
     httpService.get(`/notebooks/${notebookId}/notes`, params),
 
   create: (notebook: CreateNotebookForm): Promise<Notebook> =>

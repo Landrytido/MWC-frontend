@@ -2,6 +2,7 @@ import { ApiError } from "../types/common";
 import { authService } from "../../features/auth/services/authService";
 
 class HttpService {
+  private static readonly AUTH_RETRY_SIGNAL = "__AUTH_TOKEN_REFRESHED__";
   private baseURL: string;
   private timeout: number;
 
@@ -49,15 +50,21 @@ class HttpService {
       if (response.status === 401) {
         try {
           await authService.refreshAccessToken();
-          throw new Error("Token rafraîchi, veuillez relancer l'opération");
-        } catch {
+          throw new Error(HttpService.AUTH_RETRY_SIGNAL);
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message === HttpService.AUTH_RETRY_SIGNAL
+          ) {
+            throw error;
+          }
+
           await authService.logout();
           window.location.href = "/login";
           throw new Error("Session expirée, veuillez vous reconnecter");
         }
       }
 
-      // Améliorer le message d'erreur pour les erreurs 500
       let errorMessage = errorData.message || "Une erreur est survenue";
 
       if (response.status >= 500) {
@@ -66,10 +73,9 @@ class HttpService {
           serverError.error || errorData.message || "Erreur interne du serveur"
         }`;
 
-        // Si c'est une erreur de validation ou de données spécifique
         if (serverError.details || serverError.validation) {
           errorMessage += `\nDétails: ${JSON.stringify(
-            serverError.details || serverError.validation
+            serverError.details || serverError.validation,
           )}`;
         }
       }
@@ -97,9 +103,34 @@ class HttpService {
     return controller;
   }
 
+  private async makeRequestWithRetry<T>(
+    requestFn: () => Promise<Response>,
+  ): Promise<T> {
+    let attempt = 0;
+
+    while (attempt < 2) {
+      try {
+        const response = await requestFn();
+        return this.handleResponse<T>(response);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === HttpService.AUTH_RETRY_SIGNAL &&
+          attempt === 0
+        ) {
+          attempt++;
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error("Retry exhausted");
+  }
+
   async get<T>(
     endpoint: string,
-    params?: Record<string, string | number | boolean>
+    params?: Record<string, string | number | boolean>,
   ): Promise<T> {
     const controller = this.createAbortController();
 
@@ -118,64 +149,64 @@ class HttpService {
       }
     }
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
+    return this.makeRequestWithRetry<T>(() =>
+      fetch(url, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+        signal: controller.signal,
+      }),
+    );
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const controller = this.createAbortController();
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
+    return this.makeRequestWithRetry<T>(() =>
+      fetch(`${this.baseURL}${endpoint}`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      }),
+    );
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
     const controller = this.createAbortController();
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
+    return this.makeRequestWithRetry<T>(() =>
+      fetch(`${this.baseURL}${endpoint}`, {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      }),
+    );
   }
 
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     const controller = this.createAbortController();
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: "PATCH",
-      headers: this.getAuthHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
+    return this.makeRequestWithRetry<T>(() =>
+      fetch(`${this.baseURL}${endpoint}`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      }),
+    );
   }
 
   async delete<T>(endpoint: string): Promise<T> {
     const controller = this.createAbortController();
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-      signal: controller.signal,
-    });
-
-    return this.handleResponse<T>(response);
+    return this.makeRequestWithRetry<T>(() =>
+      fetch(`${this.baseURL}${endpoint}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+        signal: controller.signal,
+      }),
+    );
   }
 
   setBaseURL(url: string): void {
