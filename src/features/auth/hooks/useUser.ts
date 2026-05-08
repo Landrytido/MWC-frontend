@@ -9,6 +9,11 @@ interface UseUserReturn {
     firstName?: string;
     lastName?: string;
   }) => Promise<User>;
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => Promise<void>;
   getProfile: () => Promise<User>;
 }
 
@@ -33,7 +38,29 @@ export const useUser = (): UseUserReturn => {
         setLoading(false);
       }
     },
-    []
+    [],
+  );
+  const changePassword = useCallback(
+    async (data: {
+      currentPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    }): Promise<void> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await httpService.put("/users/password", data);
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Erreur lors de la mise à jour";
+        setError(errorMsg);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
   );
 
   const getProfile = useCallback(async (): Promise<User> => {
@@ -57,6 +84,7 @@ export const useUser = (): UseUserReturn => {
     loading,
     error,
     updateProfile,
+    changePassword,
     getProfile,
   };
 };

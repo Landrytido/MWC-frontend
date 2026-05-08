@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { authService } from "../services/authService";
 import { User, LoginRequest, RegisterRequest, AuthState } from "../types";
 
+const AUTH_USER_UPDATED_EVENT = "authUserUpdated";
+
 interface UseAuthReturn {
   state: AuthState;
   login: (credentials: LoginRequest) => Promise<void>;
@@ -63,7 +65,7 @@ export const useAuth = (): UseAuthReturn => {
         throw error;
       }
     },
-    []
+    [],
   );
 
   const register = useCallback(
@@ -94,7 +96,7 @@ export const useAuth = (): UseAuthReturn => {
         throw error;
       }
     },
-    []
+    [],
   );
 
   const logout = useCallback(async (): Promise<void> => {
@@ -123,6 +125,9 @@ export const useAuth = (): UseAuthReturn => {
 
   const updateUser = useCallback((user: User): void => {
     authService.updateUser(user);
+    window.dispatchEvent(
+      new CustomEvent<User>(AUTH_USER_UPDATED_EVENT, { detail: user }),
+    );
     setState((prev) => ({ ...prev, user }));
   }, []);
 
@@ -137,7 +142,7 @@ export const useAuth = (): UseAuthReturn => {
         }/auth/verify`,
         {
           method: "GET",
-        }
+        },
       );
 
       return true;
@@ -170,6 +175,30 @@ export const useAuth = (): UseAuthReturn => {
 
     return () => {
       window.removeEventListener("tokenRefreshed", handleTokenRefreshed);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleAuthUserUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<User>;
+      const updatedUser = customEvent.detail || authService.getUser();
+      const isAuthenticated = authService.isAuthenticated();
+
+      setState((prev) => ({
+        ...prev,
+        user: isAuthenticated ? updatedUser : null,
+        isAuthenticated,
+        error: null,
+      }));
+    };
+
+    window.addEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+
+    return () => {
+      window.removeEventListener(
+        AUTH_USER_UPDATED_EVENT,
+        handleAuthUserUpdated,
+      );
     };
   }, []);
 
