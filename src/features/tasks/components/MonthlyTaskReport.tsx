@@ -421,7 +421,7 @@ const MonthlyTaskReport: React.FC<MonthlyTaskReportProps> = ({
                       className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center space-x-3 w-32">
-                        <span className="text-lg">{config.icon}</span>
+                        {(() => { const Icon = config.icon; return <Icon className="w-5 h-5" />; })()}
                         <span className="text-sm font-medium">
                           {config.label}
                         </span>

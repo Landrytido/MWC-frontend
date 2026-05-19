@@ -6,6 +6,7 @@ import NotebookSelector from "../../notebooks/components/NotebookSelector";
 import LabelSelector from "../../labels/components/LabelSelector";
 import { useNotes } from "../hooks/useNotes";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
+import { Pencil, Trash2, Plus, MessageCircle, Notebook } from "lucide-react";
 
 interface NoteCardProps {
   note: Note;
@@ -143,19 +144,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 className="p-2 text-gray-400 hover:text-teal-500 rounded-md transition-colors"
                 title="Modifier la note"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
+                <Pencil className="w-4 h-4" />
               </button>
               <button
                 onClick={(e) => {
@@ -165,19 +154,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 className="p-2 text-gray-400 hover:text-red-500 rounded-md transition-colors"
                 title="Supprimer la note"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -200,7 +177,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 <span
                   className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${LABEL_COLORS.blue.default}`}
                 >
-                  <span className="mr-1">📓</span>
+                  <Notebook className="w-3 h-3 mr-1" />
                   {note.notebookTitle}
                 </span>
               ) : (
@@ -220,19 +197,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                     : "Ajouter à un carnet"
                 }
               >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <Pencil className="w-3 h-3" />
               </button>
             </div>
           )}
@@ -284,19 +249,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 className="p-1 text-gray-400 hover:text-teal-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Gérer les labels"
               >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
+                <Plus className="w-3 h-3" />
               </button>
             </div>
           )}
@@ -311,19 +264,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
             <span>{formattedDate}</span>
             {(note.commentCount ?? 0) > 0 && (
               <span className="flex items-center">
-                <svg
-                  className="w-3 h-3 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+                <MessageCircle className="w-3 h-3 mr-1" />
                 {note.commentCount}
               </span>
             )}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLabels } from "../hooks/useLabels";
 import { useConfirmation } from "../../../shared/hooks/useConfirmation";
 import { getLabelColor, getLabelColorClasses, Label } from "../types";
+import { Tags, Plus, Pencil, Trash2, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 
 interface LabelManagerProps {
   className?: string;
@@ -118,12 +119,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({
               value={editingLabel?.name || ""}
               onChange={(e) =>
                 setEditingLabel(
-                  editingLabel
-                    ? {
-                        ...editingLabel,
-                        name: e.target.value,
-                      }
-                    : null
+                  editingLabel ? { ...editingLabel, name: e.target.value } : null
                 )
               }
               className="flex-1 p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -134,19 +130,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({
               className="p-1 text-green-600 hover:text-green-700"
               title="Sauvegarder"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+              <Check className="w-4 h-4" />
             </button>
             <button
               type="button"
@@ -154,19 +138,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({
               className="p-1 text-gray-500 hover:text-gray-700"
               title="Annuler"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-4 h-4" />
             </button>
           </form>
         ) : (
@@ -203,38 +175,14 @@ const LabelManager: React.FC<LabelManagerProps> = ({
                 className="p-1 text-gray-400 hover:text-blue-500"
                 title="Modifier"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <Pencil className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDeleteLabel(label.id)}
                 className="p-1 text-gray-400 hover:text-red-500"
                 title="Supprimer"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </>
@@ -246,8 +194,9 @@ const LabelManager: React.FC<LabelManagerProps> = ({
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          🏷️ Labels
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+          <Tags className="w-5 h-5 mr-2" />
+          Labels
           {showFilterMode && selectedLabelIds.length > 0 && (
             <span className="ml-2 text-sm font-normal text-teal-600">
               ({selectedLabelIds.length} sélectionné
@@ -260,19 +209,7 @@ const LabelManager: React.FC<LabelManagerProps> = ({
           className="p-1 text-gray-500 hover:text-teal-500 rounded"
           title="Créer un label"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <Plus className="w-5 h-5" />
         </button>
       </div>
 
@@ -335,40 +272,16 @@ const LabelManager: React.FC<LabelManagerProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowAllLabels(!showAllLabels)}
-                  className="w-full p-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors text-center border border-dashed border-gray-300"
+                  className="w-full p-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors text-center border border-dashed border-gray-300 flex items-center justify-center"
                 >
                   {showAllLabels ? (
                     <>
-                      <svg
-                        className="w-3 h-3 inline mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 15l7-7 7 7"
-                        />
-                      </svg>
+                      <ChevronUp className="w-3 h-3 mr-1" />
                       Masquer les autres
                     </>
                   ) : (
                     <>
-                      <svg
-                        className="w-3 h-3 inline mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <ChevronDown className="w-3 h-3 mr-1" />
                       +{labels.length - 3} autres labels
                     </>
                   )}

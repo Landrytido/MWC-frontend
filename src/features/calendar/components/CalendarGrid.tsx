@@ -5,6 +5,7 @@ import {
   getEventColor,
   formatEventTime,
 } from "../types";
+import { PRIORITY_LABELS, TaskPriority } from "../../tasks/types";
 
 interface CalendarGridProps {
   monthData: CalendarViewDto[];
@@ -260,15 +261,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                     >
                       {/* Titre de l'élément */}
                       <div className="truncate font-medium flex items-center">
-                        {isTask && (
-                          <span className="mr-1 text-[10px]">
-                            {item.priority === 1
-                              ? "🔹"
-                              : item.priority === 2
-                              ? "🔸"
-                              : "🔴"}
-                          </span>
-                        )}
+                        {isTask && (() => {
+                          const p = (item.priority ?? 2) as TaskPriority;
+                          const Icon = PRIORITY_LABELS[p]?.icon;
+                          return Icon ? <Icon className="w-2.5 h-2.5 mr-1 flex-shrink-0" /> : null;
+                        })()}
                         {item.title}
                       </div>
 

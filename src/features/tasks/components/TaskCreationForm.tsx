@@ -176,6 +176,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
           <div className="grid grid-cols-3 gap-2">
             {priorityOptions.map(({ value, config }) => {
               const isSelected = formData.priority === value;
+              const PriorityIcon = config.icon;
 
               return (
                 <button
@@ -196,7 +197,7 @@ const TaskCreationForm: React.FC<TaskCreationFormProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
-                    <span>{config.icon}</span>
+                    <PriorityIcon className="w-4 h-4" />
                     <span>{config.label}</span>
                   </div>
                 </button>

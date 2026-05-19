@@ -1,14 +1,22 @@
+import { type LucideIcon, ArrowDown, Minus, ArrowUp } from "lucide-react";
+
 export enum TaskPriority {
   LOW = 1,
   MEDIUM = 2,
   HIGH = 3,
 }
 
-export const PRIORITY_LABELS = {
-  [TaskPriority.LOW]: { label: "Basse", icon: "🔹", color: "gray" },
-  [TaskPriority.MEDIUM]: { label: "Moyenne", icon: "🔸", color: "blue" },
-  [TaskPriority.HIGH]: { label: "Haute", icon: "🔴", color: "red" },
-} as const;
+interface PriorityConfig {
+  label: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+export const PRIORITY_LABELS: Record<TaskPriority, PriorityConfig> = {
+  [TaskPriority.LOW]: { label: "Basse", icon: ArrowDown, color: "gray" },
+  [TaskPriority.MEDIUM]: { label: "Moyenne", icon: Minus, color: "blue" },
+  [TaskPriority.HIGH]: { label: "Haute", icon: ArrowUp, color: "red" },
+};
 
 export type TaskStatus =
   | "upcoming"

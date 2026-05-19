@@ -1,6 +1,17 @@
 import React from "react";
 import { Task, getPriorityConfig } from "../types";
 import { formatDateForDisplay } from "../utils";
+import {
+  Pencil,
+  Trash2,
+  Clock,
+  Check,
+  Calendar,
+  AlertTriangle,
+  CalendarDays,
+  Timer,
+  RotateCcw,
+} from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
@@ -41,37 +52,48 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const getStatusDisplay = () => {
     switch (status) {
       case "completed":
-        return { text: "✓ Terminée", color: "text-green-600", show: true };
+        return {
+          icon: <Check className="w-3 h-3 mr-1" />,
+          text: "Terminée",
+          color: "text-green-600",
+          show: true,
+        };
       case "overdue":
         return {
-          text: "⚠️ En retard",
+          icon: <AlertTriangle className="w-3 h-3 mr-1" />,
+          text: "En retard",
           color: "text-red-600 font-medium",
           show: true,
         };
       case "today":
         return {
-          text: "📅 Aujourd'hui",
+          icon: <Calendar className="w-3 h-3 mr-1" />,
+          text: "Aujourd'hui",
           color: "text-blue-600",
           show: showScheduleInfo,
         };
       case "tomorrow":
         return {
-          text: "🗓️ Demain",
+          icon: <CalendarDays className="w-3 h-3 mr-1" />,
+          text: "Demain",
           color: "text-purple-600",
           show: showScheduleInfo,
         };
       case "upcoming":
         return {
-          text: "⏰ À venir",
+          icon: <Timer className="w-3 h-3 mr-1" />,
+          text: "À venir",
           color: "text-gray-600",
           show: showScheduleInfo,
         };
       default:
-        return { text: "", color: "", show: false };
+        return { icon: null, text: "", color: "", show: false };
     }
   };
 
   const statusDisplay = getStatusDisplay();
+
+  const PriorityIcon = priorityConfig?.icon;
 
   return (
     <div
@@ -89,15 +111,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 : "border-gray-300 hover:border-green-400 hover:bg-green-50"
             }`}
           >
-            {task.completed && (
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
+            {task.completed && <Check className="w-3 h-3" />}
           </button>
 
           <div className="flex-1 min-w-0">
@@ -112,23 +126,28 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {task.title}
               </h3>
 
-              {priorityConfig && (
+              {priorityConfig && PriorityIcon && (
                 <span
                   className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${getPriorityBadgeColor()}`}
                 >
-                  {priorityConfig.icon} {priorityConfig.label}
+                  <PriorityIcon className="w-3 h-3 mr-1" />
+                  {priorityConfig.label}
                 </span>
               )}
 
               {statusDisplay.show && (
-                <span className={`text-xs ${statusDisplay.color}`}>
+                <span
+                  className={`text-xs flex items-center ${statusDisplay.color}`}
+                >
+                  {statusDisplay.icon}
                   {statusDisplay.text}
                 </span>
               )}
 
               {task.carriedOver && (
                 <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-orange-50 text-orange-700 border border-orange-200">
-                  📅 Reportée
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Reportée
                 </span>
               )}
             </div>
@@ -145,30 +164,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
             {formattedDueDate && (
               <div className="flex items-center space-x-4 mt-3 text-xs">
-                {formattedDueDate && (
-                  <span
-                    className={`flex items-center ${
-                      status === "overdue"
-                        ? "text-red-600 font-medium"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    <svg
-                      className="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    Prévue: {formattedDueDate}
-                  </span>
-                )}
+                <span
+                  className={`flex items-center ${
+                    status === "overdue"
+                      ? "text-red-600 font-medium"
+                      : "text-gray-500"
+                  }`}
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  Prévue: {formattedDueDate}
+                </span>
 
                 {task.carriedOver && task.originalDate && (
                   <span className="text-orange-600">
@@ -187,19 +192,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Modifier la tâche"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
+            <Pencil className="w-4 h-4" />
           </button>
 
           <button
@@ -207,19 +200,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Supprimer la tâche"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

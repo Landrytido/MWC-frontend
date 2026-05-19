@@ -19,6 +19,7 @@ import { useNotes } from "../../notes";
 import { useDashboard } from "../hooks/useDashboard";
 import { Note } from "../../notes/types";
 import type { TabType } from "../types";
+import { Search, X, Plus, BookOpen, Tag, FileText, Link2, ListTodo, Calendar, Wrench } from "lucide-react";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -110,8 +111,9 @@ const Dashboard: React.FC = () => {
       } else {
         ui.setSelectedLabels([...currentLabels, labelId]);
       }
+      handleTabChange("notes");
     },
-    [ui],
+    [ui, handleTabChange],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -139,7 +141,7 @@ const Dashboard: React.FC = () => {
           <div className="lg:col-span-1 space-y-6">
             <NotebookSidebar
               selectedNotebookId={ui.currentNotebook}
-              onNotebookSelect={(id) => ui.setCurrentNotebook(id)}
+              onNotebookSelect={(id) => { ui.setCurrentNotebook(id); handleTabChange("notes"); }}
               totalNotes={notes.length}
             />
             <LabelManager
@@ -165,19 +167,7 @@ const Dashboard: React.FC = () => {
                         : "border-slate-200 bg-white/85 focus:ring-teal-500"
                     }`}
                   />
-                  <svg
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   {(hasActiveSearch ||
                     ui.currentNotebook ||
                     ui.selectedLabels.length > 0) && (
@@ -186,19 +176,7 @@ const Dashboard: React.FC = () => {
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       title="Effacer tous les filtres"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <X className="w-5 h-5" />
                     </button>
                   )}
                 </div>
@@ -237,7 +215,7 @@ const Dashboard: React.FC = () => {
                   <div className="mt-2 flex flex-wrap gap-2">
                     {ui.currentNotebook && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                        📓{" "}
+                        <BookOpen className="w-3 h-3 mr-1" />
                         {
                           notebooks.find((n) => n.id === ui.currentNotebook)
                             ?.title
@@ -246,19 +224,7 @@ const Dashboard: React.FC = () => {
                           onClick={() => ui.setCurrentNotebook(null)}
                           className="ml-1 text-blue-600 hover:text-blue-800"
                         >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          <X className="w-3 h-3" />
                         </button>
                       </span>
                     )}
@@ -270,7 +236,8 @@ const Dashboard: React.FC = () => {
                           key={labelId}
                           className="inline-flex items-center px-2 py-1 text-xs bg-teal-100 text-teal-800 rounded-full"
                         >
-                          🏷️ {label.name}
+                          <Tag className="w-3 h-3 mr-1" />
+                          {label.name}
                           <button
                             onClick={() => {
                               const updatedLabels = ui.selectedLabels.filter(
@@ -280,19 +247,7 @@ const Dashboard: React.FC = () => {
                             }}
                             className="ml-1 text-teal-600 hover:text-teal-800"
                           >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
+                            <X className="w-3 h-3" />
                           </button>
                         </span>
                       ) : null;
@@ -300,24 +255,13 @@ const Dashboard: React.FC = () => {
 
                     {hasActiveSearch && (
                       <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-                        🔍 "{searchConfig.value}"
+                        <Search className="w-3 h-3 mr-1" />
+                        "{searchConfig.value}"
                         <button
                           onClick={() => clearAllSearches()}
                           className="ml-1 text-purple-600 hover:text-purple-800"
                         >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          <X className="w-3 h-3" />
                         </button>
                       </span>
                     )}
@@ -328,13 +272,14 @@ const Dashboard: React.FC = () => {
 
             <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-slate-200/80 bg-white/75 p-2 backdrop-blur-sm">
               <button
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center ${
                   activeTab === "notes"
                     ? "bg-teal-600 text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("notes")}
               >
+                <FileText className="w-4 h-4 mr-1.5" />
                 Notes (
                 {hasActiveSearch && activeTab === "notes"
                   ? getTabSearchResults("notes").length
@@ -342,13 +287,14 @@ const Dashboard: React.FC = () => {
                 )
               </button>
               <button
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center ${
                   activeTab === "links"
                     ? "bg-teal-600 text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("links")}
               >
+                <Link2 className="w-4 h-4 mr-1.5" />
                 Liens Sauvegardés (
                 {hasActiveSearch && activeTab === "links"
                   ? getTabSearchResults("links").length
@@ -356,20 +302,21 @@ const Dashboard: React.FC = () => {
                 )
               </button>
               <button
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center ${
                   activeTab === "tasks"
                     ? "bg-teal-600 text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("tasks")}
               >
+                <ListTodo className="w-4 h-4 mr-1.5" />
                 Tâches{" "}
                 {hasActiveSearch && activeTab === "tasks"
                   ? `(${getTabSearchResults("tasks").length})`
                   : ""}
               </button>
               <button
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center ${
                   activeTab === "calendar"
                     ? "bg-teal-600 text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
@@ -378,17 +325,19 @@ const Dashboard: React.FC = () => {
                   navigate(`/dashboard/calendar?returnTo=${activeTab}`)
                 }
               >
-                📅 Calendrier
+                <Calendar className="w-4 h-4 mr-1.5" />
+                Calendrier
               </button>
               <button
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center ${
                   activeTab === "tools"
                     ? "bg-teal-600 text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 onClick={() => handleTabChange("tools")}
               >
-                🛠️ Outils
+                <Wrench className="w-4 h-4 mr-1.5" />
+                Outils
               </button>
             </div>
 
@@ -411,19 +360,7 @@ const Dashboard: React.FC = () => {
                     onClick={() => navigate("/dashboard/notes/new")}
                     className="btn btn-primary px-4 py-2"
                   >
-                    <svg
-                      className="w-5 h-5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
+                    <Plus className="w-5 h-5 mr-1" />
                     Nouvelle note
                   </button>
                 </div>

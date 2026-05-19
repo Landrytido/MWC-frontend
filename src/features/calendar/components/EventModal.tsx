@@ -417,6 +417,7 @@ const EventModal: React.FC<EventModalProps> = ({
                           priorityValue
                         ) as TaskPriority;
                         const isSelected = priority === priorityNum;
+                        const PriorityIcon = config.icon;
 
                         return (
                           <button
@@ -435,7 +436,7 @@ const EventModal: React.FC<EventModalProps> = ({
                             }`}
                           >
                             <div className="flex items-center justify-center space-x-2">
-                              <span>{config.icon}</span>
+                              <PriorityIcon className="w-4 h-4" />
                               <span>{config.label}</span>
                             </div>
                           </button>
