@@ -2,7 +2,6 @@ import { httpService } from "../../shared/services/httpService";
 import type {
   SavedLink,
   LinkGroup,
-  SavedLinkGroup,
   CreateLinkForm,
   CreateLinkGroupForm,
 } from "./types";
@@ -26,6 +25,14 @@ export const linksApi = {
     }
     return httpService.get("/links/search", { keyword });
   },
+
+  /** Assigner un lien à un groupe (groupId = null pour retirer du groupe) */
+  assignToGroup: (id: number, groupId: string | null): Promise<SavedLink> =>
+    httpService.put(`/links/${id}/group`, { groupId }),
+
+  /** Incrémenter le compteur de clics */
+  incrementClick: (id: number): Promise<SavedLink> =>
+    httpService.post(`/links/${id}/click`),
 };
 
 export const linkGroupsApi = {
@@ -42,36 +49,4 @@ export const linkGroupsApi = {
 
   delete: (id: string): Promise<void> =>
     httpService.delete(`/link-groups/${id}`),
-
-  getLinksInGroup: (groupId: string): Promise<SavedLinkGroup[]> =>
-    httpService.get(`/link-groups/${groupId}/links`),
-
-  addLinkToGroup: (
-    groupId: string,
-    linkId: number,
-    linkName?: string
-  ): Promise<SavedLinkGroup> =>
-    httpService.post(`/link-groups/${groupId}/links/${linkId}`, { linkName }),
-
-  updateLinkInGroup: (
-    groupId: string,
-    linkId: number,
-    linkName: string
-  ): Promise<SavedLinkGroup> =>
-    httpService.put(`/link-groups/${groupId}/links/${linkId}`, { linkName }),
-
-  removeLinkFromGroup: (groupId: string, linkId: number): Promise<void> =>
-    httpService.delete(`/link-groups/${groupId}/links/${linkId}`),
-
-  incrementClickCounter: (
-    groupId: string,
-    linkId: number
-  ): Promise<SavedLinkGroup> =>
-    httpService.post(`/link-groups/${groupId}/links/${linkId}/click`),
-
-  getTopClickedLinks: (groupId: string): Promise<SavedLinkGroup[]> =>
-    httpService.get(`/link-groups/${groupId}/links/top-clicked`),
-
-  getGlobalTopClickedLinks: (): Promise<SavedLinkGroup[]> =>
-    httpService.get("/link-groups/links/global-top-clicked"),
 };

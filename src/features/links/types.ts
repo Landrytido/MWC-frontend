@@ -3,6 +3,8 @@ export interface SavedLink {
   url: string;
   title: string;
   description?: string;
+  clickCounter: number;
+  linkGroupId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,22 +16,14 @@ export interface LinkGroup {
   createdAt: string;
   updatedAt: string;
   linkCount?: number;
-  savedLinks?: SavedLinkGroup[];
-}
-
-export interface SavedLinkGroup {
-  savedLinkId: number;
-  linkGroupId: string;
-  linkName: string;
-  url: string;
-  clickCounter: number;
-  savedLinkDetails: SavedLink;
+  savedLinks?: SavedLink[];
 }
 
 export interface CreateLinkForm {
   url: string;
   title: string;
   description?: string;
+  linkGroupId?: string | null;
 }
 
 export interface CreateLinkGroupForm {
