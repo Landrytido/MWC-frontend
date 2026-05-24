@@ -10,7 +10,7 @@ const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { notes, deleteNote, getNoteById } = useNotes();
+  const { notes, loading: notesLoading, deleteNote, getNoteById } = useNotes();
   const { confirm, ConfirmationComponent } = useConfirmation();
 
   const [note, setNote] = useState<Note | null>(null);
@@ -21,6 +21,12 @@ const NoteDetail: React.FC = () => {
     if (!id) {
       setError("ID de note manquant");
       setIsLoading(false);
+      return;
+    }
+
+    // Tant que les notes sont en cours de chargement, on attend
+    if (notesLoading) {
+      setIsLoading(true);
       return;
     }
 
@@ -35,7 +41,7 @@ const NoteDetail: React.FC = () => {
     }
 
     setIsLoading(false);
-  }, [id, getNoteById, notes]);
+  }, [id, getNoteById, notes, notesLoading]);
 
   const handleEdit = () => {
     if (note) {

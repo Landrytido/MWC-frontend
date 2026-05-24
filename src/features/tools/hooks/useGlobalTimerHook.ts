@@ -1,80 +1,10 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { TimerMode, TimerLap, TimerPreset } from "../types/timer";
 import { TimerService } from "../services/timerService";
 import { useGlobalTimer } from "../../../shared/contexts/AppContext";
 
 export const useGlobalTimerHook = () => {
   const { timer, updateTimer } = useGlobalTimer();
-  const intervalRef = useRef<number | null>(null);
-
-  // Fonction pour mettre à jour le temps
-  const updateTime = useCallback(() => {
-    if (!timer.isRunning || !timer.startTime) return;
-
-    const now = Date.now();
-    const elapsed = now - timer.startTime + timer.pausedTime;
-
-    if (timer.mode === "stopwatch") {
-      updateTimer({ time: elapsed });
-    } else {
-      // Mode countdown
-      const remaining = Math.max(0, timer.targetTime - elapsed);
-
-      // Vérifier si le temps est écoulé
-      if (remaining === 0 && timer.time > 0) {
-        // Timer terminé !
-        const settings = TimerService.getSettings();
-
-        if (settings.soundEnabled) {
-          TimerService.playAlarmSound();
-        }
-
-        if (settings.notificationsEnabled) {
-          TimerService.showNotification(
-            "Timer terminé !",
-            `Le minuteur de ${TimerService.formatTimeCompact(
-              timer.targetTime
-            )} est terminé.`
-          );
-        }
-
-        updateTimer({
-          time: 0,
-          isRunning: false,
-          startTime: null,
-          pausedTime: 0,
-        });
-      } else {
-        updateTimer({ time: remaining });
-      }
-    }
-  }, [
-    timer.isRunning,
-    timer.startTime,
-    timer.pausedTime,
-    timer.mode,
-    timer.targetTime,
-    timer.time,
-    updateTimer,
-  ]);
-
-  // Démarrer l'interval quand le timer est en marche
-  useEffect(() => {
-    if (timer.isRunning) {
-      intervalRef.current = setInterval(updateTime, 10); // Mise à jour toutes les 10ms pour la précision
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [timer.isRunning, updateTime]);
 
   // Changer de mode
   const switchMode = useCallback(

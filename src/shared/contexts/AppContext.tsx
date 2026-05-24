@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useReducer, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useRef,
+  ReactNode,
+} from "react";
 import { UIState, LoadingState } from "../types/common";
 import { TimerState } from "../../features/tools/types/timer";
+import { TimerService } from "../../features/tools/services/timerService";
 
 interface AppState {
   ui: UIState & {
@@ -172,6 +180,62 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // Keep a ref to the latest timer state so the interval closure never goes stale
+  const timerRef = useRef(state.timer);
+  timerRef.current = state.timer;
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (state.timer.isRunning) {
+      intervalRef.current = setInterval(() => {
+        const t = timerRef.current;
+        if (!t.isRunning || t.startTime === null) return;
+
+        const elapsed = Date.now() - t.startTime + t.pausedTime;
+
+        if (t.mode === "stopwatch") {
+          dispatch({ type: "UPDATE_TIMER", payload: { time: elapsed } });
+        } else {
+          const remaining = Math.max(0, t.targetTime - elapsed);
+
+          if (remaining === 0 && t.time > 0) {
+            // Countdown finished
+            dispatch({
+              type: "UPDATE_TIMER",
+              payload: { time: 0, isRunning: false, startTime: null, pausedTime: 0 },
+            });
+
+            const settings = TimerService.getSettings();
+            if (settings.soundEnabled) {
+              TimerService.playAlarmSound();
+            }
+            if (settings.notificationsEnabled) {
+              TimerService.showNotification(
+                "Timer terminé !",
+                `Le minuteur de ${TimerService.formatTimeCompact(t.targetTime)} est terminé.`
+              );
+            }
+          } else {
+            dispatch({ type: "UPDATE_TIMER", payload: { time: remaining } });
+          }
+        }
+      }, 10);
+    } else {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [state.timer.isRunning]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
